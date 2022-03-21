@@ -30,10 +30,9 @@ public:
         }
         inline string substr(size_t start, size_t len)
         {
-          return contents.substr(start,len);
+          return contents.substr(start,len)
         }
   private:
-
       string filename;
       string contents;
  };
