@@ -1,6 +1,6 @@
 #include "../headers/string_functions.h"
 #include "../headers/A1Program.h"
-#include "../h/ErrorHandler.h"
+#include "../headers/ErrorHandler.h"
 
 #include <iosstream>
 
