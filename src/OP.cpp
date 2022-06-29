@@ -1,5 +1,5 @@
-#include "../h/OP_List.h"
-#include "../h/ErrorHandler.h"
+#include "../headers/OP_List.h"
+#include "../headers/ErrorHandler.h"
 
 OP_List* ops=nullptr;
 
