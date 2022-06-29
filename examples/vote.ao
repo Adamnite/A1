@@ -1,0 +1,26 @@
+#Voting/Ballot example
+
+import hashmap
+import transaction
+
+def voter(self) {
+  self.weight = weight #no need for type declration, default integer types precoded
+  self.voted = voted
+  self.delegate = delegate
+  self.nonce = uint256(nonce) #user can declare specific tupes
+}
+
+def proposal(self){
+  self.name = name
+  self.count = count
+}
+
+public def voters := hashmap([address,Voter]) #Map voter
+public def proposals := hashmap([name,proposal])
+
+#typechecking
+def delegated(addr :address){
+  return self.voters[addr].delegate != null
+}
+
+#Other examples follow Vyper 
