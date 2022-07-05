@@ -1,7 +1,7 @@
 
-//Copyright Adamnite Authors. See Liscense for more info.
+//Copyright Adamnite Authors. See License for more info.
 
-//Initial version of codebase inspired by Solidity. Authors reserve the right to remove this declration once
+//Initial version of codebase inspired by Solidity. Authors reserve the right to remove this declaration once
 #pragma once
 
 //Including some Solidity's LibDevCore Library for now; change in the future
@@ -19,7 +19,7 @@ namespace A1
 // The token list is a list of macros that define different tokens based
 //on their name, string, and precedence. This is similar to the C++ implementation
 //in Solidity for now (make this original later). The 3 macros are, like Solidity
-// are signed as follows: (token_name,source_code, precendence). The name is the name of the
+// are signed as follows: (token_name,source_code, precedence). The name is the name of the
 //token within the protocol, the string within the source code, and the precedence.
 
 //We also use IGNORE_TOKEN and keywords, as with Solidity (please change)
@@ -27,10 +27,10 @@ namespace A1
 #define IGNORE_TOKEN(token_name, source_code, precedence)
 
 #define TOKEN_LIST(T,K)
-        //End of source declration
+        //End of source declaration
         T(END, "EOS", 0)
 \
-        //Basic Puncuation
+        //Basic Punctuation
         T(LPAR, "(", 0)
         T(RPAR, ")", 0)
         T(LSQB, "[", 0)
@@ -43,7 +43,7 @@ namespace A1
         T(ARROW, "=>", 0)
 
 \\
-      //Assignemnt Operators
+      //Assignment Operators
         T(ASSIGN, "=", 2)
         T(ADD_ASSIGN, "+=", 2)
         T(SUBTRACT_ASSIGN, "-=",2)
