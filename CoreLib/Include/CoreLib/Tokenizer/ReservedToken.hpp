@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include <CoreLib/PushBackStream.hpp>
+
+#include <string_view>
 #include <cstdint>
 
 namespace A1
@@ -55,5 +58,10 @@ enum class ReservedToken : std::uint8_t
     // Number of possible reserved tokens
     Count
 };
+
+[[ nodiscard ]] ReservedToken getKeyword( std::string_view const word ) noexcept;
+
+[[ nodiscard ]] ReservedToken getOperator( PushBackStream & stream ) noexcept;
+[[ nodiscard ]] ReservedToken getSymbol  ( PushBackStream & stream ) noexcept;
 
 } // namespace A1
