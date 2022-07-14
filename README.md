@@ -1,7 +1,20 @@
 # A1
 A1 is a dynamically typed, high-level programming language for developing smart contracts on the Adamnite Blockchain. A1 borrows concepts from Python, C, and best practices for PL research to at once create a programming language that is modular, simple, and efficient. 
 
+Before contributing:
 
-New Contributors:
+Please create a branch named appropriately relating to your assigned Jira ticket. Please create/checkout your branch using the follow structure -  
 
-Please create a new branch and work there so we can tell who is doing what! Feel free to refer to the resources that we have shared previously, and try to develop a hacky version that people can mess around with. 
+- feature/description/ticket-key(example:ALD-19)
+- refactor/description/ticket-key(example:ALD-19)
+- improvement/description/ticket-key(example:ALD-19)
+- bugfix/description/ticket-key(example:ALD-19)
+
+An example could be: 
+    - git checkout -b -m 'refactor: add in pythonic keywords' ALD-19
+
+Once ready, please create a pull request to merge your branch to main after review. 
+
+Thank you for contributing and happy hacking!
+
+
