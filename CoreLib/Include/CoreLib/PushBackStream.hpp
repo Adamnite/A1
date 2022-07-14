@@ -29,7 +29,7 @@ public:
     {}
 
     /** Gets the next character from the stream */
-    [[ nodiscard ]] int operator()();
+    [[ nodiscard ]] int next();
 
     [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
     [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
@@ -47,14 +47,14 @@ private:
 };
 
 template< typename GetCharClbk >
-int PushBackStream< GetCharClbk >::operator()()
+int PushBackStream< GetCharClbk >::next()
 {
     int result{ -1 };
     if ( stack_.empty() ) {
         result = getCharClbk_();
     } else {
-        result = _stack.top();
-        _stack.pop();
+        result = stack_.top();
+        stack_.pop();
     }
 
     if ( result == '\n' ) { ++lineNumber_; }

@@ -19,49 +19,92 @@ enum class ReservedToken : std::uint8_t
 {
     Unknown,
 
+    // Arithmetic operators
+    OpAdd,
+    OpDiv,
+    OpExp,
+    OpFloorDiv,
+    OpMod,
+    OpMul,
+    OpSub,
+
+    // Bitwise operators
+    OpAnd,
+    OpLeftShift,
+    OpNot,
+    OpOr,
+    OpRightShift,
+    OpXor,
+
+    // Assignment operators
+    OpAssign,
+    OpAddAssign,
+    OpDivAssign,
+    OpExpAssign,
+    OpFloorDivAssign,
+    OpModAssign,
+    OpMulAssign,
+    OpSubAssign,
+
+    // Bitwise assignment operators
+    OpAndAssign,
+    OpOrAssign,
+    OpXorAssign,
+    OpLeftShiftAssign,
+    OpRightShiftAssign,
+
+    // Comparison operators
+    OpEqual,
+    OpGreaterThan,
+    OpGreaterThanEqual,
+    OpLessThan,
+    OpLessThanEqual,
+    OpNotEqual,
+
+
     // Keywords
-    And,
-    As,
-    Assert,
-    Break,
-    Class,
-    Continue,
-    Def,
-    Del,
-    Elif,
-    Else,
-    Except,
-    False,
-    Finally,
-    For,
-    From,
-    Global,
-    If,
-    Import,
-    In,
-    Is,
-    Lambda,
-    Non,
-    None,
-    NonLocal,
-    Not,
-    Or,
-    Pass,
-    Raise,
-    Return,
-    True,
-    Try,
-    While,
-    With,
-    Yield,
+    KwAnd,
+    KwAs,
+    KwAssert,
+    KwBreak,
+    KwClass,
+    KwContinue,
+    KwDef,
+    KwDel,
+    KwElif,
+    KwElse,
+    KwExcept,
+    KwFalse,
+    KwFinally,
+    KwFor,
+    KwFrom,
+    KwGlobal,
+    KwIf,
+    KwImport,
+    KwIn,
+    KwIs,
+    KwLambda,
+    KwNon,
+    KwNone,
+    KwNonLocal,
+    KwNot,
+    KwOr,
+    KwPass,
+    KwRaise,
+    KwReturn,
+    KwTrue,
+    KwTry,
+    KwWhile,
+    KwWith,
+    KwYield,
 
     // Number of possible reserved tokens
     Count
 };
 
-[[ nodiscard ]] ReservedToken getKeyword( std::string_view const word ) noexcept;
+[[ nodiscard ]] std::string_view toStringView( ReservedToken const token ) noexcept;
 
-[[ nodiscard ]] ReservedToken getOperator( PushBackStream & stream ) noexcept;
-[[ nodiscard ]] ReservedToken getSymbol  ( PushBackStream & stream ) noexcept;
+[[ nodiscard ]] ReservedToken getKeyword ( std::string_view const   word   ) noexcept;
+[[ nodiscard ]] ReservedToken getOperator( PushBackStream         & stream ) noexcept;
 
 } // namespace A1
