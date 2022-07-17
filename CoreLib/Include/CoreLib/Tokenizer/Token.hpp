@@ -47,7 +47,7 @@ public:
 private:
     ValueType   value_;
     std::size_t lineNumber_;
-    std::size_t charIndex_
+    std::size_t charIndex_;
 };
 
 } // namespace A1

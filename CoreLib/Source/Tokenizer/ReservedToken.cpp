@@ -206,7 +206,14 @@ ReservedToken getOperator( PushBackStream & stream ) noexcept
 
     for ( std::size_t idx{ 0U }; candidates.first != candidates.second; ++idx )
     {
-        chars.push( stream.next() );
+        if ( auto const c{ stream.pop() }; c )
+        {
+            chars.push( *c );
+        }
+        else
+        {
+            break;
+        }
 
         candidates = std::equal_range
         (
@@ -225,7 +232,7 @@ ReservedToken getOperator( PushBackStream & stream ) noexcept
 
     while ( chars.size() > matchSize )
     {
-        stream.push_back( chars.top() );
+        stream.push( chars.top() );
         chars.pop();
     }
 

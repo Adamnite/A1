@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string_view>
+#include <optional>
 #include <stack>
 
 namespace A1
@@ -17,61 +19,35 @@ namespace A1
  *
  * Allows us to return character back to the stream
  * until we are sure about the type of the specific token.
+ *
+ * CAUTION: This class does not own the data in the stream.
  */
-template< typename GetCharClbk >
 class PushBackStream
 {
 public:
-    PushBackStream( GetCharClbk && clbk ) noexcept
-    : lineNumber_ { 0 }
-    , charIndex_  { 0 }
-    , getCharClbk_{ std::forward< GetCharClbk >( clbk ) }
+    PushBackStream( std::string_view const strv )
+    : lineNumber_{ 0U   }
+    , charIndex_ { 0U   }
+    , data_      { strv }
     {}
 
+    /** Pushes character back to the stream */
+    void push( int const c ) noexcept;
+
     /** Gets the next character from the stream */
-    [[ nodiscard ]] int next();
+    [[ nodiscard ]] std::optional< int > pop() noexcept;
 
     [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
     [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
 
-    /** Pushes character back to the stream */
-    void pushBack( int const c );
-
 private:
-    std::size_t lineNumber_{ 0 };
-    std::size_t charIndex_ { 0 };
+    std::size_t lineNumber_{ 0U };
+    std::size_t charIndex_ { 0U };
+
+    std::string_view data_;
+    std::size_t      dataIndex_{ 0U };
 
     std::stack< int > stack_;
-
-    GetCharClbk getCharClbk_;
 };
-
-template< typename GetCharClbk >
-int PushBackStream< GetCharClbk >::next()
-{
-    int result{ -1 };
-    if ( stack_.empty() ) {
-        result = getCharClbk_();
-    } else {
-        result = stack_.top();
-        stack_.pop();
-    }
-
-    if ( result == '\n' ) { ++lineNumber_; }
-
-    ++charIndex_;
-
-    return result;
-}
-
-template< typename GetCharClbk >
-void PushBackStream< GetCharClbk >::pushBack( int const c )
-{
-    stack_.push( c );
-
-    if ( c== '\n' ) { --lineNumber_; }
-
-    --charIndex_;
-}
 
 } // namespace A1
