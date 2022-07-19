@@ -40,11 +40,7 @@ public:
     [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
     [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
 
-    [[ nodiscard ]] std::string toString() const noexcept
-    {
-        // TODO: Implement this
-        return {};
-    }
+    [[ nodiscard ]] std::string toString() const noexcept;
 
 private:
     ValueType   value_;
