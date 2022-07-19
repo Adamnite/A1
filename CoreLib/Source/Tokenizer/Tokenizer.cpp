@@ -50,7 +50,7 @@ namespace
         for
         (
             auto c{ stream.pop() };
-            c && ( getCharType( *c ) == CharType::Alphanumeric || *c == '.' );
+            c && ( getCharType( *c ) == CharType::Alphanumeric || *c == '.' || *c == '_' );
             c = stream.pop()
         )
         {
@@ -144,11 +144,14 @@ namespace
 
                 case CharType::Operator:
                     stream.push( *c );
-                    if ( auto const op{ getOperator( stream ) }; op == ReservedToken::Unknown )
+
+                    auto const op{ getOperator( stream ) };
+                    if ( op == ReservedToken::Unknown )
                     {
                         // TODO: Throw parsing error
+                        return {};
                     }
-                    return { getOperator( stream ), stream.lineNumber(), stream.charIndex() };
+                    return { op, stream.lineNumber(), stream.charIndex() };
             }
         }
 
