@@ -28,6 +28,7 @@ class Token
 public:
     using ValueType = std::variant< ReservedToken, Identifier, double, std::string, Eof >;
 
+    Token() noexcept = default;
     Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )
     : value_     { std::move( value ) }
     , lineNumber_{ lineNumber         }
