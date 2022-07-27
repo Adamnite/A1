@@ -5,7 +5,7 @@
 #include "helpers.hpp"
 #include "errors.hpp"
 
-namespace stork {
+namespace Adamnite
 	namespace {
 		template<class V, typename T>
 		struct is_boxed {
