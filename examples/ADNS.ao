@@ -1,0 +1,9 @@
+def init():
+  create_new(self.storage, 'name', 'assigned_to')
+def register(name,address):
+  if self.storage['name'] == '' or self.storage['name'][''assigned_to] == ''
+  domain = name.mapto(address) #string that maps to address. Mapping class should also allow for mapping to contracts, storage, etc
+  domain = domain + '.nite'
+  self.storage['name'] = name
+  self.storage['name']['assigned_to'] = address
+  return domain
