@@ -1,0 +1,19 @@
+#sub-token using A1 smart contract programming language
+
+import token
+
+token = New_Token() #"token" can be any name
+
+def init():
+  self.storage['token']['balance'] = 100
+  
+ 
+
+def return_balance(user):
+  return user.storage['token']['balance']
+ 
+ 
+def send(sender,reciever, amount):
+  if sender.storage['token']['balance'] > amount:
+    sender.storage['token']['balance'] = sender.storage['token']['balance'] - amount
+    receiver.storage['token']['balance'] = reciever.storage['token']['balance'] + amount
