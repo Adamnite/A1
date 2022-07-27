@@ -22,5 +22,3 @@ public def proposals := hashmap([name,proposal])
 def delegated(addr :address){
   return self.voters[addr].delegate != null
 }
-
-#Other examples follow Vyper 
