@@ -56,4 +56,8 @@ TEST( ReservedTokenTest, operatorTest )
         A1::PushBackStream stream{ "random" };
         EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::Unknown );
     }
+    {
+        A1::PushBackStream stream{ "<" };
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLessThan );
+    }
 }
