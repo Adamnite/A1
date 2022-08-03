@@ -76,10 +76,10 @@ TEST( TokenizerTest, tokenizationTest )
     }
 
     {
-        A1::TokenIterator it{ A1::PushBackStream{ "if 5 < 2" } };
+        A1::TokenIterator it{ A1::PushBackStream{ "return 5 < 2 #ignored comment right?" } };
 
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
-        EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwIf );
+        EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwReturn );
 
         it++;
 
@@ -94,7 +94,7 @@ TEST( TokenizerTest, tokenizationTest )
         it++;
 
         EXPECT_TRUE( std::holds_alternative< double >( it->value() ) );
-        EXPECT_EQ( std::get< double >( it->value() ), 2.0 );
+        EXPECT_EQ( std::get< double >( it->value() ), 2 );
 
         it++;
 
