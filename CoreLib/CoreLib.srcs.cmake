@@ -3,5 +3,5 @@ set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Token.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Tokenizer.cpp
 
-    ${CMAKE_CURRENT_LIST_DIR}/Source/PushBackStream.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/Utils/PushBackStream.cpp
 )
