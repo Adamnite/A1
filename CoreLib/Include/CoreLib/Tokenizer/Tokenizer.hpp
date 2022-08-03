@@ -8,7 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/Token.hpp>
-#include <CoreLib/PushBackStream.hpp>
+#include <CoreLib/Utils/PushBackStream.hpp>
 
 #include <iterator>
 

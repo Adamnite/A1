@@ -6,7 +6,7 @@
  */
 
 #include <CoreLib/Tokenizer/ReservedToken.hpp>
-#include <CoreLib/PushBackStream.hpp>
+#include <CoreLib/Utils/PushBackStream.hpp>
 
 #include <gtest/gtest.h>
 
