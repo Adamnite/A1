@@ -44,4 +44,6 @@ private:
     PushBackStream stream_;
 };
 
+[[ nodiscard ]] TokenIterator tokenize( PushBackStream stream );
+
 } // namespace A1

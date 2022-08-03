@@ -30,7 +30,7 @@ namespace
 TEST( TokenizerTest, tokenizationTest )
 {
     {
-        A1::TokenIterator it{ A1::PushBackStream{ "my_variable = 5" } };
+        auto it{ A1::tokenize( A1::PushBackStream{ "my_variable = 5" } ) };
 
         EXPECT_TRUE( std::holds_alternative< A1::Identifier >( it->value() ) );
         EXPECT_EQ( std::get< A1::Identifier >( it->value() ).name, "my_variable" );
@@ -50,7 +50,7 @@ TEST( TokenizerTest, tokenizationTest )
         EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
     }
     {
-        A1::TokenIterator it{ A1::PushBackStream{ "if my_variable == \"foo\"" } };
+        auto it{ A1::tokenize( A1::PushBackStream{ "if my_variable == \"foo\"" } ) };
 
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwIf );

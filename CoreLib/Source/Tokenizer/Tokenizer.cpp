@@ -122,7 +122,7 @@ namespace
         // TODO: Throw a parsing error instead
     }
 
-    [[ nodiscard ]] Token tokenize( PushBackStream & stream )
+    [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )
     {
         while ( auto const c{ stream.pop() } )
         {
@@ -161,7 +161,7 @@ namespace
 
 TokenIterator & TokenIterator::operator++()
 {
-    current_ = tokenize( stream_ );
+    current_ = tokenizeImpl( stream_ );
     return *this;
 }
 
@@ -170,6 +170,11 @@ TokenIterator TokenIterator::operator++(int)
     auto tmp{ *this };
     ++*this;
     return tmp;
+}
+
+TokenIterator tokenize( PushBackStream stream )
+{
+    return { std::move( stream ) };
 }
 
 } // namespace A1
