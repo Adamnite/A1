@@ -35,17 +35,17 @@ TEST( TokenizerTest, tokenizationTest )
         EXPECT_TRUE( std::holds_alternative< A1::Identifier >( it->value() ) );
         EXPECT_EQ( std::get< A1::Identifier >( it->value() ).name, "my_variable" );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::OpAssign );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< double >( it->value() ) );
         EXPECT_EQ( std::get< double >( it->value() ), 5. );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
     }
@@ -55,22 +55,22 @@ TEST( TokenizerTest, tokenizationTest )
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwIf );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::Identifier >( it->value() ) );
         EXPECT_EQ( std::get< A1::Identifier >( it->value() ).name, "my_variable" );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::OpEqual );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< std::string >( it->value() ) );
         EXPECT_EQ( std::get< std::string >( it->value() ), "foo" );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
     }
@@ -81,22 +81,22 @@ TEST( TokenizerTest, tokenizationTest )
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwReturn );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< double >( it->value() ) );
         EXPECT_EQ( std::get< double >( it->value() ), 5 );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
         EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::OpLessThan );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< double >( it->value() ) );
         EXPECT_EQ( std::get< double >( it->value() ), 2 );
 
-        it++;
+        ++it;
 
         EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
     }
