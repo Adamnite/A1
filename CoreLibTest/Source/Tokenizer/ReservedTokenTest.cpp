@@ -49,6 +49,10 @@ TEST( ReservedTokenTest, operatorTest )
         EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpDiv );
     }
     {
+        A1::PushBackStream stream{ "<" };
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLessThan );
+    }
+    {
         A1::PushBackStream stream{ "/=" };
         EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpDivAssign );
     }

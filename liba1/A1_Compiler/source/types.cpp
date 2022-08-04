@@ -8,16 +8,16 @@ namespace stork {
 		const size_t idx1 = t1.index();
 		const size_t idx2 = t2.index();
 		
-		if (idx1 != idx2) {
+		if (idx1 != idx2) {//different types
 			return idx1 < idx2;
 		}
 		
 		switch (idx1) {
-			case 0:
+			case 0://simple_type
 				return std::get<0>(t1) < std::get<0>(t2);
-			case 1:
+			case 1://array_type
 				return std::get<1>(t1).inner_type_id < std::get<1>(t2).inner_type_id;
-			case 2:
+			case 2://function_type
 			{
 				const function_type& ft1 = std::get<2>(t1);
 				const function_type& ft2 = std::get<2>(t2);
@@ -40,7 +40,7 @@ namespace stork {
 				}
 				return false;
 			}
-			case 3:
+			case 3://tuple_type
 			{
 				const tuple_type& tt1 = std::get<3>(t1);
 				const tuple_type& tt2 = std::get<3>(t2);
@@ -56,7 +56,7 @@ namespace stork {
 				}
 				return false;
 			}
-			case 4:
+			case 4://init_list_type
 			{
 				const init_list_type& ilt1 = std::get<4>(t1);
 				const init_list_type& ilt2 = std::get<4>(t2);
