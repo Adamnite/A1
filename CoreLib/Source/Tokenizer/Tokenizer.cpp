@@ -57,7 +57,6 @@ namespace
             result.push_back( static_cast< char >( *c ) );
         }
 
-
         if ( auto const keyword{ getKeyword( result ) }; keyword != ReservedToken::Unknown )
         {
             return Token{ keyword, stream.lineNumber(), stream.charIndex() };
