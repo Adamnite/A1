@@ -1,4 +1,7 @@
 set( SOURCES
+    ${CMAKE_CURRENT_LIST_DIR}/Source/Parser/ExpressionTreeNode.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/Parser/Operator.cpp
+
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/ReservedToken.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Token.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Tokenizer.cpp
