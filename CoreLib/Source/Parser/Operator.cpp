@@ -76,6 +76,7 @@ OperatorPrecedence getOperatorPrecedence( OperatorType const type ) noexcept
             break;
     }
 
+    ASSERT( false );
     return OperatorPrecedence::Count;
 }
 
@@ -128,6 +129,7 @@ std::size_t getNumberOfOperands( OperatorType const type ) noexcept
             break;
     }
 
+    ASSERT( false );
     return 0U;
 }
 
