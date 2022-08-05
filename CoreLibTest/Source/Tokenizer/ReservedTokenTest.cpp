@@ -42,7 +42,7 @@ TEST( ReservedTokenTest, operatorTest )
 {
     {
         A1::PushBackStream stream{ "<<=" };
-        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLeftShiftAssign );
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpAssignBitwiseLeftShift );
     }
     {
         A1::PushBackStream stream{ "/" };
@@ -54,7 +54,15 @@ TEST( ReservedTokenTest, operatorTest )
     }
     {
         A1::PushBackStream stream{ "/=" };
-        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpDivAssign );
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpAssignDiv );
+    }
+    {
+        A1::PushBackStream stream{ "&" };
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpBitwiseAnd );
+    }
+    {
+        A1::PushBackStream stream{ "&&" };
+        EXPECT_PRED_FORMAT2( areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLogicalAnd );
     }
     {
         A1::PushBackStream stream{ "random" };

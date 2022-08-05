@@ -36,6 +36,8 @@ enum class [[ nodiscard ]] OperatorPrecedence : std::uint8_t
     Group11,
     Group12,
     Group13,
+    Group14,
+    Group15,
 
     // Number of possible operator precedences
     Count
@@ -54,10 +56,10 @@ enum class [[ nodiscard ]] OperatorAssociativity : std::uint8_t
     Count
 };
 
-OperatorPrecedence    getOperatorPrecedence   ( OperatorType       const type       ) noexcept;
-OperatorAssociativity getOperatorAssociativity( OperatorPrecedence const precedence ) noexcept;
+OperatorPrecedence    getOperatorPrecedence   ( OperatorType const type ) noexcept;
+OperatorAssociativity getOperatorAssociativity( OperatorType const type ) noexcept;
 
 [[ nodiscard ]]
-std::size_t getNumberOfOperands( OperatorType const type ) noexcept;
+std::size_t getOperandsCount( OperatorType const type ) noexcept;
 
 } // namespace A1
