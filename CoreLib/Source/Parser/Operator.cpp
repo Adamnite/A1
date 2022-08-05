@@ -7,7 +7,7 @@
 
 #include "Operator.hpp"
 
-#include <CoreLib/Utils/Macros.hpp>
+#include "Utils/Macros.hpp"
 
 namespace A1
 {

@@ -7,7 +7,7 @@
 
 #include <CoreLib/Tokenizer/Token.hpp>
 
-#include <CoreLib/Utils/Utils.hpp>
+#include "Utils/Utils.hpp"
 
 namespace A1
 {
