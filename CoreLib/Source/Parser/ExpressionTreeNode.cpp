@@ -33,15 +33,28 @@ namespace
 
 Node::Node
 (
+    ValueType         value,
+    std::size_t const lineNumber,
+    std::size_t const charIndex
+)
+: value_     { std::move( value  ) }
+, typeID_    { getTypeID( value_ ) }
+, lineNumber_{ lineNumber          }
+, charIndex_ { charIndex           }
+{}
+
+Node::Node
+(
     ValueType                    value,
     std::vector< Pointer >       children,
     std::size_t            const lineNumber,
     std::size_t            const charIndex
-) : value_     { std::move( value    ) }
-  , children_  { std::move( children ) }
-  , typeID_    { getTypeID( value_ )   }
-  , lineNumber_{ lineNumber            }
-  , charIndex_ { charIndex             }
+)
+: value_     { std::move( value    ) }
+, children_  { std::move( children ) }
+, typeID_    { getTypeID( value_ )   }
+, lineNumber_{ lineNumber            }
+, charIndex_ { charIndex             }
 {}
 
 } // namespace A1

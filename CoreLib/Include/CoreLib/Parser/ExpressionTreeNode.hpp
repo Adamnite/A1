@@ -22,43 +22,62 @@ enum class OperatorType : std::uint8_t
 {
     Unknown,
 
-    Call,                // ( <operand>, <operand>, ... )
+    Call,                    // ( <operand>, <operand>, ... )
+    Index,                   // [ <operand> ]
 
-    Exponent,            // <operand> ** <operand>
+    Exponent,                // <operand> ** <operand>
 
-    UnaryPlus,           // + <operand>
-    UnaryMinus,          // - <operand>
+    UnaryPlus,               // + <operand>
+    UnaryMinus,              // - <operand>
 
-    Multiplication,      // <operand> *  <operand>
-    Division,            // <operand> /  <operand>
-    FloorDivision,       // <operand> // <operand>
-    Modulus,             // <operand> %  <operand>
+    Multiplication,          // <operand>  * <operand>
+    Division,                // <operand>  / <operand>
+    FloorDivision,           // <operand> // <operand>
+    Modulus,                 // <operand>  % <operand>
 
-    Addition,            // <operand> + <operand>
-    Subtraction,         // <operand> - <operand>
+    Addition,                // <operand> + <operand>
+    Subtraction,             // <operand> - <operand>
 
-    BitwiseLeftShift,    // <operand> << <operand>
-    BitwiseRightShift,   // <operand> >> <operand>
-    BitwiseAnd,          // <operand> & <operand>
-    BitwiseOr,           // <operand> | <operand>
-    BitwiseXor,          // <operand> ^ <operand>
-    BitwiseNot,          // ~ <operand>
+    BitwiseLeftShift,        // <operand> << <operand>
+    BitwiseRightShift,       // <operand> >> <operand>
+    BitwiseAnd,              // <operand>  & <operand>
+    BitwiseOr,               // <operand>  | <operand>
+    BitwiseXor,              // <operand>  ^ <operand>
+    BitwiseNot,              // ~ <operand>
 
-    Equality,            // <operand> == <operand>
-    Inequality,          // <operand> != <operand>
-    GreaterThan,         // <operand> >  <operand>
-    GreaterThanEqual,    // <operand> >= <operand>
-    LessThan,            // <operand> <  <operand>
-    LessThanEqual,       // <operand> <= <operand>
+    Equality,                // <operand> == <operand>
+    Inequality,              // <operand> != <operand>
+    GreaterThan,             // <operand>  > <operand>
+    GreaterThanEqual,        // <operand> >= <operand>
+    LessThan,                // <operand>  < <operand>
+    LessThanEqual,           // <operand> <= <operand>
 
-    IsIdentical,         // <operand> is     <operand>
-    IsNotIdentical,      // <operand> is not <operand>
-    IsMemberOf,          // <operand> in     <operand>
-    IsNotMemberOf,       // <operand> not in <operand>
+    IsIdentical,             // <operand> is     <operand>
+    IsNotIdentical,          // <operand> is not <operand>
+    IsMemberOf,              // <operand> in     <operand>
+    IsNotMemberOf,           // <operand> not in <operand>
 
-    LogicalNot,          // ! <operand>
-    LogicalAnd,          // <operand> && <operand>
-    LogicalOr,           // <operand> || <operand>
+    LogicalNot,              // ! <operand>
+    LogicalAnd,              // <operand> && <operand>
+    LogicalOr,               // <operand> || <operand>
+
+    Assign,                  // <operand> = <operand>
+
+    AssignExponent,          // <operand> **= <operand>
+
+    AssignAddition,          // <operand> += <operand>
+    AssignSubtraction,       // <operand> -= <operand>
+
+    AssignMultiplication,    // <operand>  *= <operand>
+    AssignDivision,          // <operand>  /= <operand>
+    AssignFloorDivision,     // <operand> //= <operand>
+    AssignModulus,           // <operand>  %= <operand>
+
+    AssignBitwiseLeftShift,  // <operand> <<= <operand>
+    AssignBitwiseRightShift, // <operand> >>= <operand>
+    AssignBitwiseAnd,        // <operand>  &= <operand>
+    AssignBitwiseOr,         // <operand>  |= <operand>
+    AssignBitwiseXor,        // <operand>  ^= <operand>
 
     // Number of possible node operations
     Count
@@ -69,6 +88,13 @@ class Node
 public:
     using Pointer   = std::unique_ptr< Node >;
     using ValueType = std::variant< Identifier, OperatorType, std::string, double >;
+
+    Node
+    (
+        ValueType         value,
+        std::size_t const lineNumber,
+        std::size_t const charIndex
+    );
 
     Node
     (

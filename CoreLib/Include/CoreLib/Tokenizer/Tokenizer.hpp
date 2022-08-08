@@ -23,6 +23,7 @@ public:
     using value_type        = Token;
     using pointer           = value_type *;
     using reference         = value_type &;
+    using const_pointer     = value_type const *;
     using const_reference   = value_type const &;
 
     TokenIterator( PushBackStream stream )
@@ -37,6 +38,7 @@ public:
 
     [[ nodiscard ]] const_reference operator* () const { return  current_; }
     [[ nodiscard ]] reference       operator* ()       { return  current_; }
+    [[ nodiscard ]] const_pointer   operator->() const { return &current_; }
     [[ nodiscard ]] pointer         operator->()       { return &current_; }
 
 private:

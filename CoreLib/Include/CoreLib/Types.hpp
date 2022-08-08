@@ -49,4 +49,14 @@ struct FunctionType
     std::vector< ParameterType > parameterTypeIDs{};
 };
 
+namespace Registry
+{
+
+[[ nodiscard ]] TypeID getHandle( Type const & type ) noexcept;
+
+[[ nodiscard ]] TypeID getNumberHandle       () noexcept;
+[[ nodiscard ]] TypeID getStringLiteralHandle() noexcept;
+
+} // namespace Registry
+
 } // namespace A1
