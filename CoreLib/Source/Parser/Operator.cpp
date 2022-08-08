@@ -112,17 +112,19 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
         /**
          * Since the number of arguments in a function call is variable,
          * detecting it is done by the parser itself.
+         * The only operand that's certain to exist is the function name
+         * identifier.
          */
         case OperatorType::Call:
-            return 0U;
+            return 1U;
 
-        case OperatorType::Index:
         case OperatorType::UnaryPlus:
         case OperatorType::UnaryMinus:
         case OperatorType::BitwiseNot:
         case OperatorType::LogicalNot:
             return 1U;
 
+        case OperatorType::Index:
         case OperatorType::Exponent:
         case OperatorType::Multiplication:
         case OperatorType::Division:

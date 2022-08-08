@@ -21,9 +21,24 @@ namespace
 {
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
-        if ( std::holds_alternative< Eof >( token.value() ) )
+        if ( std::holds_alternative< Eof >( token.value() ) ) { return true; }
+
+        if
+        (
+            auto const & value{ token.value() };
+            std::holds_alternative< ReservedToken >( value )
+        )
         {
-            return true;
+            if
+            (
+                auto const reservedToken{ std::get< ReservedToken >( value ) };
+                reservedToken == ReservedToken::OpCallClose  ||
+                reservedToken == ReservedToken::OpIndexClose ||
+                reservedToken == ReservedToken::OpComma
+            )
+            {
+                return true;
+            }
         }
 
         return false;
@@ -55,6 +70,8 @@ namespace
             .charIndex     = charIndex,                                 \
             .operandsCount = getOperandsCount( OperatorType::operator ) \
         }
+
+#define IGNORE_TOKEN( token ) case ReservedToken::token: break;
 
         switch ( token )
         {
@@ -150,9 +167,17 @@ namespace
             MAP_TOKEN_TO_OPERATOR( OpLessThanEqual   , LessThanEqual    );
             MAP_TOKEN_TO_OPERATOR( OpNotEqual        , Inequality       );
 
+            IGNORE_TOKEN( OpCallClose  );
+            IGNORE_TOKEN( OpIndexClose );
+            IGNORE_TOKEN( OpComma      );
+
             default:
                 throw std::runtime_error( "Syntax error - unexpected token" );
         }
+
+        return {};
+
+#undef IGNORE_TOKEN
 
 #undef MAP_TOKEN_TO_OPERATOR
 
@@ -193,13 +218,13 @@ namespace
         std::size_t                 const   charIndex
     )
     {
-        auto const & lastOperator { operators.top() };
+        auto const & lastOperator{ operators.top() };
 
         if ( operands.size() < lastOperator.operandsCount )
         {
             ( void ) lineNumber;
             ( void ) charIndex;
-            throw std::runtime_error( "Compiler error" );
+            throw std::runtime_error( "Compile error" );
         }
 
         std::vector< Node::Pointer > lastOperatorOperands;
@@ -221,6 +246,8 @@ namespace
                 lastOperator.charIndex
             )
         );
+
+        operators.pop();
     }
 } // namespace
 
@@ -246,6 +273,8 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     isTokenPrefix
                 )
             };
+
+            if ( operatorInfo.type == OperatorType::Unknown ) { continue; }
 
             if ( operatorInfo.type == OperatorType::Call && expectingOperand )
             {
@@ -334,7 +363,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             operators.push( operatorInfo );
 
-            // TODO: set expecting operand
+            expectingOperand = true;
         }
         else
         {
@@ -346,18 +375,16 @@ Node::Pointer parse( TokenIterator & tokenIt )
             operands.push( parseOperand( tokenIt ) );
             expectingOperand = false;
         }
+    }
 
-        if ( expectingOperand )
-        {
-            if ( operands.empty() )
-            {
-                return nullptr;
-            }
-            else
-            {
-                throw std::runtime_error( "Syntax error - expecting an operand" );
-            }
-        }
+    if ( expectingOperand && operands.empty() )
+    {
+        throw std::runtime_error( "Syntax error - expecting an operand" );
+    }
+
+    while ( !operators.empty() )
+    {
+        popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
     }
 
     return std::move( operands.top() );
