@@ -47,15 +47,20 @@ namespace
     {
         std::string result;
 
+        std::optional< int > lastChar;
+
         for
         (
-            auto c{ stream.pop() };
-            c && ( getCharType( *c ) == CharType::Alphanumeric || *c == '.' || *c == '_' );
-            c = stream.pop()
+            lastChar = stream.pop();
+            lastChar && ( getCharType( *lastChar ) == CharType::Alphanumeric || *lastChar == '.' || *lastChar == '_' );
+            lastChar = stream.pop()
         )
         {
-            result.push_back( static_cast< char >( *c ) );
+            result.push_back( static_cast< char >( *lastChar ) );
         }
+
+        // return last character back to the stream
+        if ( lastChar ) { stream.push( *lastChar ); }
 
         if ( auto const keyword{ getKeyword( result ) }; keyword != ReservedToken::Unknown )
         {
@@ -132,7 +137,7 @@ namespace
                     continue;
 
                 case CharType::Comment:
-                    skipComment(stream);
+                    skipComment( stream );
                     continue;
 
                 case CharType::Alphanumeric:
