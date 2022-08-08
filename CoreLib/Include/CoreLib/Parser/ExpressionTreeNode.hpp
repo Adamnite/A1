@@ -107,14 +107,17 @@ public:
     [[ nodiscard ]] ValueType              const & value   () const noexcept { return value_;    }
     [[ nodiscard ]] std::vector< Pointer > const & children() const noexcept { return children_; }
 
+    [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
+    [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
+
 private:
     ValueType              value_;
     std::vector< Pointer > children_;
 
     TypeID typeID_{ nullptr };
 
-    [[ maybe_unused ]] std::size_t lineNumber_{ 0U };
-    [[ maybe_unused ]] std::size_t charIndex_ { 0U };
+    std::size_t lineNumber_{ 0U };
+    std::size_t charIndex_ { 0U };
 };
 
 } // namespace A1

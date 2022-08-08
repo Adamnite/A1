@@ -11,6 +11,7 @@
 #include "Utils/Macros.hpp"
 #include "Operator.hpp"
 
+#include <stdexcept>
 #include <cstdint>
 
 namespace A1
@@ -150,7 +151,7 @@ namespace
             MAP_TOKEN_TO_OPERATOR( OpNotEqual        , Inequality       );
 
             default:
-                throw std::runtime_error( "Syntax error - unexpected" );
+                throw std::runtime_error( "Syntax error - unexpected token" );
         }
 
 #undef MAP_TOKEN_TO_OPERATOR
@@ -174,7 +175,7 @@ namespace
             return std::make_unique< Node >( std::get< Identifier >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
 
-        throw std::runtime_error( "Syntax error - unexpected" );
+        throw std::runtime_error( "Syntax error - unexpected operand" );
     }
 
     bool hasHigherPrecedence( OperatorInfo const & lhs, OperatorInfo const & rhs ) noexcept
@@ -204,9 +205,9 @@ namespace
         std::vector< Node::Pointer > lastOperatorOperands;
         lastOperatorOperands.resize( lastOperator.operandsCount );
 
-        for ( auto i{ lastOperator.operandsCount - 1 }; i >= 0; --i )
+        for ( auto i{ lastOperator.operandsCount }; i > 0U; --i )
         {
-            lastOperatorOperands[ i ] = std::move( operands.top() );
+            lastOperatorOperands[ i - 1 ] = std::move( operands.top() );
             operands.pop();
         }
 
@@ -339,7 +340,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
         {
             if ( !expectingOperand )
             {
-                throw std::runtime_error( "Syntax error - unexpected" );
+                throw std::runtime_error( "Syntax error" );
             }
 
             operands.push( parseOperand( tokenIt ) );

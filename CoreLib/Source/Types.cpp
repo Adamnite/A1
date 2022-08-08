@@ -35,6 +35,8 @@ TypeID getHandle( Type const & type ) noexcept
                     case PrimitiveType::Count:
                         return nullptr;
                 }
+
+                return nullptr;
             },
             []( ArrayType const ) noexcept -> TypeID
             {
