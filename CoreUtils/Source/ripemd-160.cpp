@@ -1,4 +1,4 @@
-#include "ripemd-160.h"
+#include "CoreUtils/ripemd-160.h"
 
 unsigned int inv(unsigned int a)
 {
@@ -260,7 +260,7 @@ string ripemd160_file(char *str)
     int how_many_blocks_modified = 1;
 
     if (size_of_last_block >= 56)
-        how_many_blocks_modified++;
+        ++how_many_blocks_modified;
 
     unsigned int h0 = 0x67452301;
     unsigned int h1 = 0xefcdab89;
@@ -360,7 +360,7 @@ string ripemd160_str(string str)
 
     unsigned long long file_size = str.length();
     byte bytes[file_size];
-
+    
     std::memcpy(bytes, str.data(), file_size);
     int size_of_last_block = file_size % 64;
     
@@ -372,7 +372,7 @@ string ripemd160_str(string str)
         number_of_zero_bytes = 64 - size_of_last_block + 56;
    
     unsigned long long num_of_blocks = (file_size + number_of_zero_bytes + 8) / 64;
-    
+
     int how_many_blocks_modified = 1;
 
     if (size_of_last_block >= 56)
@@ -388,7 +388,7 @@ string ripemd160_str(string str)
 
     byte X[64];
     unsigned int foo[16];
-
+    
     unsigned long long start = 0;
     for (unsigned long long i = 0; i < num_of_blocks - how_many_blocks_modified; i++)
     {
@@ -400,22 +400,19 @@ string ripemd160_str(string str)
         {
             foo[j] = 256 * 256 * 256 * (int)(X[4 * j + 3]) + 256 * 256 * int(X[4 * j + 2]) + 256 * int(X[4 * j + 1]) + int(X[4 * j]);
         }
-        //  = *((unsigned int[])*X);//converting byte array to int array
+    
 
         block_hash(foo, h0, h1, h2, h3, h4);
     }
-
+    
     if (size_of_last_block < 56)
     {
         unsigned char buf[64];
         
-        // fread(buf, 1, size_of_last_block, ff);
-        // std::copy(bytes + start, bytes + start + size_of_last_block, buf);//getting last block of data into buf
         for (int i=0; i<size_of_last_block; i++){
-            buf[i] = (unsigned char)(foo[start + i]);
+            buf[i] = (unsigned char)(bytes[start + i]);
         }
 
-        // fclose(ff);
 
         int it = size_of_last_block;
 
@@ -442,7 +439,7 @@ string ripemd160_str(string str)
         // fread(buf, 1, size_of_last_block, ff);
         // std::copy(bytes + start, bytes + start + size_of_last_block, buf);//getting last block of data into buf
         for (int i=0; i<size_of_last_block; i++){
-            buf[i] = (unsigned char)(foo[start + i]);
+            buf[i] = (unsigned char)(bytes[start + i]);
         }
 
         // fclose(ff);
