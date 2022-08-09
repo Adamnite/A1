@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <CoreLib/PushBackStream.hpp>
+#include <CoreLib/Utils/PushBackStream.hpp>
 
 #include <string_view>
 #include <cstdint>
@@ -19,6 +19,13 @@ enum class ReservedToken : std::uint8_t
 {
     Unknown,
 
+    OpCallOpen,
+    OpCallClose,
+    OpIndexOpen,
+    OpIndexClose,
+
+    OpComma,
+
     // Arithmetic operators
     OpAdd,
     OpDiv,
@@ -29,29 +36,34 @@ enum class ReservedToken : std::uint8_t
     OpSub,
 
     // Bitwise operators
-    OpAnd,
-    OpLeftShift,
-    OpNot,
-    OpOr,
-    OpRightShift,
-    OpXor,
+    OpBitwiseAnd,
+    OpBitwiseLeftShift,
+    OpBitwiseNot,
+    OpBitwiseOr,
+    OpBitwiseRightShift,
+    OpBitwiseXor,
+
+    // Logical operators
+    OpLogicalAnd,
+    OpLogicalNot,
+    OpLogicalOr,
 
     // Assignment operators
     OpAssign,
-    OpAddAssign,
-    OpDivAssign,
-    OpExpAssign,
-    OpFloorDivAssign,
-    OpModAssign,
-    OpMulAssign,
-    OpSubAssign,
+    OpAssignAdd,
+    OpAssignDiv,
+    OpAssignExp,
+    OpAssignFloorDiv,
+    OpAssignMod,
+    OpAssignMul,
+    OpAssignSub,
 
     // Bitwise assignment operators
-    OpAndAssign,
-    OpOrAssign,
-    OpXorAssign,
-    OpLeftShiftAssign,
-    OpRightShiftAssign,
+    OpAssignBitwiseAnd,
+    OpAssignBitwiseLeftShift,
+    OpAssignBitwiseOr,
+    OpAssignBitwiseRightShift,
+    OpAssignBitwiseXor,
 
     // Comparison operators
     OpEqual,
@@ -60,7 +72,6 @@ enum class ReservedToken : std::uint8_t
     OpLessThan,
     OpLessThanEqual,
     OpNotEqual,
-
 
     // Keywords
     KwAnd,

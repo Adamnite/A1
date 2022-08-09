@@ -28,6 +28,16 @@ target_link_libraries(
     gtest_main
 )
 
+target_compile_definitions(
+    CoreLibTests PRIVATE
+    -DENABLED_TESTING
+)
+
+target_include_directories(
+    CoreLibTests
+    PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source
+)
+
 # Include GoogleTest module for gtest_discover_tests function
 include( GoogleTest )
 

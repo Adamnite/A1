@@ -7,14 +7,10 @@
 
 #include <CoreLib/Tokenizer/Token.hpp>
 
+#include "Utils/Utils.hpp"
+
 namespace A1
 {
-
-namespace
-{
-    template< typename ... Ts > struct Overload : Ts... { using Ts::operator()...; };
-    template< typename ... Ts > Overload( Ts ... ) -> Overload< Ts ... >;
-} // namespace
 
 std::string Token::toString() const noexcept
 {

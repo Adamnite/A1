@@ -47,15 +47,20 @@ namespace
     {
         std::string result;
 
+        std::optional< int > lastChar;
+
         for
         (
-            auto c{ stream.pop() };
-            c && ( getCharType( *c ) == CharType::Alphanumeric || *c == '.' || *c == '_' );
-            c = stream.pop()
+            lastChar = stream.pop();
+            lastChar && ( getCharType( *lastChar ) == CharType::Alphanumeric || *lastChar == '.' || *lastChar == '_' );
+            lastChar = stream.pop()
         )
         {
-            result.push_back( static_cast< char >( *c ) );
+            result.push_back( static_cast< char >( *lastChar ) );
         }
+
+        // return last character back to the stream
+        if ( lastChar ) { stream.push( *lastChar ); }
 
         if ( auto const keyword{ getKeyword( result ) }; keyword != ReservedToken::Unknown )
         {
@@ -122,7 +127,7 @@ namespace
         // TODO: Throw a parsing error instead
     }
 
-    [[ nodiscard ]] Token tokenize( PushBackStream & stream )
+    [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )
     {
         while ( auto const c{ stream.pop() } )
         {
@@ -132,7 +137,7 @@ namespace
                     continue;
 
                 case CharType::Comment:
-                    skipComment(stream);
+                    skipComment( stream );
                     continue;
 
                 case CharType::Alphanumeric:
@@ -161,7 +166,7 @@ namespace
 
 TokenIterator & TokenIterator::operator++()
 {
-    current_ = tokenize( stream_ );
+    current_ = tokenizeImpl( stream_ );
     return *this;
 }
 
@@ -170,6 +175,11 @@ TokenIterator TokenIterator::operator++(int)
     auto tmp{ *this };
     ++*this;
     return tmp;
+}
+
+TokenIterator tokenize( PushBackStream stream )
+{
+    return { std::move( stream ) };
 }
 
 } // namespace A1

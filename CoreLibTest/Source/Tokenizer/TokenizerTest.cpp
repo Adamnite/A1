@@ -7,71 +7,137 @@
 
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
+#include "TestUtils.hpp"
+
 #include <gtest/gtest.h>
 
-namespace
-{
-    testing::AssertionResult areEqual
-    (
-        char const *,
-        char const *,
-        A1::ReservedToken const value1,
-        A1::ReservedToken const value2
-    )
-    {
-        if ( value1 == value2 ) { return testing::AssertionSuccess(); }
-
-        return testing::AssertionFailure()
-            << "Expected "                << A1::toStringView( value2 )
-            << " reserved token but got " << A1::toStringView( value1 );
-    }
-} // namespace
-
-TEST( TokenizerTest, tokenizationTest )
+TEST( TokenizerTest, tokenization )
 {
     {
-        A1::TokenIterator it{ A1::PushBackStream{ "my_variable = 5" } };
+        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "my_variable = 5" } ) };
 
-        EXPECT_TRUE( std::holds_alternative< A1::Identifier >( it->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( it->value() ).name, "my_variable" );
+        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "my_variable" );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
-        EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::OpAssign );
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpAssign );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< double >( it->value() ) );
-        EXPECT_EQ( std::get< double >( it->value() ), 5. );
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 5. );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
     }
     {
-        A1::TokenIterator it{ A1::PushBackStream{ "if my_variable == \"foo\"" } };
+        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "if my_variable == \"foo\"" } ) };
 
-        EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
-        EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::KwIf );
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::KwIf );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< A1::Identifier >( it->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( it->value() ).name, "my_variable" );
+        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "my_variable" );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< A1::ReservedToken >( it->value() ) );
-        EXPECT_PRED_FORMAT2( areEqual, std::get< A1::ReservedToken >( it->value() ), A1::ReservedToken::OpEqual );
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpEqual );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< std::string >( it->value() ) );
-        EXPECT_EQ( std::get< std::string >( it->value() ), "foo" );
+        ASSERT_TRUE( std::holds_alternative< std::string >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< std::string >( tokenIt->value() ), "foo" );
 
-        ++it;
+        ++tokenIt;
 
-        EXPECT_TRUE( std::holds_alternative< A1::Eof >( it->value() ) );
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+    }
+    {
+        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "return 5 < 2 # comment" } ) };
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::KwReturn );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 5 );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpLessThan );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 2 );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+    }
+    {
+        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "fun(1, 2, 3)" } ) };
+
+        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "fun" );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpCallOpen );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 1 );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpComma );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 2 );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpComma );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
+        EXPECT_EQ( std::get< double >( tokenIt->value() ), 3 );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
+        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpCallClose );
+
+        ++tokenIt;
+
+        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
     }
 }
