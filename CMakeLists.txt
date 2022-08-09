@@ -14,10 +14,12 @@ if( CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
 endif()
 
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib/CoreLib.cmake )
+include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtils/CoreUtils.cmake )
 
 option( CoreLib_ENABLE_TESTING "Enable testing" OFF )
 message( "CoreLib testing enabled: ${CoreLib_ENABLE_TESTING}" )
 
 if( CoreLib_ENABLE_TESTING )
     include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest/CoreLibTest.cmake )
+    include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtilsTest/CoreUtilsTest.cmake )
 endif()
