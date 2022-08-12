@@ -92,16 +92,16 @@ public:
     Node
     (
         ValueType         value,
-        std::size_t const lineNumber,
-        std::size_t const charIndex
+        std::size_t const lineNumber = 0U,
+        std::size_t const charIndex  = 0U
     );
 
     Node
     (
         ValueType                    value,
         std::vector< Pointer >       children,
-        std::size_t            const lineNumber,
-        std::size_t            const charIndex
+        std::size_t            const lineNumber = 0U,
+        std::size_t            const charIndex  = 0U
     );
 
     [[ nodiscard ]] ValueType              const & value   () const noexcept { return value_;    }

@@ -16,31 +16,31 @@ namespace
     template< typename T >
     void match( T && token, std::size_t const tokenIndex, A1::TokenIterator const & tokenIt )
     {
-        using U = std::remove_cvref_t< T >;
+        using CleanT = std::remove_cvref_t< T >;
 
-        ASSERT_TRUE( std::holds_alternative< U >( tokenIt->value() ) )
+        ASSERT_TRUE( std::holds_alternative< CleanT >( tokenIt->value() ) )
             << "Token at position " << ( tokenIndex + 1 ) << " is of an incorrect type";
 
-        if constexpr ( std::same_as< U, A1::ReservedToken > )
+        if constexpr ( std::same_as< CleanT, A1::ReservedToken > )
         {
             ASSERT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), token );
         }
-        else if constexpr ( std::same_as< U, A1::Identifier > )
+        else if constexpr ( std::same_as< CleanT, A1::Identifier > )
         {
             ASSERT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, token.name );
         }
-        else if constexpr ( std::same_as< U, A1::Number > )
+        else if constexpr ( std::same_as< CleanT, A1::Number > )
         {
             ASSERT_EQ( std::get< A1::Number >( tokenIt->value() ), token );
         }
-        else if constexpr ( std::same_as< U, A1::String > )
+        else if constexpr ( std::same_as< CleanT, A1::String > )
         {
             ASSERT_EQ( std::get< A1::String >( tokenIt->value() ), token );
         }
     }
 
     template< typename ... Ts >
-    void matchTokenization( std::string_view const expression, Ts ... tokens )
+    void matchTokenization( std::string_view const expression, Ts && ... tokens )
     {
         std::size_t tokenIndex{ 0U };
 
