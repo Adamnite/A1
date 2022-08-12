@@ -71,7 +71,7 @@ namespace
             if ( std::isdigit( result.front() ) )
             {
                 char * endPtr{ nullptr };
-                double number{ std::strtod( result.data(), &endPtr ) };
+                Number number{ std::strtod( result.data(), &endPtr ) };
 
                 if ( endPtr == result.data() )
                 {
@@ -88,7 +88,7 @@ namespace
 
     [[ nodiscard ]] Token getString( PushBackStream & stream )
     {
-        std::string result;
+        String result;
 
         auto escaped{ false };
 
@@ -123,8 +123,8 @@ namespace
             }
         }
 
+        // TODO: Throw a parsing error
         return {};
-        // TODO: Throw a parsing error instead
     }
 
     [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )

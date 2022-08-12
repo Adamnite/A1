@@ -18,15 +18,20 @@ namespace A1
 struct Identifier
 {
     std::string name;
+
+    [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
 struct Eof
 {};
 
+using Number = double;
+using String = std::string;
+
 class Token
 {
 public:
-    using ValueType = std::variant< ReservedToken, Identifier, double, std::string, Eof >;
+    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Eof >;
 
     Token() noexcept = default;
     Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )

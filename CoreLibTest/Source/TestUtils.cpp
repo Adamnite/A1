@@ -21,8 +21,8 @@ testing::AssertionResult areEqual
     if ( value1 == value2 ) { return testing::AssertionSuccess(); }
 
     return testing::AssertionFailure()
-        << "Expected "                << A1::toStringView( value2 )
-        << " reserved token but got " << A1::toStringView( value1 );
+        << "Expected '"                << A1::toStringView( value2 ) << "'"
+        << " reserved token but got '" << A1::toStringView( value1 ) << "'";
 }
 
 } // namespace A1

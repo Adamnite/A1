@@ -111,6 +111,7 @@ namespace
         StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
         StringifiedToken{ "//=", ReservedToken::OpAssignFloorDiv          },
         StringifiedToken{ "/=" , ReservedToken::OpAssignDiv               },
+        StringifiedToken{ ":"  , ReservedToken::OpColon                   },
         StringifiedToken{ "<"  , ReservedToken::OpLessThan                },
         StringifiedToken{ "<<" , ReservedToken::OpBitwiseLeftShift        },
         StringifiedToken{ "<<=", ReservedToken::OpAssignBitwiseLeftShift  },

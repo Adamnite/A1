@@ -11,133 +11,178 @@
 
 #include <gtest/gtest.h>
 
+namespace
+{
+    template< typename T >
+    void match( T && token, std::size_t const tokenIndex, A1::TokenIterator const & tokenIt )
+    {
+        using U = std::remove_cvref_t< T >;
+
+        ASSERT_TRUE( std::holds_alternative< U >( tokenIt->value() ) )
+            << "Token at position " << ( tokenIndex + 1 ) << " is of an incorrect type";
+
+        if constexpr ( std::same_as< U, A1::ReservedToken > )
+        {
+            ASSERT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), token );
+        }
+        else if constexpr ( std::same_as< U, A1::Identifier > )
+        {
+            ASSERT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, token.name );
+        }
+        else if constexpr ( std::same_as< U, A1::Number > )
+        {
+            ASSERT_EQ( std::get< A1::Number >( tokenIt->value() ), token );
+        }
+        else if constexpr ( std::same_as< U, A1::String > )
+        {
+            ASSERT_EQ( std::get< A1::String >( tokenIt->value() ), token );
+        }
+    }
+
+    template< typename ... Ts >
+    void matchTokenization( std::string_view const expression, Ts ... tokens )
+    {
+        std::size_t tokenIndex{ 0U };
+
+        auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
+        ( match( tokens, tokenIndex++, tokenIt++ ), ... );
+    }
+} // namespace
+
 TEST( TokenizerTest, tokenization )
 {
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "my_variable = 5" } ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "my_variable" );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpAssign );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 5. );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+        constexpr auto expression{ "var = 5" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssign,
+                A1::Number{ 5 },
+                A1::Eof{}
+            )
+        ) << "Tokenization failure: '" << expression << "'";
     }
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "if my_variable == \"foo\"" } ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::KwIf );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "my_variable" );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpEqual );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< std::string >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< std::string >( tokenIt->value() ), "foo" );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+        constexpr auto expression{ "if var == \"foo\"" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
+                A1::ReservedToken::KwIf,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpEqual,
+                A1::String{ "foo" },
+                A1::Eof{}
+            )
+        ) << "Tokenization failure: '" << expression << "'";
     }
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "return 5 < 2 # comment" } ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::KwReturn );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 5 );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpLessThan );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 2 );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+        constexpr auto expression{ "return 5 < 2 # comment" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
+                A1::ReservedToken::KwReturn,
+                A1::Number{ 5 },
+                A1::ReservedToken::OpLessThan,
+                A1::Number{ 2 },
+                A1::Eof{},
+                A1::Eof{} // after first EOF, there should always be just EOF again
+            )
+        ) << "Tokenization failure: '" << expression << "'";
     }
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "fun(1, 2, 3)" } ) };
+        constexpr auto expression{ "fun(1, 2, 3)" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
+                A1::Identifier{ .name = "fun" },
+                A1::ReservedToken::OpCallOpen,
+                A1::Number{ 1 },
+                A1::ReservedToken::OpComma,
+                A1::Number{ 2 },
+                A1::ReservedToken::OpComma,
+                A1::Number{ 3 },
+                A1::ReservedToken::OpCallClose,
+                A1::Eof{},
+                A1::Eof{} // after first EOF, there should always be just EOF again
+            )
+        ) << "Tokenization failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "while var1 >= var2 && var3 == \"foo\"" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
+                A1::ReservedToken::KwWhile,
+                A1::Identifier{ .name = "var1" },
+                A1::ReservedToken::OpGreaterThanEqual,
+                A1::Identifier{ .name = "var2" },
+                A1::ReservedToken::OpLogicalAnd,
+                A1::Identifier{ .name = "var3" },
+                A1::ReservedToken::OpEqual,
+                A1::String{ "foo" },
+                A1::Eof{}
+            )
+        ) << "Tokenization failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression
+        {
+            "for key, value in items:\n"
+            "    if key in foo_dict:\n"
+            "        pass # avoid repeating keys\n"
+            "    else:\n"
+            "        foo_dict[key] = value"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchTokenization
+            (
+                expression,
 
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, "fun" );
+                // 1st line
+                A1::ReservedToken::KwFor,
+                A1::Identifier{ .name = "key" },
+                A1::ReservedToken::OpComma,
+                A1::Identifier{ .name = "value" },
+                A1::ReservedToken::KwIn,
+                A1::Identifier{ .name = "items" },
+                A1::ReservedToken::OpColon,
 
-        ++tokenIt;
+                // 2nd line
+                A1::ReservedToken::KwIf,
+                A1::Identifier{ .name = "key" },
+                A1::ReservedToken::KwIn,
+                A1::Identifier{ .name = "foo_dict" },
+                A1::ReservedToken::OpColon,
 
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpCallOpen );
+                // 3rd line
+                A1::ReservedToken::KwPass,
 
-        ++tokenIt;
+                // 4th line
+                A1::ReservedToken::KwElse,
+                A1::ReservedToken::OpColon,
 
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 1 );
+                // 5th line
+                A1::Identifier{ .name = "foo_dict" },
+                A1::ReservedToken::OpIndexOpen,
+                A1::Identifier{ .name = "key" },
+                A1::ReservedToken::OpIndexClose,
+                A1::ReservedToken::OpAssign,
+                A1::Identifier{ .name = "value" },
 
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpComma );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 2 );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpComma );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< double >( tokenIt->value() ) );
-        EXPECT_EQ( std::get< double >( tokenIt->value() ), 3 );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::ReservedToken >( tokenIt->value() ) );
-        EXPECT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), A1::ReservedToken::OpCallClose );
-
-        ++tokenIt;
-
-        ASSERT_TRUE( std::holds_alternative< A1::Eof >( tokenIt->value() ) );
+                A1::Eof{}
+            )
+        ) << "Tokenization failure: '" << expression << "'";
     }
 }
