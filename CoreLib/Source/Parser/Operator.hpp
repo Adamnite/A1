@@ -38,6 +38,7 @@ enum class [[ nodiscard ]] OperatorPrecedence : std::uint8_t
     Group13,
     Group14,
     Group15,
+    Group16,
 
     // Number of possible operator precedences
     Count

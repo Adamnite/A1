@@ -89,6 +89,15 @@ OperatorPrecedence getOperatorPrecedence( OperatorType const type ) noexcept
         case OperatorType::AssignBitwiseXor:
             return OperatorPrecedence::Group15;
 
+        /**
+         * All statements should fall into this precedence group
+         */
+        case OperatorType::StatementIf:
+        case OperatorType::StatementWhile:
+        case OperatorType::StatementPass:
+        case OperatorType::StatementReturn:
+            return OperatorPrecedence::Group16;
+
         case OperatorType::Unknown:
         case OperatorType::Count:
             break;
@@ -116,6 +125,22 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
          * identifier.
          */
         case OperatorType::Call:
+            return 1U;
+
+        /**
+         * Since the number of operands for if statement is variable,
+         * detecting it is done by the parser itself.
+         * It is certain that at least two operands should exist -
+         * if-condition and if-body.
+         */
+        case OperatorType::StatementIf:
+        case OperatorType::StatementWhile:
+            return 2U;
+
+        case OperatorType::StatementPass:
+            return 0U;
+
+        case OperatorType::StatementReturn:
             return 1U;
 
         case OperatorType::UnaryPlus:

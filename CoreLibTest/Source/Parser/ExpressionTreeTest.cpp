@@ -122,6 +122,64 @@ TEST( ExpressionTreeTest, parsing )
         ) << "Parsing failure: '" << expression << "'";
     }
     {
+        constexpr auto expression{ "return 1" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementReturn,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Number{ 1 } )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "return a < b" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementReturn,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::LessThan,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "a" } ),
+                                std::make_unique< Node >( A1::Identifier{ .name = "b" } )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "pass" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementPass
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
         constexpr auto expression
         {
             "if var == 5:\n"
@@ -164,6 +222,53 @@ TEST( ExpressionTreeTest, parsing )
                             (
                                 std::make_unique< Node >( A1::Identifier{ .name = "equal" } ),
                                 std::make_unique< Node >( A1::Number{ 2 }                   )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression
+        {
+            "while i < 5:\n"
+            "    i = i + 1"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementWhile,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::LessThan,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                std::make_unique< Node >( A1::Number{ 5 }               )
+                            )
+                        ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Assign,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                std::make_unique< Node >
+                                (
+                                    A1::OperatorType::Addition,
+                                    makeChildren
+                                    (
+                                        std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                        std::make_unique< Node >( A1::Number{ 1 }               )
+                                    )
+                                )
                             )
                         )
                     )

@@ -79,6 +79,11 @@ enum class OperatorType : std::uint8_t
     AssignBitwiseOr,         // <operand>  |= <operand>
     AssignBitwiseXor,        // <operand>  ^= <operand>
 
+    StatementIf,             // if <expression>
+    StatementWhile,          // while <expression>
+    StatementPass,           // pass
+    StatementReturn,         // return <expression>
+
     // Number of possible node operations
     Count
 };
