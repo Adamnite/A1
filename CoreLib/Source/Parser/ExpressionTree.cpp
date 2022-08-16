@@ -34,6 +34,8 @@ namespace
                 auto const reservedToken{ std::get< ReservedToken >( value ) };
                 reservedToken == ReservedToken::OpCallClose  ||
                 reservedToken == ReservedToken::OpIndexClose ||
+                reservedToken == ReservedToken::OpColon      ||
+                reservedToken == ReservedToken::KwElse       ||
                 reservedToken == ReservedToken::OpComma
             )
             {
@@ -167,12 +169,21 @@ namespace
             MAP_TOKEN_TO_OPERATOR( OpLessThanEqual   , LessThanEqual    );
             MAP_TOKEN_TO_OPERATOR( OpNotEqual        , Inequality       );
 
+            // Statements
+            MAP_TOKEN_TO_OPERATOR( KwIf    , StatementIf     );
+            MAP_TOKEN_TO_OPERATOR( KwWhile , StatementWhile  );
+            MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
+            MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
+
+            // Ignored tokens
             IGNORE_TOKEN( OpCallClose  );
             IGNORE_TOKEN( OpIndexClose );
+            IGNORE_TOKEN( OpColon      );
             IGNORE_TOKEN( OpComma      );
+            IGNORE_TOKEN( KwElse       );
 
             default:
-                throw std::runtime_error( "Syntax error - unexpected token" );
+                throw std::runtime_error( toStringView( token ).data() );
         }
 
         return {};
@@ -276,31 +287,6 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             if ( operatorInfo.type == OperatorType::Unknown ) { continue; }
 
-            if ( operatorInfo.type == OperatorType::Call && expectingOperand )
-            {
-                ++tokenIt; // skip opening parenthesis
-                operands.push( parse( tokenIt ) );
-
-                /**
-                 * Once we have parsed the expression inside parentheses, we need to check
-                 * if there is a matching closing parenthesis at the end.
-                 */
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( token ) &&
-                    std::get              < ReservedToken >( token ) == ReservedToken::OpCallClose
-                )
-                {
-                    expectingOperand = false;
-                    continue;
-                }
-                else
-                {
-                    throw std::runtime_error( "Syntax error - missing closing ')'" );
-                }
-            }
-
             if ( !operators.empty() && hasHigherPrecedence( operators.top(), operatorInfo ) )
             {
                 popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex() );
@@ -360,10 +346,69 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     throw std::runtime_error( "Syntax error - missing closing ']'" );
                 }
             }
+            else if ( operatorInfo.type == OperatorType::StatementIf )
+            {
+                ++tokenIt; // skip 'if' keyword
+
+                operands.push( parse( tokenIt ) ); // parse if condition
+
+                if
+                (
+                    auto const & token{ tokenIt->value() };
+                    std::holds_alternative< ReservedToken >( token ) &&
+                    std::get              < ReservedToken >( token ) == ReservedToken::OpColon
+                )
+                {
+                    ++tokenIt;
+                }
+                else
+                {
+                    throw std::runtime_error( "Syntax error - missing colon" );
+                }
+
+                operands.push( parse( tokenIt ) ); // parse if body
+
+                if
+                (
+                    auto const & token{ tokenIt->value() };
+                    std::holds_alternative< ReservedToken >( token ) &&
+                    std::get              < ReservedToken >( token ) == ReservedToken::KwElse
+                )
+                {
+                    ++tokenIt; // skip 'else'
+                    ++tokenIt; // skip ':'
+
+                    ++operatorInfo.operandsCount;
+
+                    operands.push( parse( tokenIt ) ); // parse else body
+                }
+            }
+            else if ( operatorInfo.type == OperatorType::StatementWhile )
+            {
+                ++tokenIt; // skip 'while' keyword
+
+                operands.push( parse( tokenIt ) ); // parse if condition
+
+                if
+                (
+                    auto const & token{ tokenIt->value() };
+                    std::holds_alternative< ReservedToken >( token ) &&
+                    std::get              < ReservedToken >( token ) == ReservedToken::OpColon
+                )
+                {
+                    ++tokenIt;
+                }
+                else
+                {
+                    throw std::runtime_error( "Syntax error - missing colon" );
+                }
+
+                operands.push( parse( tokenIt ) ); // parse while body
+            }
 
             operators.push( operatorInfo );
 
-            expectingOperand = true;
+            expectingOperand = operatorInfo.operandsCount != 0;
         }
         else
         {

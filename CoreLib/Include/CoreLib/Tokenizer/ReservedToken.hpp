@@ -24,6 +24,7 @@ enum class ReservedToken : std::uint8_t
     OpIndexOpen,
     OpIndexClose,
 
+    OpColon,
     OpComma,
 
     // Arithmetic operators

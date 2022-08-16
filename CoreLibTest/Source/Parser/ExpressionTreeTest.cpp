@@ -10,60 +10,270 @@
 
 #include <gtest/gtest.h>
 
+namespace
+{
+    using Node    = A1::Node;
+    using NodePtr = A1::Node::Pointer;
+
+    void match( NodePtr const & actual, NodePtr const & expected )
+    {
+        ASSERT_EQ( actual->value(), expected->value() );
+
+        auto const & actualChildren  { actual  ->children() };
+        auto const & expectedChildren{ expected->children() };
+
+        auto const actualChildrenCount  { std::size( actualChildren   ) };
+        auto const expectedChildrenCount{ std::size( expectedChildren ) };
+
+        ASSERT_EQ( actualChildrenCount, expectedChildrenCount )
+            << "Actual node children count: "     << actualChildrenCount
+            << ", expected node children count: " << expectedChildrenCount;
+
+        for ( auto i{ 0U }; i < actualChildrenCount; ++i )
+        {
+            match( actualChildren[ i ], expectedChildren[ i ] );
+        }
+    }
+
+    void matchParsing( std::string_view const expression, NodePtr expectedRoot )
+    {
+        auto tokenIt   { A1::tokenize( A1::PushBackStream{ expression } ) };
+        auto actualRoot{ A1::parse( tokenIt ) };
+
+        match( actualRoot, expectedRoot );
+    }
+
+    template< typename ... Ts >
+    std::vector< NodePtr > makeChildren( Ts && ... nodes )
+    {
+        std::vector< NodePtr > children;
+        children.reserve( sizeof...( Ts ) );
+
+        (
+            [ & ]
+            {
+                children.push_back( std::move( nodes ) );
+            }(), ...
+        );
+
+        return children;
+    }
+} // namespace
+
 TEST( ExpressionTreeTest, parsing )
 {
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "my_variable = 5" } ) };
-        auto root   { A1::parse( tokenIt ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::OperatorType >( root->value() ) );
-        EXPECT_EQ( std::get< A1::OperatorType >( root->value() ), A1::OperatorType::Assign );
-
-        auto const & children{ root->children() };
-        ASSERT_EQ( children.size(), 2U );
-
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( children[ 0 ]->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( children[ 0 ]->value() ).name, "my_variable" );
-
-        ASSERT_TRUE( std::holds_alternative< double >( children[ 1 ]->value() ) );
-        EXPECT_EQ( std::get< double >( children[ 1 ]->value() ), 5. );
+        constexpr auto expression{ "var = 5" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::Assign,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                        std::make_unique< Node >( A1::Number{ 5 }                 )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
     }
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "fun(1, \"my string\", 5)" } ) };
-        auto root   { A1::parse( tokenIt ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::OperatorType >( root->value() ) );
-        EXPECT_EQ( std::get< A1::OperatorType >( root->value() ), A1::OperatorType::Call );
-
-        auto const & children{ root->children() };
-        ASSERT_EQ( children.size(), 4U );
-
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( children[ 0 ]->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( children[ 0 ]->value() ).name, "fun" );
-
-        ASSERT_TRUE( std::holds_alternative< double >( children[ 1 ]->value() ) );
-        EXPECT_EQ( std::get< double >( children[ 1 ]->value() ), 1. );
-
-        ASSERT_TRUE( std::holds_alternative< std::string >( children[ 2 ]->value() ) );
-        EXPECT_EQ( std::get< std::string >( children[ 2 ]->value() ), "my string" );
-
-        ASSERT_TRUE( std::holds_alternative< double >( children[ 3 ]->value() ) );
-        EXPECT_EQ( std::get< double >( children[ 3 ]->value() ), 5. );
+        constexpr auto expression{ "func(1.4, \"This is random string\", 5)" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::Call,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
+                        std::make_unique< Node >( A1::Number{ 1.4 }                     ),
+                        std::make_unique< Node >( A1::String{ "This is random string" } ),
+                        std::make_unique< Node >( A1::Number{ 5 }                       )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
     }
     {
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ "arr[1]" } ) };
-        auto root   { A1::parse( tokenIt ) };
-
-        ASSERT_TRUE( std::holds_alternative< A1::OperatorType >( root->value() ) );
-        EXPECT_EQ( std::get< A1::OperatorType >( root->value() ), A1::OperatorType::Index );
-
-        auto const & children{ root->children() };
-        ASSERT_EQ( children.size(), 2U );
-
-        ASSERT_TRUE( std::holds_alternative< A1::Identifier >( children[ 0 ]->value() ) );
-        EXPECT_EQ( std::get< A1::Identifier >( children[ 0 ]->value() ).name, "arr" );
-
-        ASSERT_TRUE( std::holds_alternative< double >( children[ 1 ]->value() ) );
-        EXPECT_EQ( std::get< double >( children[ 1 ]->value() ), 1. );
+        constexpr auto expression{ "arr[1]" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::Index,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Identifier{ .name = "arr" } ),
+                        std::make_unique< Node >( A1::Number{ 1 }                 )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "return 1" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementReturn,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Number{ 1 } )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "return a < b" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementReturn,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::LessThan,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "a" } ),
+                                std::make_unique< Node >( A1::Identifier{ .name = "b" } )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression{ "pass" };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementPass
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression
+        {
+            "if var == 5:\n"
+            "    equal = 1\n"
+            "else:\n"
+            "    equal = 2"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementIf,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Equality,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                std::make_unique< Node >( A1::Number{ 5 }                 )
+                            )
+                        ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Assign,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "equal" } ),
+                                std::make_unique< Node >( A1::Number{ 1 }                   )
+                            )
+                        ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Assign,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "equal" } ),
+                                std::make_unique< Node >( A1::Number{ 2 }                   )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression
+        {
+            "while i < 5:\n"
+            "    i = i + 1"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::StatementWhile,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::LessThan,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                std::make_unique< Node >( A1::Number{ 5 }               )
+                            )
+                        ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Assign,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                std::make_unique< Node >
+                                (
+                                    A1::OperatorType::Addition,
+                                    makeChildren
+                                    (
+                                        std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                        std::make_unique< Node >( A1::Number{ 1 }               )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
     }
 }

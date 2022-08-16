@@ -26,11 +26,11 @@ std::string Token::toString() const noexcept
             {
                 return identifier.name;
             },
-            []( double const number )
+            []( Number const number )
             {
                 return std::to_string( number );
             },
-            []( std::string const & str )
+            []( String const & str )
             {
                 return str;
             },
