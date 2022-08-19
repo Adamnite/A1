@@ -14,9 +14,10 @@
 
 TEST( ReservedTokenTest, keywords )
 {
-    EXPECT_EQ( A1::getKeyword( "and"   ), A1::ReservedToken::KwAnd   );
-    EXPECT_EQ( A1::getKeyword( "del"   ), A1::ReservedToken::KwDel   );
-    EXPECT_EQ( A1::getKeyword( "yield" ), A1::ReservedToken::KwYield );
+    EXPECT_EQ( A1::getKeyword( "and"      ), A1::ReservedToken::KwAnd      );
+    EXPECT_EQ( A1::getKeyword( "del"      ), A1::ReservedToken::KwDel      );
+    EXPECT_EQ( A1::getKeyword( "yield"    ), A1::ReservedToken::KwYield    );
+    EXPECT_EQ( A1::getKeyword( "contract" ), A1::ReservedToken::KwContract );
 
     EXPECT_EQ( A1::getKeyword( "=" ), A1::ReservedToken::Unknown );
     EXPECT_EQ( A1::getKeyword( "&" ), A1::ReservedToken::Unknown );

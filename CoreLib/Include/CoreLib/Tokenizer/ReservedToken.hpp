@@ -110,6 +110,9 @@ enum class ReservedToken : std::uint8_t
     KwWith,
     KwYield,
 
+    // Smart contract keywords
+    KwContract,
+
     // Number of possible reserved tokens
     Count
 };
