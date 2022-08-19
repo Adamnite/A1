@@ -16,31 +16,31 @@ namespace
 {
     enum class CharType : std::uint8_t
     {
-        Comment,
-        Quote,
-        Whitespace,
         Alphanumeric,
-        Operator
+        Comment,
+        Newline,
+        Operator,
+        Quote,
+        Whitespace
     };
 
     [[ nodiscard ]] CharType getCharType( int const c ) noexcept
     {
              if ( c == '#'              ) { return CharType::Comment;      }
+        else if ( c == '\n'             ) { return CharType::Newline;      }
         else if ( c == '"' || c == '\'' ) { return CharType::Quote;        }
-        else if ( std::isspace( c )     ) { return CharType::Whitespace;   }
         else if ( std::isalnum( c )     ) { return CharType::Alphanumeric; }
+        else if ( std::isspace( c )     ) { return CharType::Whitespace;   }
         else                              { return CharType::Operator;     }
     }
 
     void skipComment( PushBackStream & stream ) noexcept
     {
         auto c{ stream.pop() };
+
         while ( c && *c != '\n' ) { c = stream.pop(); }
 
-        if ( c && *c != '\n' )
-        {
-            stream.push( *c );
-        }
+        if ( c ) { stream.push( *c ); }
     }
 
     [[ nodiscard ]] Token getWord( PushBackStream & stream )
@@ -133,19 +133,22 @@ namespace
         {
             switch ( getCharType( *c ) )
             {
-                case CharType::Whitespace:
-                    continue;
+                case CharType::Alphanumeric:
+                    stream.push( *c );
+                    return getWord( stream );
 
                 case CharType::Comment:
                     skipComment( stream );
                     continue;
 
-                case CharType::Alphanumeric:
-                    stream.push( *c );
-                    return getWord( stream );
+                case CharType::Newline:
+                    return { Newline{}, stream.lineNumber(), stream.charIndex() };
 
                 case CharType::Quote:
                     return getString( stream );
+
+                case CharType::Whitespace:
+                    continue;
 
                 case CharType::Operator:
                     stream.push( *c );

@@ -34,6 +34,10 @@ std::string Token::toString() const noexcept
             {
                 return str;
             },
+            []( Newline )
+            {
+                return std::string{ "<NEWLINE>" };
+            },
             []( Eof )
             {
                 return std::string{ "<EOF>" };
