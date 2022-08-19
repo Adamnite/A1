@@ -294,7 +294,7 @@ TEST( ExpressionTreeTest, parsing )
                                         std::make_unique< Node >( A1::Number{ 2 }                     )
                                     )
                                 ),
-                                // // second elif branch
+                                // second elif branch
                                 std::make_unique< Node >
                                 (
                                     A1::OperatorType::StatementIf,
