@@ -21,7 +21,14 @@ namespace
 {
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
-        if ( std::holds_alternative< Eof >( token.value() ) ) { return true; }
+        if
+        (
+            std::holds_alternative< Eof     >( token.value() ) ||
+            std::holds_alternative< Newline >( token.value() )
+        )
+        {
+            return true;
+        }
 
         if
         (
@@ -35,7 +42,6 @@ namespace
                 reservedToken == ReservedToken::OpCallClose  ||
                 reservedToken == ReservedToken::OpIndexClose ||
                 reservedToken == ReservedToken::OpColon      ||
-                reservedToken == ReservedToken::KwElse       ||
                 reservedToken == ReservedToken::OpComma
             )
             {
@@ -171,6 +177,7 @@ namespace
 
             // Statements
             MAP_TOKEN_TO_OPERATOR( KwIf    , StatementIf     );
+            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementIf     );
             MAP_TOKEN_TO_OPERATOR( KwWhile , StatementWhile  );
             MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
             MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
@@ -260,6 +267,35 @@ namespace
 
         operators.pop();
     }
+
+    void skipReservedToken( TokenIterator & tokenIt, ReservedToken const tokenToSkip )
+    {
+        if
+        (
+            auto const & token{ tokenIt->value() };
+            std::holds_alternative< ReservedToken >( token ) &&
+            std::get              < ReservedToken >( token ) == tokenToSkip
+        )
+        {
+            ++tokenIt;
+        }
+        else
+        {
+            throw std::runtime_error( std::string{ "Syntax error - missing '" } + toStringView( tokenToSkip ).data() + "'" );
+        }
+    }
+
+    void skipNewline( TokenIterator & tokenIt )
+    {
+        if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+        {
+            ++tokenIt;
+        }
+        else
+        {
+            throw std::runtime_error( "Syntax error - missing newline" );
+        }
+    }
 } // namespace
 
 Node::Pointer parse( TokenIterator & tokenIt )
@@ -294,7 +330,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             if ( operatorInfo.type == OperatorType::Call )
             {
-                ++tokenIt; // skip opening parenthesis
+                skipReservedToken( tokenIt, ReservedToken::OpCallOpen );
 
                 if
                 (
@@ -333,7 +369,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
             }
             else if ( operatorInfo.type == OperatorType::Index )
             {
-                ++tokenIt; // skip opening bracket
+                skipReservedToken( tokenIt, ReservedToken::OpIndexOpen );
                 operands.push( parse( tokenIt ) );
 
                 if
@@ -348,25 +384,34 @@ Node::Pointer parse( TokenIterator & tokenIt )
             }
             else if ( operatorInfo.type == OperatorType::StatementIf )
             {
-                ++tokenIt; // skip 'if' keyword
+                ++tokenIt; // skip 'if' / 'elif' keyword
 
-                operands.push( parse( tokenIt ) ); // parse if condition
+                operands.push( parse( tokenIt ) ); // parse condition
 
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( token ) &&
-                    std::get              < ReservedToken >( token ) == ReservedToken::OpColon
-                )
+                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipNewline( tokenIt );
+
+                operands.push( parse( tokenIt ) ); // parse body
+
+                skipNewline( tokenIt );
+
+                while ( true )
                 {
-                    ++tokenIt;
+                    if
+                    (
+                        auto const & token{ tokenIt->value() };
+                        std::holds_alternative< ReservedToken >( token ) &&
+                        std::get              < ReservedToken >( token ) == ReservedToken::KwElif
+                    )
+                    {
+                        ++operatorInfo.operandsCount;
+                        operands.push( parse( tokenIt ) ); // parse branch
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
-                {
-                    throw std::runtime_error( "Syntax error - missing colon" );
-                }
-
-                operands.push( parse( tokenIt ) ); // parse if body
 
                 if
                 (
@@ -375,33 +420,23 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     std::get              < ReservedToken >( token ) == ReservedToken::KwElse
                 )
                 {
-                    ++tokenIt; // skip 'else'
-                    ++tokenIt; // skip ':'
+                    skipReservedToken( tokenIt, ReservedToken::KwElse  );
+                    skipReservedToken( tokenIt, ReservedToken::OpColon );
+                    skipNewline( tokenIt );
 
                     ++operatorInfo.operandsCount;
 
-                    operands.push( parse( tokenIt ) ); // parse else body
+                    operands.push( parse( tokenIt ) ); // parse body
                 }
             }
             else if ( operatorInfo.type == OperatorType::StatementWhile )
             {
-                ++tokenIt; // skip 'while' keyword
+                skipReservedToken( tokenIt, ReservedToken::KwWhile );
 
-                operands.push( parse( tokenIt ) ); // parse if condition
+                operands.push( parse( tokenIt ) ); // parse condition
 
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( token ) &&
-                    std::get              < ReservedToken >( token ) == ReservedToken::OpColon
-                )
-                {
-                    ++tokenIt;
-                }
-                else
-                {
-                    throw std::runtime_error( "Syntax error - missing colon" );
-                }
+                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipNewline( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse while body
             }

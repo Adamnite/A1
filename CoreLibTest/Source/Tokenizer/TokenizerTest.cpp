@@ -184,7 +184,6 @@ TEST( TokenizerTest, tokenization )
                 A1::ReservedToken::OpIndexClose,
                 A1::ReservedToken::OpAssign,
                 A1::Identifier{ .name = "value" },
-
                 A1::Eof{}
             )
         ) << "Tokenization failure: '" << expression << "'";
