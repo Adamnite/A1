@@ -183,9 +183,9 @@ TEST( ExpressionTreeTest, parsing )
         constexpr auto expression
         {
             "if var == 5:\n"
-            "    equal = 1\n"
+            "    new_var = 1\n"
             "else:\n"
-            "    equal = 2"
+            "    new_var = 2"
         };
         EXPECT_NO_FATAL_FAILURE
         (
@@ -211,8 +211,8 @@ TEST( ExpressionTreeTest, parsing )
                             A1::OperatorType::Assign,
                             makeChildren
                             (
-                                std::make_unique< Node >( A1::Identifier{ .name = "equal" } ),
-                                std::make_unique< Node >( A1::Number{ 1 }                   )
+                                std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                std::make_unique< Node >( A1::Number{ 1 }                     )
                             )
                         ),
                         std::make_unique< Node >
@@ -220,8 +220,116 @@ TEST( ExpressionTreeTest, parsing )
                             A1::OperatorType::Assign,
                             makeChildren
                             (
-                                std::make_unique< Node >( A1::Identifier{ .name = "equal" } ),
-                                std::make_unique< Node >( A1::Number{ 2 }                   )
+                                std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                std::make_unique< Node >( A1::Number{ 2 }                     )
+                            )
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
+    {
+        constexpr auto expression
+        {
+            "if var == 5:\n"
+            "    new_var = 1\n"
+            "elif var == 6:\n"
+            "    new_var = 2\n"
+            "elif var == 7:\n"
+            "    new_var = 3\n"
+            "else:\n"
+            "    new_var = 4"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    // if branch
+                    A1::OperatorType::StatementIf,
+                    makeChildren
+                    (
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Equality,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                std::make_unique< Node >( A1::Number{ 5 }                 )
+                            )
+                        ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::Assign,
+                            makeChildren
+                            (
+                                std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                std::make_unique< Node >( A1::Number{ 1 }                     )
+                            )
+                        ),
+                        // first elif branch
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::StatementIf,
+                            makeChildren
+                            (
+                                std::make_unique< Node >
+                                (
+                                    A1::OperatorType::Equality,
+                                    makeChildren
+                                    (
+                                        std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                        std::make_unique< Node >( A1::Number{ 6 }                 )
+                                    )
+                                ),
+                                std::make_unique< Node >
+                                (
+                                    A1::OperatorType::Assign,
+                                    makeChildren
+                                    (
+                                        std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                        std::make_unique< Node >( A1::Number{ 2 }                     )
+                                    )
+                                ),
+                                // // second elif branch
+                                std::make_unique< Node >
+                                (
+                                    A1::OperatorType::StatementIf,
+                                    makeChildren
+                                    (
+                                        std::make_unique< Node >
+                                        (
+                                            A1::OperatorType::Equality,
+                                            makeChildren
+                                            (
+                                                std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                                std::make_unique< Node >( A1::Number{ 7 }                 )
+                                            )
+                                        ),
+                                        std::make_unique< Node >
+                                        (
+                                            A1::OperatorType::Assign,
+                                            makeChildren
+                                            (
+                                                std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                                std::make_unique< Node >( A1::Number{ 3 }                     )
+                                            )
+                                        ),
+                                        // else branch
+                                        std::make_unique< Node >
+                                        (
+                                            A1::OperatorType::Assign,
+                                            makeChildren
+                                            (
+                                                std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                                std::make_unique< Node >( A1::Number{ 4 }                     )
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         )
                     )
