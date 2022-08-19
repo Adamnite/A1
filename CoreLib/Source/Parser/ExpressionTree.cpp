@@ -205,13 +205,13 @@ namespace
     {
         auto const & token{ tokenIt->value() };
 
-        if ( std::holds_alternative< double >( token ) )
+        if ( std::holds_alternative< Number >( token ) )
         {
-            return std::make_unique< Node >( std::get< double >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( std::get< Number >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
-        else if ( std::holds_alternative< std::string >( token ) )
+        else if ( std::holds_alternative< String >( token ) )
         {
-            return std::make_unique< Node >( std::get< std::string >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( std::get< String >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
         else if ( std::holds_alternative< Identifier >( token ) )
         {

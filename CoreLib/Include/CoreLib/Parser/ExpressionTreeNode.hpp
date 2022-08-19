@@ -92,7 +92,7 @@ class Node
 {
 public:
     using Pointer   = std::unique_ptr< Node >;
-    using ValueType = std::variant< Identifier, OperatorType, std::string, double >;
+    using ValueType = std::variant< Identifier, OperatorType, String, Number >;
 
     Node
     (
