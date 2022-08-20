@@ -384,4 +384,30 @@ TEST( ExpressionTreeTest, parsing )
             )
         ) << "Parsing failure: '" << expression << "'";
     }
+    {
+        constexpr auto expression
+        {
+            "contract Example:\n"
+            "    pass"
+        };
+        EXPECT_NO_FATAL_FAILURE
+        (
+            matchParsing
+            (
+                expression,
+                std::make_unique< Node >
+                (
+                    A1::OperatorType::ClassDefinition,
+                    makeChildren
+                    (
+                        std::make_unique< Node >( A1::Identifier{ .name = "Example" } ),
+                        std::make_unique< Node >
+                        (
+                            A1::OperatorType::StatementPass
+                        )
+                    )
+                )
+            )
+        ) << "Parsing failure: '" << expression << "'";
+    }
 }

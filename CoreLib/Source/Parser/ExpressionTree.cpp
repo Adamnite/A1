@@ -182,6 +182,9 @@ namespace
             MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
             MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
 
+            // Smart contract specific
+            MAP_TOKEN_TO_OPERATOR( KwContract, ClassDefinition );
+
             // Ignored tokens
             IGNORE_TOKEN( OpCallClose  );
             IGNORE_TOKEN( OpIndexClose );
@@ -439,6 +442,17 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipNewline( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse while body
+            }
+            else if ( operatorInfo.type == OperatorType::ClassDefinition )
+            {
+                skipReservedToken( tokenIt, ReservedToken::KwContract );
+
+                operands.push( parse( tokenIt ) ); // parse contract name
+
+                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipNewline( tokenIt );
+
+                operands.push( parse( tokenIt ) ); // parse contract definition
             }
 
             operators.push( operatorInfo );

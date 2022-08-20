@@ -84,6 +84,8 @@ enum class OperatorType : std::uint8_t
     StatementPass,           // pass
     StatementReturn,         // return <expression>
 
+    ClassDefinition,
+
     // Number of possible node operations
     Count
 };
