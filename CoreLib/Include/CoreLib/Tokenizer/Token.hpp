@@ -23,10 +23,14 @@ struct Identifier
 };
 
 struct Newline
-{};
+{
+    [[ nodiscard ]] bool operator==( Newline const & ) const = default;
+};
 
 struct Eof
-{};
+{
+    [[ nodiscard ]] bool operator==( Eof const & ) const = default;
+};
 
 using Number = double;
 using String = std::string;

@@ -7,102 +7,106 @@
 
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
-#include "TestUtils.hpp"
-
 #include <gtest/gtest.h>
 
 namespace
 {
-    template< typename T >
-    void match( T && token, std::size_t const tokenIndex, A1::TokenIterator const & tokenIt )
+    struct TestParameter
     {
-        using CleanT = std::remove_cvref_t< T >;
+        std::string_view title;
+        std::string_view expression;
 
-        ASSERT_TRUE( std::holds_alternative< CleanT >( tokenIt->value() ) )
-            << "Token at position " << ( tokenIndex + 1 ) << " is of an incorrect type";
+        std::vector< A1::Token::ValueType > expectedTokens;
 
-        if constexpr ( std::same_as< CleanT, A1::ReservedToken > )
+        friend std::ostream & operator<<( std::ostream & os, TestParameter const & param )
         {
-            ASSERT_PRED_FORMAT2( A1::areEqual, std::get< A1::ReservedToken >( tokenIt->value() ), token );
+            return os << param.expression;
         }
-        else if constexpr ( std::same_as< CleanT, A1::Identifier > )
-        {
-            ASSERT_EQ( std::get< A1::Identifier >( tokenIt->value() ).name, token.name );
-        }
-        else if constexpr ( std::same_as< CleanT, A1::Number > )
-        {
-            ASSERT_EQ( std::get< A1::Number >( tokenIt->value() ), token );
-        }
-        else if constexpr ( std::same_as< CleanT, A1::String > )
-        {
-            ASSERT_EQ( std::get< A1::String >( tokenIt->value() ), token );
-        }
-    }
+    };
 
-    template< typename ... Ts >
-    void matchTokenization( std::string_view const expression, Ts && ... tokens )
+    struct TokenizerTestFixture : ::testing::TestWithParam< TestParameter >
     {
-        std::size_t tokenIndex{ 0U };
-
-        auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
-        ( match( tokens, tokenIndex++, tokenIt++ ), ... );
-    }
+        struct PrintTitle
+        {
+            template< typename ParamType >
+            std::string operator()( testing::TestParamInfo< ParamType > const & info ) const
+            {
+                auto parameter{ static_cast< TestParameter >( info.param ) };
+                return std::string{ parameter.title };
+            }
+        };
+    };
 } // namespace
 
-TEST( TokenizerTest, tokenization )
+TEST_P( TokenizerTestFixture, tokenization )
 {
+    auto const [ _, expression, expectedTokens ]{ GetParam() };
+
+    std::size_t tokenIndex{ 0U };
+
+    auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
+    for ( auto const & token : expectedTokens )
     {
-        constexpr auto expression{ "var = 5" };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
+        EXPECT_EQ( token, tokenIt->value() )
+            << "Token at position " << ( tokenIndex + 1 ) << " is of an incorrect type";
+
+        ++tokenIndex;
+        ++tokenIt;
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P
+(
+    TokenizerTest,
+    TokenizerTestFixture,
+    ::testing::Values
+    (
+        TestParameter
+        {
+            .title          = "VariableAssignment",
+            .expression     = "var = 5",
+            .expectedTokens =
+            {
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpAssign,
                 A1::Number{ 5 },
                 A1::Eof{}
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-    {
-        constexpr auto expression{ "if var == \"foo\"" };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
+            }
+        },
+        TestParameter
+        {
+            .title          = "IfCondition",
+            .expression     = "if var == \"foo\":",
+            .expectedTokens =
+            {
                 A1::ReservedToken::KwIf,
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpEqual,
                 A1::String{ "foo" },
+                A1::ReservedToken::OpColon,
                 A1::Eof{}
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-    {
-        constexpr auto expression{ "return 5 < 2 # comment" };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
+            }
+        },
+        TestParameter
+        {
+            .title          = "ReturnConditionWithComment",
+            .expression     = "return 5 < 2 # comment",
+            .expectedTokens =
+            {
                 A1::ReservedToken::KwReturn,
                 A1::Number{ 5 },
                 A1::ReservedToken::OpLessThan,
                 A1::Number{ 2 },
                 A1::Eof{},
                 A1::Eof{} // after first EOF, there should always be just EOF again
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-    {
-        constexpr auto expression{ "fun(1, 2, 3)" };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
+            }
+        },
+        TestParameter
+        {
+            .title          = "FunctionCall",
+            .expression     = "fun(1, 2, 3)",
+            .expectedTokens =
+            {
                 A1::Identifier{ .name = "fun" },
                 A1::ReservedToken::OpCallOpen,
                 A1::Number{ 1 },
@@ -113,16 +117,14 @@ TEST( TokenizerTest, tokenization )
                 A1::ReservedToken::OpCallClose,
                 A1::Eof{},
                 A1::Eof{} // after first EOF, there should always be just EOF again
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-    {
-        constexpr auto expression{ "while var1 >= var2 && var3 == \"foo\"" };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
+            }
+        },
+        TestParameter
+        {
+            .title          = "WhileCondition",
+            .expression     = "while var1 >= var2 && var3 == \"foo\":",
+            .expectedTokens =
+            {
                 A1::ReservedToken::KwWhile,
                 A1::Identifier{ .name = "var1" },
                 A1::ReservedToken::OpGreaterThanEqual,
@@ -131,25 +133,21 @@ TEST( TokenizerTest, tokenization )
                 A1::Identifier{ .name = "var3" },
                 A1::ReservedToken::OpEqual,
                 A1::String{ "foo" },
+                A1::ReservedToken::OpColon,
                 A1::Eof{}
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-    {
-        constexpr auto expression
+            }
+        },
+        TestParameter
         {
-            "for key, value in items:\n"
-            "    if key in foo_dict:\n"
-            "        pass # avoid repeating keys\n"
-            "    else:\n"
-            "        foo_dict[key] = value"
-        };
-        EXPECT_NO_FATAL_FAILURE
-        (
-            matchTokenization
-            (
-                expression,
-
+            .title      = "ForLoop",
+            .expression =
+                "for key, value in items:\n"
+                "    if key in foo_dict:\n"
+                "        pass # avoid repeating keys\n"
+                "    else:\n"
+                "        foo_dict[key] = value",
+            .expectedTokens =
+            {
                 // 1st line
                 A1::ReservedToken::KwFor,
                 A1::Identifier{ .name = "key" },
@@ -185,7 +183,8 @@ TEST( TokenizerTest, tokenization )
                 A1::ReservedToken::OpAssign,
                 A1::Identifier{ .name = "value" },
                 A1::Eof{}
-            )
-        ) << "Tokenization failure: '" << expression << "'";
-    }
-}
+            }
+        }
+    ),
+    TokenizerTestFixture::PrintTitle()
+);
