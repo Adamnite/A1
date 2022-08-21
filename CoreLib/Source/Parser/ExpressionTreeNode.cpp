@@ -21,10 +21,10 @@ namespace
         (
             Overload
             {
-                []( Identifier    const & ) noexcept -> TypeID { return nullptr; /* TODO */                 },
-                []( OperatorType  const   ) noexcept -> TypeID { return nullptr; /* TODO */                 },
-                []( std::string   const & ) noexcept -> TypeID { return Registry::getNumberHandle       (); },
-                []( double        const   ) noexcept -> TypeID { return Registry::getStringLiteralHandle(); }
+                []( Identifier   const & ) noexcept -> TypeID { return nullptr; /* TODO */                 },
+                []( OperatorType const   ) noexcept -> TypeID { return nullptr; /* TODO */                 },
+                []( String       const & ) noexcept -> TypeID { return Registry::getNumberHandle       (); },
+                []( Number       const   ) noexcept -> TypeID { return Registry::getStringLiteralHandle(); }
             },
             value
         );

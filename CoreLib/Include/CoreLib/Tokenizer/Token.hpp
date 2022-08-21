@@ -22,8 +22,15 @@ struct Identifier
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
+struct Newline
+{
+    [[ nodiscard ]] bool operator==( Newline const & ) const = default;
+};
+
 struct Eof
-{};
+{
+    [[ nodiscard ]] bool operator==( Eof const & ) const = default;
+};
 
 using Number = double;
 using String = std::string;
@@ -31,7 +38,7 @@ using String = std::string;
 class Token
 {
 public:
-    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Eof >;
+    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Newline, Eof >;
 
     Token() noexcept = default;
     Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )

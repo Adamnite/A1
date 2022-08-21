@@ -90,12 +90,13 @@ OperatorPrecedence getOperatorPrecedence( OperatorType const type ) noexcept
             return OperatorPrecedence::Group15;
 
         /**
-         * All statements should fall into this precedence group
+         * All other types should fall into this precedence group
          */
         case OperatorType::StatementIf:
         case OperatorType::StatementWhile:
         case OperatorType::StatementPass:
         case OperatorType::StatementReturn:
+        case OperatorType::ClassDefinition:
             return OperatorPrecedence::Group16;
 
         case OperatorType::Unknown:
@@ -118,6 +119,9 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
 {
     switch ( type )
     {
+        case OperatorType::StatementPass:
+            return 0U;
+
         /**
          * Since the number of arguments in a function call is variable,
          * detecting it is done by the parser itself.
@@ -126,6 +130,9 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
          */
         case OperatorType::Call:
             return 1U;
+
+        case OperatorType::ClassDefinition:
+            return 2U;
 
         /**
          * Since the number of operands for if statement is variable,
@@ -136,9 +143,6 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
         case OperatorType::StatementIf:
         case OperatorType::StatementWhile:
             return 2U;
-
-        case OperatorType::StatementPass:
-            return 0U;
 
         case OperatorType::StatementReturn:
             return 1U;

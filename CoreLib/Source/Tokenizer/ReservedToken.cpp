@@ -17,15 +17,16 @@ namespace A1
 
 namespace
 {
-    template< typename T, std::size_t N1, std::size_t N2 >
+    template< typename T, std::size_t N1, std::size_t N2, std::size_t N3 >
     [[ nodiscard ]]
-    constexpr std::array< T, N1 + N2 > concat( std::array< T, N1 > lhs, std::array< T, N2 > rhs ) noexcept
+    constexpr std::array< T, N1 + N2 + N3 > concat( std::array< T, N1 > arr1, std::array< T, N2 > arr2, std::array< T, N3 > arr3 ) noexcept
     {
-        std::array< T, N1 + N2 > result;
+        std::array< T, N1 + N2 + N3 > result;
         std::size_t index{ 0 };
 
-        for ( auto & item : lhs ) { result[ index++ ] = std::move( item ); }
-        for ( auto & item : rhs ) { result[ index++ ] = std::move( item ); }
+        for ( auto & item : arr1 ) { result[ index++ ] = std::move( item ); }
+        for ( auto & item : arr2 ) { result[ index++ ] = std::move( item ); }
+        for ( auto & item : arr3 ) { result[ index++ ] = std::move( item ); }
         return result;
     }
 
@@ -49,7 +50,7 @@ namespace
         }
     };
 
-    constexpr std::array keywords
+    constexpr std::array generalKeywords
     {
         StringifiedToken{ "False"   , ReservedToken::KwFalse    },
         StringifiedToken{ "None"    , ReservedToken::KwNone     },
@@ -85,6 +86,11 @@ namespace
         StringifiedToken{ "while"   , ReservedToken::KwWhile    },
         StringifiedToken{ "with"    , ReservedToken::KwWith     },
         StringifiedToken{ "yield"   , ReservedToken::KwYield    }
+    };
+
+    constexpr std::array smartContractKeywords
+    {
+        StringifiedToken{ "contract", ReservedToken::KwContract }
     };
 
     constexpr std::array operators
@@ -132,7 +138,7 @@ namespace
         StringifiedToken{ "~"  , ReservedToken::OpBitwiseNot              }
     };
 
-    constexpr auto allTokens{ sort( concat( keywords, operators ) ) };
+    constexpr auto allTokens{ sort( concat( generalKeywords, smartContractKeywords, operators ) ) };
 
     static_assert
     (
@@ -140,9 +146,10 @@ namespace
         "There are reserved tokens that are not included in tokens map"
     );
 
-    static_assert( std::is_sorted( std::begin( keywords  ), std::end( keywords  ) ), "Keywords map is not sorted"  );
-    static_assert( std::is_sorted( std::begin( operators ), std::end( operators ) ), "Operators map is not sorted" );
-    static_assert( std::is_sorted( std::begin( allTokens ), std::end( allTokens ) ), "Tokens map is not sorted"    );
+    static_assert( std::is_sorted( std::begin( generalKeywords       ), std::end( generalKeywords       ) ), "General keywords map is not sorted"        );
+    static_assert( std::is_sorted( std::begin( smartContractKeywords ), std::end( smartContractKeywords ) ), "Smart contract keywords map is not sorted" );
+    static_assert( std::is_sorted( std::begin( operators             ), std::end( operators             ) ), "Operators map is not sorted"               );
+    static_assert( std::is_sorted( std::begin( allTokens             ), std::end( allTokens             ) ), "Tokens map is not sorted"                  );
 
     class MaximalMunchComp
     {
@@ -187,20 +194,38 @@ std::string_view toStringView( ReservedToken const token ) noexcept
 
 ReservedToken getKeyword( std::string_view const word ) noexcept
 {
-    auto const it
+    auto const generalIt
     {
         std::find_if
         (
-            std::begin( keywords ), std::end( keywords ),
+            std::begin( generalKeywords ), std::end( generalKeywords ),
             [ word ]( auto const & t ) noexcept
             {
                 return t.tokenStr == word;
             }
         )
     };
-    return it == std::end( keywords )
-        ? ReservedToken::Unknown
-        : it->token;
+
+    if ( generalIt == std::end( generalKeywords ) )
+    {
+        auto const smartContractIt
+        {
+            std::find_if
+            (
+                std::begin( smartContractKeywords ), std::end( smartContractKeywords ),
+                [ word ]( auto const & t ) noexcept
+                {
+                    return t.tokenStr == word;
+                }
+            )
+        };
+
+        return smartContractIt == std::end( smartContractKeywords )
+            ? ReservedToken::Unknown
+            : smartContractIt->token;
+    }
+
+    return generalIt->token;
 }
 
 ReservedToken getOperator( PushBackStream & stream ) noexcept
