@@ -31,7 +31,7 @@ $ mkdir build
 $ cd build
 
 $ # generate configuration files
-$ cmake -GNinja -DCoreLib_ENABLE_TESTING=ON ..
+$ cmake -GNinja -DENABLE_TESTING=ON ..
 
 $ # compile
 $ ninja

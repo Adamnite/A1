@@ -15,9 +15,9 @@ endif()
 
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib/CoreLib.cmake )
 
-option( CoreLib_ENABLE_TESTING "Enable testing" OFF )
-message( "CoreLib testing enabled: ${CoreLib_ENABLE_TESTING}" )
+option( ENABLE_TESTING "Enable testing" OFF )
+message( "Testing enabled: ${ENABLE_TESTING}" )
 
-if( CoreLib_ENABLE_TESTING )
-    include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest/CoreLibTest.cmake )
+if( ENABLE_TESTING )
+    include( ${CMAKE_CURRENT_LIST_DIR}/Test/Test.cmake )
 endif()

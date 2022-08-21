@@ -17,7 +17,7 @@ set( BUILD_GTEST ON  CACHE BOOL "" FORCE )
 
 FetchContent_MakeAvailable( gtest )
 
-include( ${CMAKE_CURRENT_LIST_DIR}/../CoreLib/CoreLib.cmake )
+include( ${CMAKE_CURRENT_LIST_DIR}/../../CoreLib/CoreLib.cmake )
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest.srcs.cmake   )
 
 add_executable( CoreLibTests ${SOURCES} )
@@ -30,7 +30,7 @@ target_link_libraries(
 
 target_compile_definitions(
     CoreLibTests PRIVATE
-    -DENABLED_TESTING
+    -DENABLE_TESTING
 )
 
 target_include_directories(

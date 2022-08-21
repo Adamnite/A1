@@ -10,7 +10,7 @@
 namespace A1
 {
 
-#ifdef ENABLED_TESTING
+#ifdef ENABLE_TESTING
 #   define ASSERT( expression ) assert( expression )
 #else
 #   define ASSERT( expression ) ( void ) 0
