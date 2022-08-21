@@ -42,22 +42,6 @@ $ ctest
 
 ## Contributing
 
-Feel free to contribute.
+Please check our contribution guidelines [here](CONTRIBUTING.md).
 
-If you find that any of the tests fail, please create a ticket in the issue tracker indicating the following information:
-
-- platform
-- architecture
-- library version
-- minimal reproducible example
-
-If there is a JIRA ticket assigned to you, please create a branch by following these naming conventions:
-
-- for features: `feature/<description>/<JIRA-ticket-number>`
-- for refactoring: `refactor/<description>/<JIRA-ticket-number>`
-- for improvements: `improvement/<description>/<JIRA-ticket-number>`
-- for bugfixes: `bugfix/<description>/<JIRA-ticket-number>`
-
-If there is no JIRA ticket, leave that part of a branch name empty.
-
-Thank you for contributing and happy hacking!
+Thank you for your help!
