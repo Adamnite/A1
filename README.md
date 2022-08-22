@@ -37,7 +37,7 @@ $ # compile
 $ ninja
 
 $ # run tests
-$ ctest
+$ ctest --output-on-failure
 ```
 
 ## Contributing
