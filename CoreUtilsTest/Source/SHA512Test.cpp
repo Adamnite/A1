@@ -6,7 +6,7 @@
  */
 
 
-#include "CoreUtils/SHA512.hpp"
+#include "CoreUtils/Sha512.hpp"
 // #include "TestUtils.hpp"
 
 #include <gtest/gtest.h>

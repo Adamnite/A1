@@ -4,7 +4,7 @@
  *
  * This code is open-sourced under the MIT license.
  */
-#include "CoreUtils/utf8.hpp"
+#include "CoreUtils/Utf8.hpp"
 
 namespace CoreUtils{
     

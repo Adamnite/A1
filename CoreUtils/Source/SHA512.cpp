@@ -4,7 +4,7 @@
  *
  * This code is open-sourced under the MIT license.
  */
-#include "CoreUtils/SHA512.hpp"
+#include "CoreUtils/Sha512.hpp"
 #include <stdio.h>
 #include <string>
 #include <string.h>
