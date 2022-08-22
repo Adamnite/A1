@@ -271,20 +271,31 @@ namespace
         operators.pop();
     }
 
-    void skipReservedToken( TokenIterator & tokenIt, ReservedToken const tokenToSkip )
+    template< ReservedToken tokenToSkip, ReservedToken ... moreTokensToSkip >
+    void skipOneOfReservedTokens( TokenIterator & tokenIt )
     {
         if
         (
             auto const & token{ tokenIt->value() };
             std::holds_alternative< ReservedToken >( token ) &&
-            std::get              < ReservedToken >( token ) == tokenToSkip
+            (
+                    std::get< ReservedToken >( token ) == tokenToSkip        ||
+                ( ( std::get< ReservedToken >( token ) == moreTokensToSkip ) || ... )
+            )
         )
         {
             ++tokenIt;
         }
         else
         {
-            throw std::runtime_error( std::string{ "Syntax error - missing '" } + toStringView( tokenToSkip ).data() + "'" );
+            throw std::runtime_error
+            (
+                std::string{ "Syntax error - missing " } +
+                (
+                      std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } + ... +
+                    ( std::string{ " or '" } + std::string{ toStringView( moreTokensToSkip ) } + std::string{ "'" } )
+                )
+            );
         }
     }
 
@@ -333,7 +344,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             if ( operatorInfo.type == OperatorType::Call )
             {
-                skipReservedToken( tokenIt, ReservedToken::OpCallOpen );
+                skipOneOfReservedTokens< ReservedToken::OpCallOpen >( tokenIt );
 
                 if
                 (
@@ -372,26 +383,17 @@ Node::Pointer parse( TokenIterator & tokenIt )
             }
             else if ( operatorInfo.type == OperatorType::Index )
             {
-                skipReservedToken( tokenIt, ReservedToken::OpIndexOpen );
+                skipOneOfReservedTokens< ReservedToken::OpIndexOpen >( tokenIt );
                 operands.push( parse( tokenIt ) );
-
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    !std::holds_alternative< ReservedToken >( token ) ||
-                     std::get              < ReservedToken >( token ) != ReservedToken::OpIndexClose
-                )
-                {
-                    throw std::runtime_error( "Syntax error - missing closing ']'" );
-                }
+                skipOneOfReservedTokens< ReservedToken::OpIndexClose >( tokenIt );
             }
             else if ( operatorInfo.type == OperatorType::StatementIf )
             {
-                ++tokenIt; // skip 'if' / 'elif' keyword
+                skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse condition
 
-                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse body
@@ -423,8 +425,8 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     std::get              < ReservedToken >( token ) == ReservedToken::KwElse
                 )
                 {
-                    skipReservedToken( tokenIt, ReservedToken::KwElse  );
-                    skipReservedToken( tokenIt, ReservedToken::OpColon );
+                    skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     ++operatorInfo.operandsCount;
@@ -434,22 +436,22 @@ Node::Pointer parse( TokenIterator & tokenIt )
             }
             else if ( operatorInfo.type == OperatorType::StatementWhile )
             {
-                skipReservedToken( tokenIt, ReservedToken::KwWhile );
+                skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse condition
 
-                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse while body
             }
             else if ( operatorInfo.type == OperatorType::ClassDefinition )
             {
-                skipReservedToken( tokenIt, ReservedToken::KwContract );
+                skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse contract name
 
-                skipReservedToken( tokenIt, ReservedToken::OpColon );
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse contract definition

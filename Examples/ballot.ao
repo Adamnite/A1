@@ -1,0 +1,23 @@
+# Ballot example
+#
+# Implements voting process
+
+class Proposal:
+    name: string   # proposal's name
+    count: number  # number of accumulated votes
+
+class Voter:
+    weight: number     # weight is accumulated by delegation
+    hasVoted: boolean  # true if person has already voted, false otherwise
+    vote: number       # index of the voted proposal
+
+contract Ballot:
+    voters: map[address, Voter]
+    proposals: list
+
+    def vote(proposalIdx: number):
+        voter = voters[msg.sender]
+        voter.hasVoted = True
+        voter.vote = proposalIdx
+
+        proposals[proposalIdx].count += voter.weight
