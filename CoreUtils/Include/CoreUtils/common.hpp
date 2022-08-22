@@ -6,14 +6,11 @@
 #ifndef BITCOIN_CRYPTO_COMMON_H
 #define BITCOIN_CRYPTO_COMMON_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
-#include <stdint.h>
-#include <string.h>
+#include <string>
+#include <cstdint>
 
-#include <endian.h>
+#include <endian.hpp>
 
 uint16_t static inline ReadLE16(const unsigned char* ptr)
 {

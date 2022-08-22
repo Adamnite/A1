@@ -1,4 +1,10 @@
-#include "CoreUtils/SHA512.h"
+/**
+ *
+ * Copyright (c)2022 The Adamnite C++ Authors.
+ *
+ * This code is open-sourced under the MIT license.
+ */
+#include "CoreUtils/SHA512.hpp"
 #include <stdio.h>
 #include <string>
 #include <string.h>

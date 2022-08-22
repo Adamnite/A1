@@ -1,4 +1,10 @@
-#include "CoreUtils/ripemd-160.h"
+/**
+ *
+ * Copyright (c)2022 The Adamnite C++ Authors.
+ *
+ * This code is open-sourced under the MIT license.
+ */
+#include "CoreUtils/ripemd-160.hpp"
 
 unsigned int inv(unsigned int a)
 {

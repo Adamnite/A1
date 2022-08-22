@@ -7,7 +7,6 @@
 #include <cstring>
 #include <stdlib.h>
 
-#ifndef SHA512_H
 #define SHA512_H
 
 
@@ -76,6 +75,3 @@ SHA512();
 ~SHA512();
 };
 
-
-
-#endif

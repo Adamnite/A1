@@ -1,4 +1,10 @@
-#include "CoreUtils/utf8.h"
+/**
+ *
+ * Copyright (c)2022 The Adamnite C++ Authors.
+ *
+ * This code is open-sourced under the MIT license.
+ */
+#include "CoreUtils/utf8.hpp"
 
 namespace CoreUtils{
     

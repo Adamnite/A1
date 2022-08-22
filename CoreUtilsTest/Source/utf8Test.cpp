@@ -1,4 +1,4 @@
-#include "CoreUtils/utf8.h"
+#include "CoreUtils/utf8.hpp"
 
 #include <gtest/gtest.h>
 TEST(utf8Test, testASCIIIsUTF8)

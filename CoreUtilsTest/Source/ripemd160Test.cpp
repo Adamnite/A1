@@ -6,7 +6,7 @@
  */
 
 
-#include "CoreUtils/ripemd-160.h"
+#include "CoreUtils/ripemd-160.hpp"
 // #include "TestUtils.hpp"
 #include <string>
 using namespace std;
