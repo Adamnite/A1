@@ -4,7 +4,7 @@
  *
  * This code is open-sourced under the MIT license.
  */
-#include "CoreUtils/Ripemd-160.hpp"
+#include "CoreUtils/Ripemd160.hpp"
 
 unsigned int inv(unsigned int a)
 {
