@@ -12,7 +12,7 @@
 using namespace std;
 
 #include <gtest/gtest.h>
-string localDirectory = "<put your relative term here>/A1/CoreUtilsTest/Source/testFiles/";
+string localDirectory = "<yourFilePathHere>/A1/CoreUtilsTest/Source/testFiles/";
 TEST(ripemd160Test, testFromFiles)
 {
     string emptyFile = localDirectory + "empty.txt";
