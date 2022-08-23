@@ -371,10 +371,32 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "SmartContract",
+            .title      = "EmptySmartContract",
             .expression =
                 "contract Example:\n"
                 "    pass",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::ClassDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "Example" } ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::StatementPass
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "SmartContract",
+            .expression =
+                "contract Example:\n"
+                "    var: number = 0\n"
+                "\n"
+                "    def func(param: number, param: number) -> number:\n"
+                "        return param + param",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::OperatorType::ClassDefinition,
