@@ -17,8 +17,8 @@ set( BUILD_GTEST ON  CACHE BOOL "" FORCE )
 
 FetchContent_MakeAvailable( gtest )
 
-include( ${CMAKE_CURRENT_LIST_DIR}/../CoreUtils/CoreUtils.cmake )
-include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtilsTest.srcs.cmake   )
+include( ${CMAKE_CURRENT_LIST_DIR}/../../CoreUtils/CoreUtils.cmake )
+include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtilsTest.srcs.cmake        )
 
 add_executable( CoreUtilsTests ${SOURCES} )
 
