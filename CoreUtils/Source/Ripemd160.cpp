@@ -4,7 +4,16 @@
  *
  * This code is open-sourced under the MIT license.
  */
-#include "CoreUtils/Ripemd160.hpp"
+
+#include <CoreUtils/Ripemd160.hpp>
+
+#include <sstream>
+
+namespace A1::Utils::Ripemd160
+{
+
+namespace
+{
 
 unsigned int inv(unsigned int a)
 {
@@ -242,141 +251,23 @@ void block_hash(unsigned int *X, unsigned int &h0, unsigned int &h1, unsigned in
     h0 = T;
 }
 
-string ripemd160_file(char *str)
+} // namespace
+
+std::string hash( std::string_view const data )
 {
-    ifstream file(str);
-    
-    file.seekg(0, ios::end);                                                     
-    unsigned long long file_size = (unsigned long long)file.tellg();                                            
-    file.seekg(0, ios::beg);                                                      
-    
-    file.close();
+    unsigned long long file_size = data.length();
+    std::uint8_t bytes[file_size];
 
+    std::memcpy(bytes, data.data(), file_size);
     int size_of_last_block = file_size % 64;
-    
+
     int number_of_zero_bytes;
-
-    if (size_of_last_block < 56) 
-        number_of_zero_bytes = 56 - size_of_last_block;
-    else 
-        number_of_zero_bytes = 64 - size_of_last_block + 56;
-   
-    unsigned long long num_of_blocks = (file_size + number_of_zero_bytes + 8) / 64;
-    
-    int how_many_blocks_modified = 1;
-
-    if (size_of_last_block >= 56)
-        ++how_many_blocks_modified;
-
-    unsigned int h0 = 0x67452301;
-    unsigned int h1 = 0xefcdab89;
-    unsigned int h2 = 0x98badcfe;
-    unsigned int h3 = 0x10325476;
-    unsigned int h4 = 0xc3d2e1f0;
-
-    FILE *ff = fopen(str, "rb");
-
-    unsigned int X[16];
-
-    for (unsigned long long i = 0; i < num_of_blocks - how_many_blocks_modified; i++)
-    {
-        fread(X, 4, 16, ff);
-
-        block_hash(X, h0, h1, h2, h3, h4);
-    }
 
     if (size_of_last_block < 56)
-    {
-        unsigned char buf[64];
-        
-        fread(buf, 1, size_of_last_block, ff);
-
-        fclose(ff);
-
-        int it = size_of_last_block;
-
-        buf[it++] = 0x80;
-
-        for (int i = 0; i < number_of_zero_bytes - 1; buf[it++] = 0, i++);
-
-        unsigned long long bit_file_size = file_size * 8;
-
-        for (int i = 0; i < 8; i++)                                                 
-            buf[it++] = (unsigned char)(bit_file_size >> i * 8);           
-
-        for (int i = 0; i < 16; i++) 
-        {
-            X[i] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(X, h0, h1, h2, h3, h4);
-    }
-    else
-    {
-        unsigned char buf[128];
-        
-        fread(buf, 1, size_of_last_block, ff);
-
-        fclose(ff);
-
-        int it = size_of_last_block;
-
-        buf[it++] = 0x80;
-
-        for (int i = 0; i < number_of_zero_bytes - 1; buf[it++] = 0, i++);
-
-        unsigned long long bit_file_size = file_size * 8;
-
-        for (int i = 0; i < 8; i++)
-            buf[it++] = (unsigned char)(bit_file_size >> i * 8);
-
-
-        for (int i = 0; i < 16; i++)
-        {
-            X[i] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(X, h0, h1, h2, h3, h4);
-
-        for (int i = 16; i < 32; i++) 
-        {
-            X[i - 16] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(X, h0, h1, h2, h3, h4);
-    }
-    
-    ostringstream s;
-
-    s << hex << inv(h0) << inv(h1) << inv(h2) << inv(h3) << inv(h4);
-    
-    cout << s.str() << endl;
-    return s.str();
-}
-
-string ripemd160_str(string str)
-{
-    // ifstream file(str);
-    
-    // file.seekg(0, ios::end);                                                     
-    // unsigned long long file_size = (unsigned long long)file.tellg();                                            
-    // file.seekg(0, ios::beg);                                                      
-    
-    // file.close();
-
-    unsigned long long file_size = str.length();
-    byte bytes[file_size];
-    
-    std::memcpy(bytes, str.data(), file_size);
-    int size_of_last_block = file_size % 64;
-    
-    int number_of_zero_bytes;
-
-    if (size_of_last_block < 56) 
         number_of_zero_bytes = 56 - size_of_last_block;
-    else 
+    else
         number_of_zero_bytes = 64 - size_of_last_block + 56;
-   
+
     unsigned long long num_of_blocks = (file_size + number_of_zero_bytes + 8) / 64;
 
     int how_many_blocks_modified = 1;
@@ -390,31 +281,27 @@ string ripemd160_str(string str)
     unsigned int h3 = 0x10325476;
     unsigned int h4 = 0xc3d2e1f0;
 
-    // FILE *ff = fopen(str, "rb");
-
-    byte X[64];
+    std::uint8_t X[64];
     unsigned int foo[16];
-    
+
     unsigned long long start = 0;
     for (unsigned long long i = 0; i < num_of_blocks - how_many_blocks_modified; i++)
     {
-        // fread(X, 4, 16, ff);
         std::copy(bytes + start, bytes + start + 64, X);//getting 64 bytes of data into x
         start += 64;
-        
+
         for (int j=0; j<16; j++)
         {
             foo[j] = 256 * 256 * 256 * (int)(X[4 * j + 3]) + 256 * 256 * int(X[4 * j + 2]) + 256 * int(X[4 * j + 1]) + int(X[4 * j]);
         }
-    
 
         block_hash(foo, h0, h1, h2, h3, h4);
     }
-    
+
     if (size_of_last_block < 56)
     {
         unsigned char buf[64];
-        
+
         for (int i=0; i<size_of_last_block; i++){
             buf[i] = (unsigned char)(bytes[start + i]);
         }
@@ -428,10 +315,10 @@ string ripemd160_str(string str)
 
         unsigned long long bit_file_size = file_size * 8;
 
-        for (int i = 0; i < 8; i++)                                                 
-            buf[it++] = (unsigned char)(bit_file_size >> i * 8);           
+        for (int i = 0; i < 8; i++)
+            buf[it++] = (unsigned char)(bit_file_size >> i * 8);
 
-        for (int i = 0; i < 16; i++) 
+        for (int i = 0; i < 16; i++)
         {
             foo[i] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
         }
@@ -441,14 +328,10 @@ string ripemd160_str(string str)
     else
     {
         unsigned char buf[128];
-        
-        // fread(buf, 1, size_of_last_block, ff);
-        // std::copy(bytes + start, bytes + start + size_of_last_block, buf);//getting last block of data into buf
+
         for (int i=0; i<size_of_last_block; i++){
             buf[i] = (unsigned char)(bytes[start + i]);
         }
-
-        // fclose(ff);
 
         int it = size_of_last_block;
 
@@ -469,33 +352,19 @@ string ripemd160_str(string str)
 
         block_hash(foo, h0, h1, h2, h3, h4);
 
-        for (int i = 16; i < 32; i++) 
+        for (int i = 16; i < 32; i++)
         {
             foo[i - 16] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
         }
 
         block_hash(foo, h0, h1, h2, h3, h4);
     }
-    
-    ostringstream s;
 
-    s << hex << inv(h0) << inv(h1) << inv(h2) << inv(h3) << inv(h4);
-    
-    cout << s.str() << endl;
+    std::ostringstream s;
+
+    s << std::hex << inv(h0) << inv(h1) << inv(h2) << inv(h3) << inv(h4);
+
     return s.str();
 }
 
-// int main(int argc, char *argv[])
-// {
-//     if (argc != 2)
-//     {
-// 	cout << endl << "Usage: testripemd160 [file]" << endl << endl;
-
-// 	return 0;
-//     }
-//     else
-// 	ripemd160_file(argv[1]);
-
-//     return 0;
-// }
-// // Footer
+} // namespace A1::Utils::Ripemd160

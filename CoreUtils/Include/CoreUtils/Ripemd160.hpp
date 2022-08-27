@@ -1,22 +1,18 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstring>
+/**
+ *
+ * Copyright (c)2022 The Adamnite C++ Authors.
+ *
+ * This code is open-sourced under the MIT license.
+ */
 
-using namespace std;
+#pragma once
 
-unsigned int shl(unsigned int a, unsigned int s);
-unsigned int f(int j, unsigned int x, unsigned int y, unsigned int z);
-unsigned int K(int j);
-unsigned int K_(int j);
-unsigned int r(int j);
-unsigned int r_(int j);
-unsigned int s(int j);
-unsigned int s_(int j);
+#include <string_view>
+#include <string>
 
-void block_hash(unsigned int *X, unsigned int &h0, unsigned int &h1, unsigned int &h2, unsigned int &h3, unsigned int &h4);
+namespace A1::Utils::Ripemd160
+{
 
-string ripemd160_file(char *str);
-string ripemd160_str(string str);
+[[ nodiscard ]] std::string hash( std::string_view const data );
 
-unsigned int inv(unsigned int a);
+} // namespace A1::Utils::Ripemd160

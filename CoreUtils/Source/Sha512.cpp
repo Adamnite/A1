@@ -127,9 +127,9 @@ namespace
 
         std::vector< std::uint64_t > result;
 
-        static constexpr auto bitsInByte      {    8U };
-        static constexpr auto minPaddingLength{    1U }; // for a mandatory '1' bit in padding
-        static constexpr auto dataLengthSize  {  128U };
+        static constexpr auto bitsInByte      {   8U };
+        static constexpr auto minPaddingLength{   1U }; // for a mandatory '1' bit in padding
+        static constexpr auto dataLengthSize  { 128U };
 
         auto const dataLength     { std::size( data ) * bitsInByte };
         auto const minResultLength{ dataLength + minPaddingLength + dataLengthSize };
@@ -160,7 +160,7 @@ namespace
 
                 for ( auto k{ 0U }; k < bitsInByte; k++ )
                 {
-                    dataIndex = i * 128 + j * bitsInByte + k;
+                    dataIndex = ( i * sequenceLength * bitsInByte ) + ( j * bitsInByte ) + k;
 
                     if ( dataIndex < std::size( data ) )
                     {
