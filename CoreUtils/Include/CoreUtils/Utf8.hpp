@@ -1,16 +1,17 @@
+/**
+ *
+ * Copyright (c)2022 The Adamnite C++ Authors.
+ *
+ * This code is open-sourced under the MIT license.
+ */
+
 #pragma once
-#include <iostream>
-#include <string>
 
-namespace CoreUtils{
+#include <string_view>
 
-bool isUTFencoding(std::string const& _input, size_t& _position);
-
-///Inline bool for some form of recursiveness
-
-inline bool isUTFencoding(std::string const& _input)
+namespace A1::Utils
 {
-    size_t _position;
-    return isUTFencoding(_input, _position);
-}
-}
+
+[[ nodiscard ]] bool isUtf8( std::string_view const data ) noexcept;
+
+} // namespace A1::Utils

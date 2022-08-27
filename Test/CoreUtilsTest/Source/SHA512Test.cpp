@@ -5,7 +5,6 @@
  * This code is open-sourced under the MIT license.
  */
 
-
 #include <CoreUtils/Sha512.hpp>
 
 #include <gtest/gtest.h>
