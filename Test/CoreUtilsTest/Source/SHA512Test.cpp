@@ -49,17 +49,35 @@ TEST( Sha512Test, hash )
         "7ccb85f2b00c31b42a84112127d750c5e0e80b6d37"
     );
 
-    // EXPECT_EQ
-    // (
-    //     Sha512::hash
-    //     (
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //     ),
-    //     "039f74360411cd1c028f1f761e2ced9e543457d8009"
-    //     "0e0dca2579405805451312d09b5a77de4a2bb6b86a7"
-    //     "31d20468fa48500c36e5a757c52e830bf2f5434998"
-    // );
+    EXPECT_EQ
+    (
+        Sha512::hash
+        (
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+        ),
+        "039f74360411cd1c028f1f761e2ced9e543457d8009"
+        "0e0dca2579405805451312d09b5a77de4a2bb6b86a7"
+        "31d20468fa48500c36e5a757c52e830bf2f5434998"
+    );
+
+    EXPECT_EQ
+    (
+        Sha512::hash
+        (
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+        ),
+        "8ce4533203f6d01fa16f96e09da428be10599d60e28"
+        "fa9cd862bf142c2abc9d4a8be03fee8409d7d251936"
+        "05b14d8b9fecbee1e391078c641f976b3e79b24675"
+    );
 }

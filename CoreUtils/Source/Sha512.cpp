@@ -103,8 +103,9 @@ namespace
         return rotateRight( x, 19 ) ^ rotateRight( x, 61 ) ^ ( x >> 6 );
     }
 
+    static constexpr auto bitsInByte       {    8U };
     static constexpr auto hashLength       {  512U };
-    static constexpr auto hashBufferLength {    8U }; // 512 / sizeof( std::uint64_t )
+    static constexpr auto hashBufferLength {    8U }; // 512 / ( sizeof( std::uint64_t ) * bitsInByte )
     static constexpr auto sequenceLength   {   16U };
     static constexpr auto singleBlockLength{ 1024U };
 
@@ -127,7 +128,6 @@ namespace
 
         std::vector< std::uint64_t > result;
 
-        static constexpr auto bitsInByte      {   8U };
         static constexpr auto minPaddingLength{   1U }; // for a mandatory '1' bit in padding
         static constexpr auto dataLengthSize  { 128U };
 
@@ -148,7 +148,7 @@ namespace
         };
 
         auto const resultLength{ minResultLength + restOfPaddingLength };
-        result.resize( resultLength / sizeof( std::uint64_t ) );
+        result.resize( resultLength / ( sizeof( std::uint64_t ) * bitsInByte ) );
 
         auto const blocksCount{ resultLength / singleBlockLength };
 
@@ -196,7 +196,7 @@ namespace
         result.resize( hashBufferLength );
 
         static constexpr auto roundsCount{ 80 };
-        auto const blocksCount{ ( std::size( buffer ) * sizeof( std::uint64_t ) ) / singleBlockLength };
+        auto const blocksCount{ ( std::size( buffer ) * sizeof( std::uint64_t ) * bitsInByte ) / singleBlockLength };
 
         std::array< std::uint64_t, hashBufferLength > previousRoundOutput;
         std::array< std::uint64_t, roundsCount      > words;
@@ -205,7 +205,7 @@ namespace
 
         for ( auto i{ 0U }; i < blocksCount; i++ )
         {
-            std::memcpy( words.data(), buffer.data() + i, sequenceLength * sizeof( std::uint64_t ) );
+            std::memcpy( words.data(), buffer.data() + ( sequenceLength * i ), sequenceLength * sizeof( std::uint64_t ) );
 
             // prepare the words
             for ( auto j{ sequenceLength }; j < roundsCount; j++ )
