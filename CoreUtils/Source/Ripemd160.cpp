@@ -9,362 +9,319 @@
 
 #include <sstream>
 
+#include <array>
+
 namespace A1::Utils::Ripemd160
 {
 
 namespace
 {
-
-unsigned int inv(unsigned int a)
-{
-    unsigned int b = 0;
-
-    b |= ((a >> 0) & 0xFF) << 24;
-    b |= ((a >> 8) & 0xFF) << 16;
-    b |= ((a >> 16) & 0xFF) << 8;
-    b |= ((a >> 24) & 0xFF) << 0;
-
-    return b;
-}
-
-unsigned int shl(unsigned int a, unsigned int s)
-{
-    return ((a << s) | (a >> (32 - s)));
-}
-
-unsigned int f(int j, unsigned int x, unsigned int y, unsigned int z)
-{
-    if (j > 63) return x ^ (y | (~z));
-    if (j > 47) return (x & z) | (y & (~z));
-    if (j > 31) return (x | (~y)) ^ z;
-    if (j > 15) return (x & y) | ((~x) & z);
-    if (j > -1) return x ^ y ^ z;
-    return 0;
-}
-
-unsigned int K(int j)
-{
-    if (j > 63) return 0xa953fd4e;
-    if (j > 47) return 0x8f1bbcdc;
-    if (j > 31) return 0x6ed9eba1;
-    if (j > 15) return 0x5a827999;
-    if (j > -1) return 0x00000000;
-    return 0;
-}
-
-unsigned int K_(int j)
-{
-    if (j > 63) return 0x00000000;
-    if (j > 47) return 0x7a6d76e9;
-    if (j > 31) return 0x6d703ef3;
-    if (j > 15) return 0x5c4dd124;
-    if (j > -1) return 0x50a28be6;
-    return 0;
-}
-
-unsigned int r(int j)
-{
-    if (j > 63) 
+    [[ nodiscard ]]
+    constexpr std::uint32_t shiftLeft( std::uint32_t const x, std::size_t const n ) noexcept
     {
-        int r[16] = { 4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13 };
-
-        return r[j % 16];
-    }
-    if (j > 47) 
-    {
-        int r[16] = { 1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2 };
-
-        return r[j % 16];
-    }
-    if (j > 31) 
-    {
-        int r[16] = { 3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12 };
-
-        return r[j % 16];
+        return ( x << n ) | ( x >> ( 32 - n ) );
     }
 
-    if (j > 15) 
-    {
-        int r[16] = { 7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8 };
+    static constexpr auto roundsCount{ 80 };
 
-        return r[j % 16];
+    [[ nodiscard ]]
+    constexpr std::size_t getWordIndex( std::size_t const roundIndex ) noexcept
+    {
+        constexpr std::array< std::size_t, roundsCount > wordIndicesPerRound
+        {
+            0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 9U, 10U, 11U, 12U, 13U, 14U, 15U, // 1st group of rounds
+            7U, 4U, 13U, 1U, 10U, 6U, 15U, 3U, 12U, 0U, 9U, 5U, 2U, 14U, 11U, 8U, // 2nd group of rounds
+            3U, 10U, 14U, 4U, 9U, 15U, 8U, 1U, 2U, 7U, 0U, 6U, 13U, 11U, 5U, 12U, // 3rd group of rounds
+            1U, 9U, 11U, 10U, 0U, 8U, 12U, 4U, 13U, 3U, 7U, 15U, 14U, 5U, 6U, 2U, // 4th group of rounds
+            4U, 0U, 5U, 9U, 7U, 12U, 2U, 10U, 14U, 1U, 3U, 8U, 11U, 6U, 15U, 13U  // 5th group of rounds
+        };
+
+        return wordIndicesPerRound[ roundIndex % roundsCount ];
     }
 
-    if (j > -1) 
+    [[ nodiscard ]]
+    constexpr std::size_t getWordIndexPrime( std::size_t const roundIndex ) noexcept
     {
-        int r[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+        constexpr std::array< std::size_t, roundsCount > wordIndicesPerRound
+        {
+            5U, 14U, 7U, 0U, 9U, 2U, 11U, 4U, 13U, 6U, 15U, 8U, 1U, 10U, 3U, 12U, // 1st group of rounds
+            6U, 11U, 3U, 7U, 0U, 13U, 5U, 10U, 14U, 15U, 8U, 12U, 4U, 9U, 1U, 2U, // 2nd group of rounds
+            15U, 5U, 1U, 3U, 7U, 14U, 6U, 9U, 11U, 8U, 12U, 2U, 10U, 0U, 4U, 13U, // 3rd group of rounds
+            8U, 6U, 4U, 1U, 3U, 11U, 15U, 0U, 5U, 12U, 2U, 13U, 9U, 7U, 10U, 14U, // 4th group of rounds
+            12U, 15U, 10U, 4U, 1U, 5U, 8U, 7U, 6U, 2U, 13U, 14U, 0U, 3U, 9U, 11U  // 5th group of rounds
+        };
 
-        return r[j % 16];
-    }
-    return 0;
-}
-
-unsigned int r_(int j)
-{
-    if (j > 63) 
-    {
-        int r_[16] = { 12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11 };
-
-        return r_[j % 16];
+        return wordIndicesPerRound[ roundIndex % roundsCount ];
     }
 
-    if (j > 47) 
+    [[ nodiscard ]]
+    constexpr std::size_t getShiftCount( std::size_t const roundIndex ) noexcept
     {
-        int r_[16] = { 8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14 };
+        constexpr std::array< std::size_t, roundsCount > shiftCountsPerRound
+        {
+            11U, 14U, 15U, 12U, 5U, 8U, 7U, 9U, 11U, 13U, 14U, 15U, 6U, 7U, 9U, 8U, // 1st group of rounds
+            7U, 6U, 8U, 13U, 11U, 9U, 7U, 15U, 7U, 12U, 15U, 9U, 11U, 7U, 13U, 12U, // 2nd group of rounds
+            11U, 13U, 6U, 7U, 14U, 9U, 13U, 15U, 14U, 8U, 13U, 6U, 5U, 12U, 7U, 5U, // 3rd group of rounds
+            11U, 12U, 14U, 15U, 14U, 15U, 9U, 8U, 9U, 14U, 5U, 6U, 8U, 6U, 5U, 12U, // 4th group of rounds
+            9U, 15U, 5U, 11U, 6U, 8U, 13U, 12U, 5U, 12U, 13U, 14U, 11U, 8U, 5U, 6U  // 5th group of rounds
+        };
 
-        return r_[j % 16];
+        return shiftCountsPerRound[ roundIndex % roundsCount ];
     }
 
-    if (j > 31) 
+    [[ nodiscard ]]
+    constexpr std::size_t getShiftCountPrime( std::size_t const roundIndex ) noexcept
     {
-        int r_[16] = { 15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13 };
+        constexpr std::array< std::size_t, roundsCount > shiftCountsPerRound
+        {
+            8U, 9U, 9U, 11U, 13U, 15U, 15U, 5U, 7U, 7U, 8U, 11U, 14U, 14U, 12U, 6U, // 1st group of rounds
+            9U, 13U, 15U, 7U, 12U, 8U, 9U, 11U, 7U, 7U, 12U, 7U, 6U, 15U, 13U, 11U, // 2nd group of rounds
+            9U, 7U, 15U, 11U, 8U, 6U, 6U, 14U, 12U, 13U, 5U, 14U, 13U, 13U, 7U, 5U, // 3rd group of rounds
+            15U, 5U, 8U, 11U, 14U, 14U, 6U, 14U, 6U, 9U, 12U, 9U, 12U, 5U, 15U, 8U, // 4th group of rounds
+            8U, 5U, 12U, 9U, 12U, 5U, 14U, 6U, 8U, 13U, 6U, 5U, 15U, 13U, 11U, 11U  // 5th group of rounds
+        };
 
-        return r_[j % 16];
+        return shiftCountsPerRound[ roundIndex % roundsCount ];
     }
 
-    if (j > 15) 
+    [[ nodiscard ]]
+    constexpr std::uint32_t func
+    (
+        std::size_t   const roundIndex,
+        std::uint32_t const x,
+        std::uint32_t const y,
+        std::uint32_t const z
+    )
     {
-        int r_[16] = { 6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2 };
+        if ( roundIndex >= 64U ) { return x ^ ( y | ~z );         } // 5th group of rounds
+        if ( roundIndex >= 48U ) { return ( x & z ) | ( y & ~z ); } // 4th group of rounds
+        if ( roundIndex >= 32U ) { return ( x | ~y ) ^ z;         } // 3rd group of rounds
+        if ( roundIndex >= 16U ) { return ( x & y ) | ( ~x & z ); } // 2nd group of rounds
+        if ( roundIndex >= 0U  ) { return x ^ y ^ z;              } // 1st group of rounds
 
-        return r_[j % 16];
+        return 0U;
     }
 
-    if (j > -1) 
+    [[ nodiscard ]]
+    constexpr std::uint32_t getConstant( std::size_t const roundIndex ) noexcept
     {
-        int r_[16] = { 5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12 };
+        if ( roundIndex >= 64U ) { return 0xa953fd4eUL; } // 5th group of rounds
+        if ( roundIndex >= 48U ) { return 0x8f1bbcdcUL; } // 4th group of rounds
+        if ( roundIndex >= 32U ) { return 0x6ed9eba1UL; } // 3rd group of rounds
+        if ( roundIndex >= 16U ) { return 0x5a827999UL; } // 2nd group of rounds
+        if ( roundIndex >= 0U  ) { return 0x00000000UL; } // 1st group of rounds
 
-        return r_[j % 16];
-    }
-    return 0;
-}
-
-unsigned int s(int j)
-{
-    if (j > 63) 
-    {
-        int s[16] = { 9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6 };
-
-        return s[j % 16];
+        return 0U;
     }
 
-    if (j > 47) 
+    [[ nodiscard ]]
+    constexpr std::uint32_t getConstantPrime( std::size_t const roundIndex ) noexcept
     {
-        int s[16] = { 11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12 };
+        if ( roundIndex >= 64U ) { return 0x00000000UL; } // 5th group of rounds
+        if ( roundIndex >= 48U ) { return 0x7a6d76e9UL; } // 4th group of rounds
+        if ( roundIndex >= 32U ) { return 0x6d703ef3UL; } // 3rd group of rounds
+        if ( roundIndex >= 16U ) { return 0x5c4dd124UL; } // 2nd group of rounds
+        if ( roundIndex >= 0U  ) { return 0x50a28be6UL; } // 1st group of rounds
 
-        return s[j % 16];
+        return 0U;
     }
 
-    if (j > 31) 
+    [[ nodiscard ]]
+    constexpr std::uint32_t invert( std::uint32_t const x ) noexcept
     {
-        int s[16] = { 11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5 };
+        std::uint32_t result{ 0 };
 
-        return s[j % 16];
+        result |= ( ( x >>  0 ) & 0xff ) << 24;
+        result |= ( ( x >>  8 ) & 0xff ) << 16;
+        result |= ( ( x >> 16 ) & 0xff ) << 8;
+        result |= ( ( x >> 24 ) & 0xff );
+
+        return result;
     }
 
-    if (j > 15) 
+    void hashWords
+    (
+        std::uint32_t const * words,
+        std::uint32_t & h0,
+        std::uint32_t & h1,
+        std::uint32_t & h2,
+        std::uint32_t & h3,
+        std::uint32_t & h4
+    ) noexcept
     {
-        int s[16] = { 7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12 };
+        std::uint32_t a{ h0 }; std::uint32_t aPrime{ h0 };
+        std::uint32_t b{ h1 }; std::uint32_t bPrime{ h1 };
+        std::uint32_t c{ h2 }; std::uint32_t cPrime{ h2 };
+        std::uint32_t d{ h3 }; std::uint32_t dPrime{ h3 };
+        std::uint32_t e{ h4 }; std::uint32_t ePrime{ h4 };
 
-        return s[j % 16];
+        std::uint32_t tmp{ 0 };
+
+        for ( auto i{ 0U }; i < roundsCount; i++ )
+        {
+            tmp = shiftLeft
+            (
+                a + func( i, b, c, d ) + words[ getWordIndex( i ) ] + getConstant( i ),
+                getShiftCount( i )
+            ) + e;
+
+            a = e;
+            e = d;
+            d = shiftLeft( c, 10U );
+            c = b;
+            b = tmp;
+
+            tmp = shiftLeft
+            (
+                aPrime + func( roundsCount - i - 1, bPrime, cPrime, dPrime ) + words[ getWordIndexPrime( i ) ] + getConstantPrime( i ),
+                getShiftCountPrime( i )
+            ) + ePrime;
+
+            aPrime = ePrime;
+            ePrime = dPrime;
+            dPrime = shiftLeft( cPrime, 10U );
+            cPrime = bPrime;
+            bPrime = tmp;
+        }
+
+        tmp = h1 + c + dPrime;
+        h1  = h2 + d + ePrime;
+        h2  = h3 + e + aPrime;
+        h3  = h4 + a + bPrime;
+        h4  = h0 + b + cPrime;
+        h0  = tmp;
     }
-
-    if (j > -1) 
-    {
-        int s[16] = { 11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8 };
-
-        return s[j % 16];
-    }
-    return 0;
-}
-
-unsigned int s_(int j)
-{
-    if (j > 63) 
-    {
-        int s_[16] = { 8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11 };
-
-        return s_[j % 16];
-    }
-
-    if (j > 47) 
-    {
-        int s_[16] = { 15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8 };
-
-        return s_[j % 16];
-    }
-
-    if (j > 31) 
-    {
-        int s_[16] = { 9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5 };
-
-        return s_[j % 16];
-    }
-
-    if (j > 15) 
-    {
-        int s_[16] = { 9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11 };
-
-        return s_[j % 16];
-    }
-
-    if (j > -1) 
-    {
-        int s_[16] = { 8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6 };
-
-        return s_[j % 16];
-    }
-    return 0;
-}
-
-void block_hash(unsigned int *X, unsigned int &h0, unsigned int &h1, unsigned int &h2, unsigned int &h3, unsigned int &h4)
-{
-    unsigned int A, B, C, D, E, A_, B_, C_, D_, E_, T;
-
-    A = A_ = h0;
-    B = B_ = h1;
-    C = C_ = h2;
-    D = D_ = h3;
-    E = E_ = h4;
-
-    for (int j = 0; j < 80; j++)
-    {
-        T = shl(A + f(j, B, C, D) + X[r(j)] + K(j), s(j)) + E;
-        A = E;
-        E = D;
-        D = shl(C, 10);
-        C = B;
-        B = T;
-
-        T = shl(A_ + f(79 - j, B_, C_, D_) + X[r_(j)] + K_(j), s_(j)) + E_;
-        A_ = E_;
-        E_ = D_;
-        D_ = shl(C_, 10);
-        C_ = B_;
-        B_ = T;
-    }
-
-    T = h1 + C + D_;
-    h1 = h2 + D + E_;
-    h2 = h3 + E + A_;
-    h3 = h4 + A + B_;
-    h4 = h0 + B + C_;
-    h0 = T;
-}
-
 } // namespace
 
 std::string hash( std::string_view const data )
 {
-    unsigned long long file_size = data.length();
-    std::uint8_t bytes[file_size];
+    static constexpr auto blockLength   { 64U }; // 512 bits
+    static constexpr auto dataLengthSize{  8U }; // 64 bits
+    static constexpr auto bitsInByte    {  8U };
 
-    std::memcpy(bytes, data.data(), file_size);
-    int size_of_last_block = file_size % 64;
+    auto const lastBlockLength{ data.size() % blockLength };
 
-    int number_of_zero_bytes;
+    auto const paddingLength
+    {
+        [ & ]() -> std::size_t
+        {
+            if ( auto const rem{ ( std::size( data ) + dataLengthSize ) % blockLength }; rem != 0 )
+            {
+                return blockLength - rem;
+            }
+            return 0U;
+        }()
+    };
 
-    if (size_of_last_block < 56)
-        number_of_zero_bytes = 56 - size_of_last_block;
+    auto const blocksCount{ ( std::size( data ) + paddingLength + dataLengthSize ) / blockLength };
+    auto const modifiedBlocksCount{ lastBlockLength >= 56U ? 2U : 1U };
+
+    std::uint32_t h0{ 0x67452301UL };
+    std::uint32_t h1{ 0xefcdab89UL };
+    std::uint32_t h2{ 0x98badcfeUL };
+    std::uint32_t h3{ 0x10325476UL };
+    std::uint32_t h4{ 0xc3d2e1f0UL };
+
+    std::uint32_t words[ 16 ];
+
+    std::size_t start{ 0U };
+
+    for ( auto i{ 0U }; i < blocksCount - modifiedBlocksCount; i++, start += 64 )
+    {
+        for ( auto j{ 0U }; j < 16U; j++ )
+        {
+            words[ j ] = 256 * 256 * 256 * data[ 64 * i + 4 * j + 3 ] +
+                               256 * 256 * data[ 64 * i + 4 * j + 2 ] +
+                                     256 * data[ 64 * i + 4 * j + 1 ] +
+                                           data[ 64 * i + 4 * j ];
+        }
+
+        hashWords( words, h0, h1, h2, h3, h4 );
+    }
+
+    if ( lastBlockLength < 56 )
+    {
+        std::uint8_t buffer[ 64 ];
+
+        for ( auto i{ 0U }; i < lastBlockLength; i++ )
+        {
+            buffer[ i ] = data[ start + i ];
+        }
+
+        auto pos{ lastBlockLength };
+        buffer[ pos++ ] = 0x80; // '1' bit in padding
+
+        // rest of '0' bits in padding
+        for ( auto i{ 0U }; i < paddingLength - 1; i++ ) { buffer[ pos++ ] = 0; }
+
+        auto const dataLengthInBits{ std::size( data ) * bitsInByte };
+        for ( auto i{ 0U }; i < bitsInByte; i++ )
+        {
+            buffer[ pos++ ] = dataLengthInBits >> i * bitsInByte;
+        }
+
+        for ( auto i{ 0U }; i < 16U; i++ )
+        {
+            words[ i ] = 256 * 256 * 256 * buffer[ 4 * i + 3 ] +
+                               256 * 256 * buffer[ 4 * i + 2 ] +
+                                     256 * buffer[ 4 * i + 1 ] +
+                                           buffer[ 4 * i ];
+        }
+
+        hashWords(words, h0, h1, h2, h3, h4);
+    }
     else
-        number_of_zero_bytes = 64 - size_of_last_block + 56;
-
-    unsigned long long num_of_blocks = (file_size + number_of_zero_bytes + 8) / 64;
-
-    int how_many_blocks_modified = 1;
-
-    if (size_of_last_block >= 56)
-        how_many_blocks_modified++;
-
-    unsigned int h0 = 0x67452301;
-    unsigned int h1 = 0xefcdab89;
-    unsigned int h2 = 0x98badcfe;
-    unsigned int h3 = 0x10325476;
-    unsigned int h4 = 0xc3d2e1f0;
-
-    std::uint8_t X[64];
-    unsigned int foo[16];
-
-    unsigned long long start = 0;
-    for (unsigned long long i = 0; i < num_of_blocks - how_many_blocks_modified; i++)
     {
-        std::copy(bytes + start, bytes + start + 64, X);//getting 64 bytes of data into x
-        start += 64;
+        std::uint8_t buffer[ 128 ];
 
-        for (int j=0; j<16; j++)
+        for ( auto i{ 0U }; i < lastBlockLength; i++ )
         {
-            foo[j] = 256 * 256 * 256 * (int)(X[4 * j + 3]) + 256 * 256 * int(X[4 * j + 2]) + 256 * int(X[4 * j + 1]) + int(X[4 * j]);
+            buffer[ i ] = data[ start + i ];
         }
 
-        block_hash(foo, h0, h1, h2, h3, h4);
+        auto pos{ lastBlockLength };
+        buffer[ pos++ ] = 0x80; // '1' bit in padding
+
+        // rest of '0' bits in padding
+        for ( auto i{ 0U }; i < paddingLength - 1; i++ ) { buffer[ pos++ ] = 0; }
+
+        auto const dataLengthInBits{ std::size( data ) * bitsInByte };
+        for ( auto i{ 0U }; i < bitsInByte; i++ )
+        {
+            buffer[ pos++ ] = dataLengthInBits >> i * bitsInByte;
+        }
+
+        for ( auto i{ 0U }; i < 16U; i++ )
+        {
+            words[ i ] = 256 * 256 * 256 * buffer[ 4 * i + 3 ] +
+                               256 * 256 * buffer[ 4 * i + 2 ] +
+                                     256 * buffer[ 4 * i + 1 ] +
+                                           buffer[ 4 * i ];
+        }
+
+        hashWords( words, h0, h1, h2, h3, h4 );
+
+        for ( auto i{ 16U }; i < 32U; i++ )
+        {
+            words[ i - 16 ] = 256 * 256 * 256 * buffer[ 4 * i + 3 ] +
+                                    256 * 256 * buffer[ 4 * i + 2 ] +
+                                          256 * buffer[ 4 * i + 1 ] +
+                                                buffer[ 4 * i ];
+        }
+
+        hashWords( words, h0, h1, h2, h3, h4 );
     }
 
-    if (size_of_last_block < 56)
-    {
-        unsigned char buf[64];
+    std::ostringstream ss;
 
-        for (int i=0; i<size_of_last_block; i++){
-            buf[i] = (unsigned char)(bytes[start + i]);
-        }
+    ss << std::hex
+       << invert( h0 )
+       << invert( h1 )
+       << invert( h2 )
+       << invert( h3 )
+       << invert( h4 );
 
-
-        int it = size_of_last_block;
-
-        buf[it++] = 0x80;
-
-        for (int i = 0; i < number_of_zero_bytes - 1; buf[it++] = 0, i++);
-
-        unsigned long long bit_file_size = file_size * 8;
-
-        for (int i = 0; i < 8; i++)
-            buf[it++] = (unsigned char)(bit_file_size >> i * 8);
-
-        for (int i = 0; i < 16; i++)
-        {
-            foo[i] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(foo, h0, h1, h2, h3, h4);
-    }
-    else
-    {
-        unsigned char buf[128];
-
-        for (int i=0; i<size_of_last_block; i++){
-            buf[i] = (unsigned char)(bytes[start + i]);
-        }
-
-        int it = size_of_last_block;
-
-        buf[it++] = 0x80;
-
-        for (int i = 0; i < number_of_zero_bytes - 1; buf[it++] = 0, i++);
-
-        unsigned long long bit_file_size = file_size * 8;
-
-        for (int i = 0; i < 8; i++)
-            buf[it++] = (unsigned char)(bit_file_size >> i * 8);
-
-
-        for (int i = 0; i < 16; i++)
-        {
-            foo[i] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(foo, h0, h1, h2, h3, h4);
-
-        for (int i = 16; i < 32; i++)
-        {
-            foo[i - 16] = 256 * 256 * 256 * buf[4 * i + 3] + 256 * 256 * buf[4 * i + 2] + 256 * buf[4 * i + 1] + buf[4 * i];
-        }
-
-        block_hash(foo, h0, h1, h2, h3, h4);
-    }
-
-    std::ostringstream s;
-
-    s << std::hex << inv(h0) << inv(h1) << inv(h2) << inv(h3) << inv(h4);
-
-    return s.str();
+    return ss.str();
 }
 
 } // namespace A1::Utils::Ripemd160

@@ -137,7 +137,7 @@ namespace
         // for the rest of '0' bits in padding
         auto const restOfPaddingLength
         {
-            [ & ]() -> std::uint64_t
+            [ & ]() -> std::size_t
             {
                 if ( auto const rem{ minResultLength % singleBlockLength }; rem != 0 )
                 {

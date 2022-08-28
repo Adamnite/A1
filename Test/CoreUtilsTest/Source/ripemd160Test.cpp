@@ -28,15 +28,27 @@ TEST( Ripemd160Test, hash )
         "6ee547c5199889bb2f54bee6572e652c95c83183"
     );
 
-    // EXPECT_EQ
-    // (
-    //     Ripemd160::hash
-    //     (
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //         "testtesttesttesttesttesttesttesttesttest"
-    //     ),
-    //     "6ee547c5199889bb2f54bee6572e652c95c83183"
-    // );
+    EXPECT_EQ
+    (
+        Ripemd160::hash
+        (
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "test"
+        ),
+        "e253b7151e1d7fe21ac4e0e74b2be863e35026aa"
+    );
+
+    EXPECT_EQ
+    (
+        Ripemd160::hash
+        (
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+            "testtesttesttesttesttesttesttesttesttest"
+        ),
+        "7c1316457795d60df195f842eebfcc392eb534f2"
+    );
 }
