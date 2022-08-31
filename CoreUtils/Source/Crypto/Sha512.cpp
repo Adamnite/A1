@@ -5,7 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreUtils/Sha512.hpp>
+#include <CoreUtils/Crypto/Sha512.hpp>
 
 #include <iomanip>
 #include <sstream>

@@ -5,7 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreUtils/Ripemd160.hpp>
+#include <CoreUtils/Crypto/Ripemd160.hpp>
 
 #include <sstream>
 

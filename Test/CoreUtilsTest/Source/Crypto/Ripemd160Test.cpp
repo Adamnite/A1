@@ -6,7 +6,7 @@
  */
 
 
-#include <CoreUtils/Ripemd160.hpp>
+#include <CoreUtils/Crypto/Ripemd160.hpp>
 
 #include <gtest/gtest.h>
 
