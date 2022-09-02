@@ -39,9 +39,9 @@ namespace
             if
             (
                 auto const reservedToken{ std::get< ReservedToken >( value ) };
-                reservedToken == ReservedToken::OpCallClose  ||
-                reservedToken == ReservedToken::OpIndexClose ||
-                reservedToken == ReservedToken::OpColon      ||
+                reservedToken == ReservedToken::OpParenthesisClose ||
+                reservedToken == ReservedToken::OpSubscriptClose   ||
+                reservedToken == ReservedToken::OpColon            ||
                 reservedToken == ReservedToken::OpComma
             )
             {
@@ -83,8 +83,8 @@ namespace
 
         switch ( token )
         {
-            MAP_TOKEN_TO_OPERATOR( OpCallOpen , Call  );
-            MAP_TOKEN_TO_OPERATOR( OpIndexOpen, Index );
+            MAP_TOKEN_TO_OPERATOR( OpParenthesisOpen, Call  );
+            MAP_TOKEN_TO_OPERATOR( OpSubscriptOpen  , Index );
 
             // Arithmetic operators
             MAP_TOKEN_TO_OPERATOR( OpDiv     , Division       );
@@ -186,11 +186,11 @@ namespace
             MAP_TOKEN_TO_OPERATOR( KwContract, ClassDefinition );
 
             // Ignored tokens
-            IGNORE_TOKEN( OpCallClose  );
-            IGNORE_TOKEN( OpIndexClose );
-            IGNORE_TOKEN( OpColon      );
-            IGNORE_TOKEN( OpComma      );
-            IGNORE_TOKEN( KwElse       );
+            IGNORE_TOKEN( OpParenthesisClose );
+            IGNORE_TOKEN( OpSubscriptClose   );
+            IGNORE_TOKEN( OpColon            );
+            IGNORE_TOKEN( OpComma            );
+            IGNORE_TOKEN( KwElse             );
 
             default:
                 throw std::runtime_error( toStringView( token ).data() );
@@ -344,13 +344,13 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             if ( operatorInfo.type == OperatorType::Call )
             {
-                skipOneOfReservedTokens< ReservedToken::OpCallOpen >( tokenIt );
+                skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
                 if
                 (
                     auto const & token{ tokenIt->value() };
                     !std::holds_alternative< ReservedToken >( token ) ||
-                     std::get              < ReservedToken >( token ) != ReservedToken::OpCallClose
+                     std::get              < ReservedToken >( token ) != ReservedToken::OpParenthesisClose
                 )
                 {
                     while ( true )
@@ -365,7 +365,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                             std::holds_alternative< ReservedToken >( current )
                         )
                         {
-                            if ( std::get< ReservedToken >( current ) == ReservedToken::OpCallClose )
+                            if ( std::get< ReservedToken >( current ) == ReservedToken::OpParenthesisClose )
                             {
                                 break;
                             }
@@ -383,9 +383,9 @@ Node::Pointer parse( TokenIterator & tokenIt )
             }
             else if ( operatorInfo.type == OperatorType::Index )
             {
-                skipOneOfReservedTokens< ReservedToken::OpIndexOpen >( tokenIt );
+                skipOneOfReservedTokens< ReservedToken::OpSubscriptOpen >( tokenIt );
                 operands.push( parse( tokenIt ) );
-                skipOneOfReservedTokens< ReservedToken::OpIndexClose >( tokenIt );
+                skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
             }
             else if ( operatorInfo.type == OperatorType::StatementIf )
             {
@@ -445,7 +445,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                 operands.push( parse( tokenIt ) ); // parse while body
             }
-            else if ( operatorInfo.type == OperatorType::ClassDefinition )
+            else if ( operatorInfo.type == OperatorType::ContractDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
 

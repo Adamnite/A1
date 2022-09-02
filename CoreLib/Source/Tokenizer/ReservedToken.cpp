@@ -17,16 +17,15 @@ namespace A1
 
 namespace
 {
-    template< typename T, std::size_t N1, std::size_t N2, std::size_t N3 >
+    template< typename T, std::size_t N1, std::size_t N2 >
     [[ nodiscard ]]
-    constexpr std::array< T, N1 + N2 + N3 > concat( std::array< T, N1 > arr1, std::array< T, N2 > arr2, std::array< T, N3 > arr3 ) noexcept
+    constexpr std::array< T, N1 + N2 > concat( std::array< T, N1 > arr1, std::array< T, N2 > arr2 ) noexcept
     {
-        std::array< T, N1 + N2 + N3 > result;
+        std::array< T, N1 + N2 > result;
         std::size_t index{ 0 };
 
         for ( auto & item : arr1 ) { result[ index++ ] = std::move( item ); }
         for ( auto & item : arr2 ) { result[ index++ ] = std::move( item ); }
-        for ( auto & item : arr3 ) { result[ index++ ] = std::move( item ); }
         return result;
     }
 
@@ -50,7 +49,7 @@ namespace
         }
     };
 
-    constexpr std::array generalKeywords
+    constexpr std::array keywords
     {
         StringifiedToken{ "False"   , ReservedToken::KwFalse    },
         StringifiedToken{ "None"    , ReservedToken::KwNone     },
@@ -61,6 +60,7 @@ namespace
         StringifiedToken{ "break"   , ReservedToken::KwBreak    },
         StringifiedToken{ "class"   , ReservedToken::KwClass    },
         StringifiedToken{ "continue", ReservedToken::KwContinue },
+        StringifiedToken{ "contract", ReservedToken::KwContract },
         StringifiedToken{ "def"     , ReservedToken::KwDef      },
         StringifiedToken{ "del"     , ReservedToken::KwDel      },
         StringifiedToken{ "elif"    , ReservedToken::KwElif     },
@@ -75,9 +75,11 @@ namespace
         StringifiedToken{ "in"      , ReservedToken::KwIn       },
         StringifiedToken{ "is"      , ReservedToken::KwIs       },
         StringifiedToken{ "lambda"  , ReservedToken::KwLambda   },
+        StringifiedToken{ "let"     , ReservedToken::KwLet      },
         StringifiedToken{ "non"     , ReservedToken::KwNon      },
         StringifiedToken{ "nonlocal", ReservedToken::KwNonLocal },
         StringifiedToken{ "not"     , ReservedToken::KwNot      },
+        StringifiedToken{ "number"  , ReservedToken::KwNumber   },
         StringifiedToken{ "or"      , ReservedToken::KwOr       },
         StringifiedToken{ "pass"    , ReservedToken::KwPass     },
         StringifiedToken{ "raise"   , ReservedToken::KwRaise    },
@@ -86,11 +88,6 @@ namespace
         StringifiedToken{ "while"   , ReservedToken::KwWhile    },
         StringifiedToken{ "with"    , ReservedToken::KwWith     },
         StringifiedToken{ "yield"   , ReservedToken::KwYield    }
-    };
-
-    constexpr std::array smartContractKeywords
-    {
-        StringifiedToken{ "contract", ReservedToken::KwContract }
     };
 
     constexpr std::array operators
@@ -102,8 +99,8 @@ namespace
         StringifiedToken{ "&"  , ReservedToken::OpBitwiseAnd              },
         StringifiedToken{ "&&" , ReservedToken::OpLogicalAnd              },
         StringifiedToken{ "&=" , ReservedToken::OpAssignBitwiseAnd        },
-        StringifiedToken{ "("  , ReservedToken::OpCallOpen                },
-        StringifiedToken{ ")"  , ReservedToken::OpCallClose               },
+        StringifiedToken{ "("  , ReservedToken::OpParenthesisOpen         },
+        StringifiedToken{ ")"  , ReservedToken::OpParenthesisClose        },
         StringifiedToken{ "*"  , ReservedToken::OpMul                     },
         StringifiedToken{ "**" , ReservedToken::OpExp                     },
         StringifiedToken{ "**=", ReservedToken::OpAssignExp               },
@@ -113,6 +110,7 @@ namespace
         StringifiedToken{ ","  , ReservedToken::OpComma                   },
         StringifiedToken{ "-"  , ReservedToken::OpSub                     },
         StringifiedToken{ "-=" , ReservedToken::OpAssignSub               },
+        StringifiedToken{ "->" , ReservedToken::OpReturnTypeAnnotation    },
         StringifiedToken{ "/"  , ReservedToken::OpDiv                     },
         StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
         StringifiedToken{ "//=", ReservedToken::OpAssignFloorDiv          },
@@ -128,8 +126,8 @@ namespace
         StringifiedToken{ ">=" , ReservedToken::OpGreaterThanEqual        },
         StringifiedToken{ ">>" , ReservedToken::OpBitwiseRightShift       },
         StringifiedToken{ ">>=", ReservedToken::OpAssignBitwiseRightShift },
-        StringifiedToken{ "["  , ReservedToken::OpIndexOpen               },
-        StringifiedToken{ "]"  , ReservedToken::OpIndexClose              },
+        StringifiedToken{ "["  , ReservedToken::OpSubscriptOpen           },
+        StringifiedToken{ "]"  , ReservedToken::OpSubscriptClose          },
         StringifiedToken{ "^"  , ReservedToken::OpBitwiseXor              },
         StringifiedToken{ "^=" , ReservedToken::OpAssignBitwiseXor        },
         StringifiedToken{ "|"  , ReservedToken::OpBitwiseOr               },
@@ -138,7 +136,7 @@ namespace
         StringifiedToken{ "~"  , ReservedToken::OpBitwiseNot              }
     };
 
-    constexpr auto allTokens{ sort( concat( generalKeywords, smartContractKeywords, operators ) ) };
+    constexpr auto allTokens{ sort( concat( keywords, operators ) ) };
 
     static_assert
     (
@@ -146,10 +144,9 @@ namespace
         "There are reserved tokens that are not included in tokens map"
     );
 
-    static_assert( std::is_sorted( std::begin( generalKeywords       ), std::end( generalKeywords       ) ), "General keywords map is not sorted"        );
-    static_assert( std::is_sorted( std::begin( smartContractKeywords ), std::end( smartContractKeywords ) ), "Smart contract keywords map is not sorted" );
-    static_assert( std::is_sorted( std::begin( operators             ), std::end( operators             ) ), "Operators map is not sorted"               );
-    static_assert( std::is_sorted( std::begin( allTokens             ), std::end( allTokens             ) ), "Tokens map is not sorted"                  );
+    static_assert( std::is_sorted( std::begin( keywords  ), std::end( keywords  ) ), "Keywords map is not sorted"  );
+    static_assert( std::is_sorted( std::begin( operators ), std::end( operators ) ), "Operators map is not sorted" );
+    static_assert( std::is_sorted( std::begin( allTokens ), std::end( allTokens ) ), "Tokens map is not sorted"    );
 
     class MaximalMunchComp
     {
@@ -194,11 +191,11 @@ std::string_view toStringView( ReservedToken const token ) noexcept
 
 ReservedToken getKeyword( std::string_view const word ) noexcept
 {
-    auto const generalIt
+    auto const it
     {
         std::find_if
         (
-            std::begin( generalKeywords ), std::end( generalKeywords ),
+            std::begin( keywords ), std::end( keywords ),
             [ word ]( auto const & t ) noexcept
             {
                 return t.tokenStr == word;
@@ -206,26 +203,9 @@ ReservedToken getKeyword( std::string_view const word ) noexcept
         )
     };
 
-    if ( generalIt == std::end( generalKeywords ) )
-    {
-        auto const smartContractIt
-        {
-            std::find_if
-            (
-                std::begin( smartContractKeywords ), std::end( smartContractKeywords ),
-                [ word ]( auto const & t ) noexcept
-                {
-                    return t.tokenStr == word;
-                }
-            )
-        };
-
-        return smartContractIt == std::end( smartContractKeywords )
-            ? ReservedToken::Unknown
-            : smartContractIt->token;
-    }
-
-    return generalIt->token;
+    return it == std::end( keywords )
+        ? ReservedToken::Unknown
+        : it->token;
 }
 
 ReservedToken getOperator( PushBackStream & stream ) noexcept

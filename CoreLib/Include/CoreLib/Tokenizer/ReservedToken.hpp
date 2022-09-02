@@ -19,13 +19,15 @@ enum class ReservedToken : std::uint8_t
 {
     Unknown,
 
-    OpCallOpen,
-    OpCallClose,
-    OpIndexOpen,
-    OpIndexClose,
+    OpParenthesisOpen,
+    OpParenthesisClose,
+    OpSubscriptOpen,
+    OpSubscriptClose,
 
     OpColon,
     OpComma,
+
+    OpReturnTypeAnnotation,
 
     // Arithmetic operators
     OpAdd,
@@ -81,6 +83,7 @@ enum class ReservedToken : std::uint8_t
     KwBreak,
     KwClass,
     KwContinue,
+    KwContract,
     KwDef,
     KwDel,
     KwElif,
@@ -96,10 +99,12 @@ enum class ReservedToken : std::uint8_t
     KwIn,
     KwIs,
     KwLambda,
+    KwLet,
     KwNon,
     KwNone,
     KwNonLocal,
     KwNot,
+    KwNumber,
     KwOr,
     KwPass,
     KwRaise,
@@ -109,9 +114,6 @@ enum class ReservedToken : std::uint8_t
     KwWhile,
     KwWith,
     KwYield,
-
-    // Smart contract keywords
-    KwContract,
 
     // Number of possible reserved tokens
     Count
