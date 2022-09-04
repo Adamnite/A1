@@ -371,6 +371,219 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title      = "FunctionDefinitionWithoutParameters",
+            .expression =
+                "def func() -> number:\n"
+                "    return 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::FunctionDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                    std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::StatementReturn,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Number{ 5 } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "FunctionDefinitionWithoutReturn",
+            .expression =
+                "def func(param1: number, param2: number):\n"
+                "    var = param1 + param2",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::FunctionDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::Assign,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "FunctionDefinition",
+            .expression =
+                "def func(param1: number, param2: number) -> number:\n"
+                "    return param1 + param2",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::FunctionDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::StatementReturn,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "FunctionDefinitionMultiline",
+            .expression =
+                "def func(param1: number, param2: number) -> number:\n"
+                "    sum = param1 + param2\n"
+                "    return sum",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::FunctionDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::FunctionParameterDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
+                    std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::Assign,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "sum" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                                )
+                            )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::OperatorType::StatementReturn,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "sum" } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "VariableDefinition",
+            .expression = "let var: number",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::VariableDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                    std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "VariableDefinitionAndInitialization",
+            .expression = "let var: number = 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::VariableDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                    std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >( A1::Number{ 5 } )
+                )
+            )
+        },
+        TestParameter
+        {
             .title      = "EmptySmartContract",
             .expression =
                 "contract Example:\n"
@@ -393,8 +606,7 @@ INSTANTIATE_TEST_SUITE_P
             .title      = "SmartContract",
             .expression =
                 "contract Example:\n"
-                "    let foo: number = 0\n"
-                "\n"
+                "    let foo: number = 101\n"
                 "    def func(param1: number, param2: number) -> number:\n"
                 "        return param1 + param2",
             .expectedRoot = std::make_shared< Node >
@@ -408,15 +620,9 @@ INSTANTIATE_TEST_SUITE_P
                         A1::OperatorType::VariableDefinition,
                         makeChildren
                         (
-                            std::make_unique< Node >
-                            (
-                                A1::OperatorType::Assign,
-                                makeChildren
-                                (
-                                    std::make_unique< Node >( A1::Identifier{ .name = "foo" } ),
-                                    std::make_unique< Node >( A1::Number{ 0 }                 )
-                                )
-                            )
+                            std::make_unique< Node >( A1::Identifier{ .name = "foo" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                            std::make_unique< Node >( A1::Number{ 101 } )
                         )
                     ),
                     std::make_unique< Node >
@@ -425,8 +631,41 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
-                            std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
-                            std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::FunctionParameterDefinition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                                    std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::FunctionParameterDefinition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
+                                    std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                                )
+                            ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                            std::make_unique< Node >
+                            (
+                                A1::OperatorType::StatementReturn,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        A1::OperatorType::Addition,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
+                                            std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                                        )
+                                    )
+                                )
+                            )
                         )
                     )
                 )

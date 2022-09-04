@@ -13,24 +13,6 @@
 namespace A1
 {
 
-namespace
-{
-    TypeID getTypeID( Node::ValueType const & value ) noexcept
-    {
-        return std::visit
-        (
-            Overload
-            {
-                []( Identifier   const & ) noexcept -> TypeID { return nullptr; /* TODO */                 },
-                []( OperatorType const   ) noexcept -> TypeID { return nullptr; /* TODO */                 },
-                []( String       const & ) noexcept -> TypeID { return Registry::getNumberHandle       (); },
-                []( Number       const   ) noexcept -> TypeID { return Registry::getStringLiteralHandle(); }
-            },
-            value
-        );
-    }
-} // namespace
-
 Node::Node
 (
     ValueType         value,
@@ -38,7 +20,6 @@ Node::Node
     std::size_t const charIndex
 )
 : value_     { std::move( value  ) }
-, typeID_    { getTypeID( value_ ) }
 , lineNumber_{ lineNumber          }
 , charIndex_ { charIndex           }
 {}
@@ -52,7 +33,6 @@ Node::Node
 )
 : value_     { std::move( value    ) }
 , children_  { std::move( children ) }
-, typeID_    { getTypeID( value_ )   }
 , lineNumber_{ lineNumber            }
 , charIndex_ { charIndex             }
 {}

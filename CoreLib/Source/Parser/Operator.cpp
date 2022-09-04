@@ -96,7 +96,10 @@ OperatorPrecedence getOperatorPrecedence( OperatorType const type ) noexcept
         case OperatorType::StatementWhile:
         case OperatorType::StatementPass:
         case OperatorType::StatementReturn:
-        case OperatorType::ClassDefinition:
+        case OperatorType::ContractDefinition:
+        case OperatorType::FunctionDefinition:
+        case OperatorType::FunctionParameterDefinition:
+        case OperatorType::VariableDefinition:
             return OperatorPrecedence::Group16;
 
         case OperatorType::Unknown:
@@ -123,22 +126,47 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
             return 0U;
 
         /**
-         * Since the number of arguments in a function call is variable,
-         * detecting it is done by the parser itself.
-         * The only operand that's certain to exist is the function name
-         * identifier.
+         * The number of arguments in a function call is variable. Thus,
+         * it is detected by the parser itself. The only operand that's
+         * certain to exist is the function name identifier.
          */
         case OperatorType::Call:
             return 1U;
 
-        case OperatorType::ClassDefinition:
+        /**
+         * The number of statements in a smart contract body is variable. Thus,
+         * it is detected by the parser itself. The only operand that's
+         * certain to exist is the smart contract name identifier.
+         */
+        case OperatorType::ContractDefinition:
+            return 1U;
+
+        /**
+         * Variable definition consists of a name identifier and type identifier.
+         */
+        case OperatorType::VariableDefinition:
+            return 2U;
+
+        /**
+         * The number of parameters and statements in a function body is variable.
+         * Thus, those are detected by the parser itself. Return type is required
+         * only if function returns a value. Therefore, the only operand that's
+         * certain to exist is the function name identifier.
+         */
+        case OperatorType::FunctionDefinition:
+            return 1U;
+
+        /**
+         * Function parameter definition consists of a name identifier and type identifier.
+         */
+        case OperatorType::FunctionParameterDefinition:
             return 2U;
 
         /**
          * Since the number of operands for if statement is variable,
          * detecting it is done by the parser itself.
          * It is certain that at least two operands should exist -
-         * if-condition and if-body.
+         * if condition and if body.
          */
         case OperatorType::StatementIf:
         case OperatorType::StatementWhile:

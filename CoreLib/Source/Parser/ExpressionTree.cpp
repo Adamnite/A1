@@ -182,8 +182,10 @@ namespace
             MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
             MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
 
-            // Smart contract specific
-            MAP_TOKEN_TO_OPERATOR( KwContract, ClassDefinition );
+            // Definitions
+            MAP_TOKEN_TO_OPERATOR( KwDef     , FunctionDefinition );
+            MAP_TOKEN_TO_OPERATOR( KwLet     , VariableDefinition );
+            MAP_TOKEN_TO_OPERATOR( KwContract, ContractDefinition );
 
             // Ignored tokens
             IGNORE_TOKEN( OpParenthesisClose );
@@ -191,6 +193,7 @@ namespace
             IGNORE_TOKEN( OpColon            );
             IGNORE_TOKEN( OpComma            );
             IGNORE_TOKEN( KwElse             );
+            IGNORE_TOKEN( KwNumber           );
 
             default:
                 throw std::runtime_error( toStringView( token ).data() );
@@ -219,6 +222,13 @@ namespace
         else if ( std::holds_alternative< Identifier >( token ) )
         {
             return std::make_unique< Node >( std::get< Identifier >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+        }
+        else if ( std::holds_alternative< ReservedToken >( token ) )
+        {
+            if ( std::get< ReservedToken >( token ) == ReservedToken::KwNumber )
+            {
+                return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
+            }
         }
 
         throw std::runtime_error( "Syntax error - unexpected operand" );
@@ -335,7 +345,24 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 )
             };
 
-            if ( operatorInfo.type == OperatorType::Unknown ) { continue; }
+            if ( operatorInfo.type == OperatorType::Unknown )
+            {
+                if ( std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwNumber )
+                {
+                    if ( !expectingOperand )
+                    {
+                        throw std::runtime_error( "Syntax error" );
+                    }
+
+                    operands.push( parseOperand( tokenIt ) );
+                    expectingOperand = false;
+
+                    ++tokenIt;
+                    break;
+                }
+
+                continue;
+            }
 
             if ( !operators.empty() && hasHigherPrecedence( operators.top(), operatorInfo ) )
             {
@@ -437,24 +464,141 @@ Node::Pointer parse( TokenIterator & tokenIt )
             else if ( operatorInfo.type == OperatorType::StatementWhile )
             {
                 skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
-
                 operands.push( parse( tokenIt ) ); // parse condition
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                skipNewline( tokenIt );
+                operands.push( parse( tokenIt ) ); // parse while body
+            }
+            else if ( operatorInfo.type == OperatorType::FunctionDefinition )
+            {
+                skipOneOfReservedTokens< ReservedToken::KwDef >( tokenIt );
+
+                operands.push( parseOperand( tokenIt ) ); // parse function name
+                tokenIt++;
+
+                {
+                    // we are parsing function parameters
+
+                    skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
+
+                    if
+                    (
+                        auto const & token{ tokenIt->value() };
+                        !std::holds_alternative< ReservedToken >( token ) ||
+                        std::get               < ReservedToken >( token ) != ReservedToken::OpParenthesisClose
+                    )
+                    {
+                        while ( true )
+                        {
+                            OperatorInfo const parameterDefinition
+                            {
+                                .type          = OperatorType::FunctionParameterDefinition,
+                                .lineNumber    = tokenIt->lineNumber(),
+                                .charIndex     = tokenIt->charIndex (),
+                                .operandsCount = getOperandsCount( OperatorType::FunctionParameterDefinition )
+                            };
+
+                            operands.push( parse( tokenIt ) ); // parse parameter name
+                            skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                            operands.push( parse( tokenIt ) ); // parse parameter type
+
+                            operators.push( parameterDefinition );
+
+                            while ( !operators.empty() )
+                            {
+                                popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+                            }
+
+                            operatorInfo.operandsCount++;
+
+                            if
+                            (
+                                auto const & current{ tokenIt->value() };
+                                std::holds_alternative< ReservedToken >( current )
+                            )
+                            {
+                                if ( std::get< ReservedToken >( current ) == ReservedToken::OpParenthesisClose )
+                                {
+                                    break;
+                                }
+                                else if ( std::get< ReservedToken >( current ) == ReservedToken::OpComma )
+                                {
+                                    ++tokenIt;
+                                }
+                                else
+                                {
+                                    throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                }
+                            }
+                        }
+                    }
+                    skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
+                }
+
+                if
+                (
+                    auto const & current{ tokenIt->value() };
+                    std::holds_alternative< ReservedToken >( current )
+                )
+                {
+                    if ( std::get< ReservedToken >( current ) == ReservedToken::OpReturnTypeAnnotation )
+                    {
+                        ++tokenIt;
+                        operands.push( parse( tokenIt ) ); // parse type
+                        operatorInfo.operandsCount++;
+                    }
+                }
 
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                operands.push( parse( tokenIt ) ); // parse while body
+                // TODO: Handle indentation
+                while ( !std::holds_alternative< Eof >( tokenIt->value() ) )
+                {
+                    operands.push( parse( tokenIt ) ); // parse function body
+                    if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+                    {
+                        ++tokenIt;
+                    }
+                    operatorInfo.operandsCount++;
+                }
+            }
+            else if ( operatorInfo.type == OperatorType::VariableDefinition )
+            {
+                skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
+                operands.push( parse( tokenIt ) ); // parse variable name
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                operands.push( parse( tokenIt ) ); // parse type
+
+                if
+                (
+                    std::holds_alternative< ReservedToken >( tokenIt->value() ) &&
+                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::OpAssign
+                )
+                {
+                    // there is initialization in this variable definition
+                    skipOneOfReservedTokens< ReservedToken::OpAssign >( tokenIt );
+                    operatorInfo.operandsCount++;
+                    operands.push( parseOperand( tokenIt ) );
+                }
             }
             else if ( operatorInfo.type == OperatorType::ContractDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
-
                 operands.push( parse( tokenIt ) ); // parse contract name
-
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                operands.push( parse( tokenIt ) ); // parse contract definition
+                // TODO: Handle indentation
+                while ( !std::holds_alternative< Eof >( tokenIt->value() ) )
+                {
+                    operands.push( parse( tokenIt ) ); // parse contract body
+                    if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+                    {
+                        ++tokenIt;
+                    }
+                    operatorInfo.operandsCount++;
+                }
             }
 
             operators.push( operatorInfo );
