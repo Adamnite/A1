@@ -18,7 +18,7 @@ set( BUILD_GTEST ON  CACHE BOOL "" FORCE )
 FetchContent_MakeAvailable( gtest )
 
 include( ${CMAKE_CURRENT_LIST_DIR}/../../CoreLib/CoreLib.cmake )
-include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest.srcs.cmake   )
+include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest.srcs.cmake      )
 
 add_executable( CoreLibTests ${SOURCES} )
 

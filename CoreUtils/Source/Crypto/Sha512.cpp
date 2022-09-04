@@ -5,10 +5,9 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreUtils/Sha512.hpp>
+#include <CoreUtils/Crypto/Sha512.hpp>
 
-#include <iomanip>
-#include <sstream>
+#include "Utils.hpp"
 
 #include <string>
 #include <vector>
@@ -256,18 +255,6 @@ namespace
 
         return result;
     }
-
-    [[ nodiscard ]]
-    std::string toHex( std::vector< std::uint64_t > data )
-    {
-        std::stringstream ss;
-        for ( auto i{ 0U }; i < hashBufferLength; i++ )
-        {
-            ss << std::hex << std::setw(16) << std::setfill('0') << data[ i ];
-        }
-        return ss.str();
-    }
-
 } // namespace
 
 std::string hash( std::string_view const data )
@@ -275,7 +262,7 @@ std::string hash( std::string_view const data )
     auto buffer{ preprocess( data ) };
     auto result{ process( std::move( buffer ) ) };
 
-    return toHex( std::move( result ) );
+    return toHex( result );
 }
 
 } // namespace A1::Utils::Sha512

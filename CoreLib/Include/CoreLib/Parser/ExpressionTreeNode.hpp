@@ -84,7 +84,10 @@ enum class OperatorType : std::uint8_t
     StatementPass,           // pass
     StatementReturn,         // return <expression>
 
-    ClassDefinition,
+    ContractDefinition,
+    FunctionDefinition,
+    FunctionParameterDefinition,
+    VariableDefinition,
 
     // Number of possible node operations
     Count
@@ -94,7 +97,7 @@ class Node
 {
 public:
     using Pointer   = std::unique_ptr< Node >;
-    using ValueType = std::variant< Identifier, OperatorType, String, Number >;
+    using ValueType = std::variant< OperatorType, Identifier, String, Number, TypeID >;
 
     Node
     (
@@ -120,8 +123,6 @@ public:
 private:
     ValueType              value_;
     std::vector< Pointer > children_;
-
-    TypeID typeID_{ nullptr };
 
     std::size_t lineNumber_{ 0U };
     std::size_t charIndex_ { 0U };

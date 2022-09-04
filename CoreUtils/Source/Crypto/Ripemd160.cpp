@@ -5,9 +5,9 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreUtils/Ripemd160.hpp>
+#include <CoreUtils/Crypto/Ripemd160.hpp>
 
-#include <sstream>
+#include "Utils.hpp"
 
 #include <array>
 
@@ -312,16 +312,7 @@ std::string hash( std::string_view const data )
         hashWords( words, h0, h1, h2, h3, h4 );
     }
 
-    std::ostringstream ss;
-
-    ss << std::hex
-       << invert( h0 )
-       << invert( h1 )
-       << invert( h2 )
-       << invert( h3 )
-       << invert( h4 );
-
-    return ss.str();
+    return toHex( std::array{ invert( h0 ), invert( h1 ), invert( h2 ), invert( h3 ), invert( h4 ) } );
 }
 
 } // namespace A1::Utils::Ripemd160

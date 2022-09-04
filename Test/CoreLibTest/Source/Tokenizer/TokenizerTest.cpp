@@ -108,13 +108,13 @@ INSTANTIATE_TEST_SUITE_P
             .expectedTokens =
             {
                 A1::Identifier{ .name = "fun" },
-                A1::ReservedToken::OpCallOpen,
+                A1::ReservedToken::OpParenthesisOpen,
                 A1::Number{ 1 },
                 A1::ReservedToken::OpComma,
                 A1::Number{ 2 },
                 A1::ReservedToken::OpComma,
                 A1::Number{ 3 },
-                A1::ReservedToken::OpCallClose,
+                A1::ReservedToken::OpParenthesisClose,
                 A1::Eof{},
                 A1::Eof{} // after first EOF, there should always be just EOF again
             }
@@ -177,11 +177,72 @@ INSTANTIATE_TEST_SUITE_P
 
                 // 5th line
                 A1::Identifier{ .name = "foo_dict" },
-                A1::ReservedToken::OpIndexOpen,
+                A1::ReservedToken::OpSubscriptOpen,
                 A1::Identifier{ .name = "key" },
-                A1::ReservedToken::OpIndexClose,
+                A1::ReservedToken::OpSubscriptClose,
                 A1::ReservedToken::OpAssign,
                 A1::Identifier{ .name = "value" },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "VariableDefinition",
+            .expression     = "let var: number",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwNumber,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "VariableDefinitionAndInitialization",
+            .expression     = "let var: number = 0",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::OpAssign,
+                A1::Number{ 0 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "FunctionDefinition",
+            .expression     =
+                "def func(param1: number, param2: number) -> number:\n"
+                "    return param1 + param2",
+            .expectedTokens =
+            {
+                // 1st line
+                A1::ReservedToken::KwDef,
+                A1::Identifier{ .name = "func" },
+                A1::ReservedToken::OpParenthesisOpen,
+                A1::Identifier{ .name = "param1" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::OpComma,
+                A1::Identifier{ .name = "param2" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::OpParenthesisClose,
+                A1::ReservedToken::OpReturnTypeAnnotation,
+                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 2nd line
+                A1::ReservedToken::KwReturn,
+                A1::Identifier{ .name = "param1" },
+                A1::ReservedToken::OpAdd,
+                A1::Identifier{ .name = "param2" },
                 A1::Eof{}
             }
         }
