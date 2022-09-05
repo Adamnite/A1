@@ -257,7 +257,7 @@ std::string hash( std::string_view const data )
         auto const dataLengthInBits{ std::size( data ) * bitsInByte };
         for ( auto i{ 0U }; i < bitsInByte; i++ )
         {
-            buffer[ pos++ ] = dataLengthInBits >> i * bitsInByte;
+            buffer[ pos++ ] = static_cast< std::uint8_t >( dataLengthInBits >> i * bitsInByte );
         }
 
         for ( auto i{ 0U }; i < 16U; i++ )
@@ -288,7 +288,7 @@ std::string hash( std::string_view const data )
         auto const dataLengthInBits{ std::size( data ) * bitsInByte };
         for ( auto i{ 0U }; i < bitsInByte; i++ )
         {
-            buffer[ pos++ ] = dataLengthInBits >> i * bitsInByte;
+            buffer[ pos++ ] = static_cast< std::uint8_t >( dataLengthInBits >> i * bitsInByte );
         }
 
         for ( auto i{ 0U }; i < 16U; i++ )
