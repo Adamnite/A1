@@ -9,6 +9,7 @@
 
 #include "Utils.hpp"
 
+#include <cstring>
 #include <string>
 #include <vector>
 #include <array>
@@ -23,7 +24,7 @@ namespace
      * fractional parts of the square roots of the first 8 prime
      * numbers ( 8 * 64 = 512, the size of SHA512 result ).
      */
-    static constexpr std::array< std::uint64_t, 8 > initializationVector
+    static constexpr std::array< std::uint64_t, 8 > initialization
     {
         0x6a09e667f3bcc908ULL,
         0xbb67ae8584caa73bULL,
@@ -103,7 +104,6 @@ namespace
     }
 
     static constexpr auto bitsInByte       {    8U };
-    static constexpr auto hashLength       {  512U };
     static constexpr auto hashBufferLength {    8U }; // 512 / ( sizeof( std::uint64_t ) * bitsInByte )
     static constexpr auto sequenceLength   {   16U };
     static constexpr auto singleBlockLength{ 1024U };
@@ -200,7 +200,7 @@ namespace
         std::array< std::uint64_t, hashBufferLength > previousRoundOutput;
         std::array< std::uint64_t, roundsCount      > words;
 
-        std::memcpy( result.data(), initializationVector.data(), hashLength );
+        std::memcpy( result.data(), initialization.data(), hashBufferLength * sizeof( std::uint64_t ) );
 
         for ( auto i{ 0U }; i < blocksCount; i++ )
         {

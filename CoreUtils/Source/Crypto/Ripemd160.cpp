@@ -22,7 +22,7 @@ namespace
         return ( x << n ) | ( x >> ( 32 - n ) );
     }
 
-    static constexpr auto roundsCount{ 80 };
+    static constexpr auto roundsCount{ 80U };
 
     [[ nodiscard ]]
     constexpr std::size_t getWordIndex( std::size_t const roundIndex ) noexcept
@@ -97,9 +97,7 @@ namespace
         if ( roundIndex >= 48U ) { return ( x & z ) | ( y & ~z ); } // 4th group of rounds
         if ( roundIndex >= 32U ) { return ( x | ~y ) ^ z;         } // 3rd group of rounds
         if ( roundIndex >= 16U ) { return ( x & y ) | ( ~x & z ); } // 2nd group of rounds
-        if ( roundIndex >= 0U  ) { return x ^ y ^ z;              } // 1st group of rounds
-
-        return 0U;
+        return x ^ y ^ z; // 1st group of rounds
     }
 
     [[ nodiscard ]]
@@ -109,9 +107,7 @@ namespace
         if ( roundIndex >= 48U ) { return 0x8f1bbcdcUL; } // 4th group of rounds
         if ( roundIndex >= 32U ) { return 0x6ed9eba1UL; } // 3rd group of rounds
         if ( roundIndex >= 16U ) { return 0x5a827999UL; } // 2nd group of rounds
-        if ( roundIndex >= 0U  ) { return 0x00000000UL; } // 1st group of rounds
-
-        return 0U;
+        return 0x00000000UL; // 1st group of rounds
     }
 
     [[ nodiscard ]]
@@ -121,9 +117,7 @@ namespace
         if ( roundIndex >= 48U ) { return 0x7a6d76e9UL; } // 4th group of rounds
         if ( roundIndex >= 32U ) { return 0x6d703ef3UL; } // 3rd group of rounds
         if ( roundIndex >= 16U ) { return 0x5c4dd124UL; } // 2nd group of rounds
-        if ( roundIndex >= 0U  ) { return 0x50a28be6UL; } // 1st group of rounds
-
-        return 0U;
+        return 0x50a28be6UL; // 1st group of rounds
     }
 
     [[ nodiscard ]]
@@ -239,7 +233,7 @@ std::string hash( std::string_view const data )
         hashWords( words, h0, h1, h2, h3, h4 );
     }
 
-    if ( lastBlockLength < 56 )
+    if ( lastBlockLength < 56U )
     {
         std::uint8_t buffer[ 64 ];
 

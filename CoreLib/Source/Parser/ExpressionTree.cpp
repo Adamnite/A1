@@ -302,7 +302,7 @@ namespace
             (
                 std::string{ "Syntax error - missing " } +
                 (
-                      std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } + ... +
+                    ( std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } ) + ... +
                     ( std::string{ " or '" } + std::string{ toStringView( moreTokensToSkip ) } + std::string{ "'" } )
                 )
             );
