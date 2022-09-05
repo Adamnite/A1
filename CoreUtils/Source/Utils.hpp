@@ -34,7 +34,8 @@ template< Container T >
     {
         for ( auto j{ 0U }; j < sizeof( U ); ++j )
         {
-            result += toHex( bytes[ i ] >> ( 8U * ( 7U - j ) ) );
+            auto const byte{ bytes[ i ] >> ( 8U * ( sizeof( U ) - 1 - j ) ) };
+            result += toHex( static_cast< std::uint8_t >( byte ) );
         }
     }
     return result;
