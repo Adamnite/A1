@@ -4,14 +4,14 @@ A1, being a derivation of Python, should implement some form of optional type de
 adding two variables can be done by either declaring the variables and their respective values beforehand, or dynamically inputing them during the function call.
 For the second option in A1, the dynamism of Python should be maintained (described below), along with optional type guards.
 
-def add(x,y):
-  let c = x + y
+def add(x,y):<br>
+  let c = x + y <br>
   return c
   
 
 And with type guards:
-def add(x:num, y:num):
-  let c:num = x + y
+def add(x:num, y:num): <br>
+  let c:num = x + y <br>
   return c
 
 Note that for the variable c, which was declared while being assigned, the type guard is also optional. For variables that are assigned, the "let" keyword should be present. 
