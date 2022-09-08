@@ -1,0 +1,9 @@
+contract arithmetic:
+     let x: int = 0
+     let y: int = 0 
+     let c: int = 0
+
+     def add(x,y,z): #type guards only need to be used during declaration. 
+        c = x + 7
+    
+    return c

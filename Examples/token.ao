@@ -1,0 +1,16 @@
+import token
+
+contract newtoken:
+    let owner:address = msg.sender
+    let creator = owner
+    let balance = token.balance(100000)
+
+   def create(owner, name:string, balance):
+        token.create(name,owner,balance)
+        
+   def transfer(new_owner:address, amount:int):
+        if msg.sender != new_owner:
+            msg.sender['balance'] -= amount
+            new_owner['balance'] += amount
+        else
+            return null
