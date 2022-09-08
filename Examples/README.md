@@ -9,7 +9,7 @@ def add(x,y):<br>
   return c
   
 
-And with type guards:
+And with type guards: <br>
 def add(x:num, y:num): <br>
   let c:num = x + y <br>
   return c
