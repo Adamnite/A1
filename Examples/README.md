@@ -17,14 +17,14 @@ def add(x:num, y:num): <br>
 Note that for the variable c, which was declared while being assigned, the type guard is also optional. For variables that are assigned, the "let" keyword should be present. 
 
 
-In general, the following syntax should be used for the declration of various types: str (string), num (integers, floats, and doubles), and bool (booleans).
+In general, the following syntax should be used for the declaration of various types: str (strings), num (integers, floats, and doubles), and bool (booleans).
 Map, array, etc should be used for more complex data types which need to be declared due to their functionality (in general, we should follow the Python paradigm).
 
 For default types (regardless of whether a type guard is present) for numbers, the following should be used.
-num: 64 bit (if int, it should be a uint64. For floats and doubles, an alternative methodlogy can be used).
+num: 64 bit (if int, it should be a uint64. For floats and doubles, an alternative methodology can be used).
 bool: False and None should be equal; return 1 and return 0 should correspond to return True and return False respectively.
 
-In addition, the following types should be supported. These types are optional, and must be declrared as a type guard. 
+In addition, the following types should be supported. These types are optional, and must be declared as a type guard. 
 
 uint32, int32, uint256, int128, int256, uint128
 
