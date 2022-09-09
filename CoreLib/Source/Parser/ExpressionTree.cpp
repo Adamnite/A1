@@ -566,9 +566,20 @@ Node::Pointer parse( TokenIterator & tokenIt )
             else if ( operatorInfo.type == OperatorType::VariableDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse variable name
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse type
+                operands.push( parseOperand( tokenIt ) ); // parse variable name
+                ++tokenIt;
+
+                if
+                (
+                    std::holds_alternative< ReservedToken >( tokenIt->value() ) &&
+                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::OpColon
+                )
+                {
+                    // there is type declaration in this variable definition
+                    ++tokenIt;
+                    operatorInfo.operandsCount++;
+                    operands.push( parse( tokenIt ) ); // parse type
+                }
 
                 if
                 (
@@ -577,7 +588,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 )
                 {
                     // there is initialization in this variable definition
-                    skipOneOfReservedTokens< ReservedToken::OpAssign >( tokenIt );
+                    ++tokenIt;
                     operatorInfo.operandsCount++;
                     operands.push( parseOperand( tokenIt ) );
                 }

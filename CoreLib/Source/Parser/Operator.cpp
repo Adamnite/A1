@@ -142,10 +142,10 @@ std::size_t getOperandsCount( OperatorType const type ) noexcept
             return 1U;
 
         /**
-         * Variable definition consists of a name identifier and type identifier.
+         * Variable definition consists of a name identifier and type identifier or initialization.
          */
         case OperatorType::VariableDefinition:
-            return 2U;
+            return 1U;
 
         /**
          * The number of parameters and statements in a function body is variable.

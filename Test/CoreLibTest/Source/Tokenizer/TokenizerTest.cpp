@@ -188,20 +188,7 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .title          = "VariableDefinition",
-            .expression     = "let var: number",
-            .expectedTokens =
-            {
-                A1::ReservedToken::KwLet,
-                A1::Identifier{ .name = "var" },
-                A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwNumber,
-                A1::Eof{}
-            }
-        },
-        TestParameter
-        {
-            .title          = "VariableDefinitionAndInitialization",
-            .expression     = "let var: number = 0",
+            .expression     = "let var: num = 0",
             .expectedTokens =
             {
                 A1::ReservedToken::KwLet,
@@ -215,9 +202,35 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title          = "VariableDefinitionWithoutInitialization",
+            .expression     = "let var: str",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwString,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "VariableDefinitionWithoutType",
+            .expression     = "let var = 0",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssign,
+                A1::Number{ 0 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .title          = "FunctionDefinition",
             .expression     =
-                "def func(param1: number, param2: number) -> number:\n"
+                "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
             .expectedTokens =
             {

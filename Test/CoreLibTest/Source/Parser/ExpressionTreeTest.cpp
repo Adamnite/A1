@@ -373,7 +373,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title      = "FunctionDefinitionWithoutParameters",
             .expression =
-                "def func() -> number:\n"
+                "def func() -> num:\n"
                 "    return 5",
             .expectedRoot = std::make_shared< Node >
             (
@@ -397,7 +397,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title      = "FunctionDefinitionWithoutReturn",
             .expression =
-                "def func(param1: number, param2: number):\n"
+                "def func(param1: num, param2: num):\n"
                 "    var = param1 + param2",
             .expectedRoot = std::make_shared< Node >
             (
@@ -447,7 +447,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title      = "FunctionDefinition",
             .expression =
-                "def func(param1: number, param2: number) -> number:\n"
+                "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
             .expectedRoot = std::make_shared< Node >
             (
@@ -497,7 +497,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title      = "FunctionDefinitionMultiline",
             .expression =
-                "def func(param1: number, param2: number) -> number:\n"
+                "def func(param1: num, param2: num) -> num:\n"
                 "    sum = param1 + param2\n"
                 "    return sum",
             .expectedRoot = std::make_shared< Node >
@@ -555,8 +555,8 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinition",
-            .expression = "let var: number",
+            .title      = "VariableDefinitionWithoutInitialization",
+            .expression = "let var: num",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::OperatorType::VariableDefinition,
@@ -569,8 +569,22 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionAndInitialization",
-            .expression = "let var: number = 5",
+            .title      = "VariableDefinitionWithoutType",
+            .expression = "let var = 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::VariableDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                    std::make_unique< Node >( A1::Number{ 5 } )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "VariableDefinition",
+            .expression = "let var: num = 5",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::OperatorType::VariableDefinition,
@@ -606,8 +620,8 @@ INSTANTIATE_TEST_SUITE_P
             .title      = "SmartContract",
             .expression =
                 "contract Example:\n"
-                "    let foo: number = 101\n"
-                "    def func(param1: number, param2: number) -> number:\n"
+                "    let foo: num = 101\n"
+                "    def func(param1: num, param2: num) -> num:\n"
                 "        return param1 + param2",
             .expectedRoot = std::make_shared< Node >
             (
