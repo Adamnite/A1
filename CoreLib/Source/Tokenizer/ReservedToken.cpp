@@ -79,7 +79,7 @@ namespace
         StringifiedToken{ "non"     , ReservedToken::KwNon      },
         StringifiedToken{ "nonlocal", ReservedToken::KwNonLocal },
         StringifiedToken{ "not"     , ReservedToken::KwNot      },
-        StringifiedToken{ "number"  , ReservedToken::KwNumber   },
+        StringifiedToken{ "num"     , ReservedToken::KwNumber   },
         StringifiedToken{ "or"      , ReservedToken::KwOr       },
         StringifiedToken{ "pass"    , ReservedToken::KwPass     },
         StringifiedToken{ "raise"   , ReservedToken::KwRaise    },

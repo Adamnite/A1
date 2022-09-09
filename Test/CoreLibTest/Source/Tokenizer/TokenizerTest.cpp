@@ -188,7 +188,7 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .title          = "VariableDefinition",
-            .expression     = "let var: number",
+            .expression     = "let var: num",
             .expectedTokens =
             {
                 A1::ReservedToken::KwLet,
@@ -201,7 +201,7 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .title          = "VariableDefinitionAndInitialization",
-            .expression     = "let var: number = 0",
+            .expression     = "let var: num = 0",
             .expectedTokens =
             {
                 A1::ReservedToken::KwLet,
@@ -217,7 +217,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title          = "FunctionDefinition",
             .expression     =
-                "def func(param1: number, param2: number) -> number:\n"
+                "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
             .expectedTokens =
             {
