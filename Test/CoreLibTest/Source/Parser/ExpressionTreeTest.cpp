@@ -555,7 +555,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinition",
+            .title      = "VariableDefinitionWithoutInitialization",
             .expression = "let var: num",
             .expectedRoot = std::make_shared< Node >
             (
@@ -569,7 +569,21 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionAndInitialization",
+            .title      = "VariableDefinitionWithoutType",
+            .expression = "let var = 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::OperatorType::VariableDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                    std::make_unique< Node >( A1::Number{ 5 } )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "VariableDefinition",
             .expression = "let var: num = 5",
             .expectedRoot = std::make_shared< Node >
             (
