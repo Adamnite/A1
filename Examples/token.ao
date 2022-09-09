@@ -1,16 +1,16 @@
+# Ballot example
+#
+# Implements creation and transferring of a token
+
 import token
 
-contract newtoken:
-    let owner:address = msg.sender
-    let creator = owner
-    let balance = token.balance(100000)
+contract NewToken:
+    let owner: address = msg.sender
 
-   def create(owner, name:string, balance):
-        token.create(name,owner,balance)
-        
-   def transfer(new_owner:address, amount:int):
-        if msg.sender != new_owner:
-            msg.sender['balance'] -= amount
-            new_owner['balance'] += amount
-        else
-            return null
+    def create(name: str, balance: num):
+        token.create(owner, name, balance)
+
+    def transfer(new_owner: address, amount: num):
+        if owner != new_owner:
+            owner["balance"] -= amount
+            new_owner["balance"] += amount
