@@ -3,19 +3,19 @@
 # Implements voting process
 
 class Proposal:
-    name: string   # proposal's name
-    count: number  # number of accumulated votes
+    let name: str   # proposal's name
+    let count: num  # number of accumulated votes
 
 class Voter:
-    weight: number     # weight is accumulated by delegation
-    hasVoted: boolean  # true if person has already voted, false otherwise
-    vote: number       # index of the voted proposal
+    let weight: num     # weight is accumulated by delegation
+    let hasVoted: bool  # true if person has already voted, false otherwise
+    let vote: num       # index of the voted proposal
 
 contract Ballot:
-    voters: map[address, Voter]
-    proposals: list
+    let voters: map[address, Voter]
+    let proposals: array[Proposal]
 
-    def vote(proposalIdx: number):
+    def vote(proposalIdx: num):
         voter = voters[msg.sender]
         voter.hasVoted = True
         voter.vote = proposalIdx

@@ -1,0 +1,16 @@
+# Arithmetic example
+#
+# Implements simple arithmetic operation
+
+contract Arithmetic:
+    let x: num = 0
+    let y: num = 0
+    let c: num = 0
+
+    def set(x_: num, y_: num, z_: num):
+        x = x_ + 1
+        y = y_ + 1
+        z = z_ + 1
+
+    def sum() -> num:
+        return x + y + z
