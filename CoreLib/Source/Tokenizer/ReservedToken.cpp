@@ -84,6 +84,7 @@ namespace
         StringifiedToken{ "pass"    , ReservedToken::KwPass     },
         StringifiedToken{ "raise"   , ReservedToken::KwRaise    },
         StringifiedToken{ "return"  , ReservedToken::KwReturn   },
+        StringifiedToken{ "str"     , ReservedToken::KwString   },
         StringifiedToken{ "try"     , ReservedToken::KwTry      },
         StringifiedToken{ "while"   , ReservedToken::KwWhile    },
         StringifiedToken{ "with"    , ReservedToken::KwWith     },

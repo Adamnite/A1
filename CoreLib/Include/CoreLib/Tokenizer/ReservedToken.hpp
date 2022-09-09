@@ -109,6 +109,7 @@ enum class ReservedToken : std::uint8_t
     KwPass,
     KwRaise,
     KwReturn,
+    KwString,
     KwTrue,
     KwTry,
     KwWhile,

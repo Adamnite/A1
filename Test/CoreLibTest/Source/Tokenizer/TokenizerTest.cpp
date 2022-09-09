@@ -188,19 +188,6 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .title          = "VariableDefinition",
-            .expression     = "let var: num",
-            .expectedTokens =
-            {
-                A1::ReservedToken::KwLet,
-                A1::Identifier{ .name = "var" },
-                A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwNumber,
-                A1::Eof{}
-            }
-        },
-        TestParameter
-        {
-            .title          = "VariableDefinitionAndInitialization",
             .expression     = "let var: num = 0",
             .expectedTokens =
             {
@@ -208,6 +195,32 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpColon,
                 A1::ReservedToken::KwNumber,
+                A1::ReservedToken::OpAssign,
+                A1::Number{ 0 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "VariableDefinitionWithoutInitialization",
+            .expression     = "let var: str",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwString,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title          = "VariableDefinitionWithoutType",
+            .expression     = "let var = 0",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpAssign,
                 A1::Number{ 0 },
                 A1::Eof{}
