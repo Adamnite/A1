@@ -1,13 +1,29 @@
-# A1
+# A1 Language: <br/> Develop smart contracts for the Adamnite blockchain
 
+[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/m-peko/bitflags/blob/master/LICENSE)
 [![Build](https://github.com/Adamnite/A1/actions/workflows/build.yml/badge.svg)](https://github.com/Adamnite/A1/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/Adamnite/A1/branch/main/graph/badge.svg?token=YBUVS7JAEQ)](https://codecov.io/gh/Adamnite/A1)
 
-A1 is a dynamically typed, high-level programming language for developing smart contracts on the Adamnite Blockchain. A1 borrows concepts from Python, C, and best practices for PL research to at once create a programming language that is modular, simple, and efficient.
+A1 programming language is a high-level programming language for developing smart contracts for the Adamnite blockchain. With its light syntax, it primarily strives for simplicity and ease of use.
 
-## Building
+<p align="center">
+    <a href="#getting-started">Getting started</a> |
+    <a href="#getting-started">Development</a> |
+    <a href="#join-us">Join us</a>
+</p>
 
-In order to compile the library, execute the following commands:
+## Getting started
+
+Learn more about the A1 project:
+
+- [Types](Docs/Types.md)
+- [Declarations](Docs/Declarations.md)
+
+## Development
+
+### Building
+
+In order to build the A1 compiler, execute the following commands:
 
 ```sh
 $ # create build directory
@@ -21,7 +37,7 @@ $ # compile
 $ ninja
 ```
 
-## Testing
+### Testing
 
 In order to run unit tests, execute the following commands:
 
@@ -37,11 +53,12 @@ $ # compile
 $ ninja
 
 $ # run tests
-$ ctest --output-on-failure
+$ ctest
 ```
 
-## Contributing
+## Join us
 
-Please check our contribution guidelines [here](CONTRIBUTING.md).
+A1 is committed to a welcoming environment where everyone can contribute.
 
-Thank you for your help!
+- See our [contributing guidelines](CONTRIBUTING.md) for information about the A1 development community
+- We discuss A1 and Adamnite Blockchain on [Discord](https://discord.gg/AxbRrXvS)
