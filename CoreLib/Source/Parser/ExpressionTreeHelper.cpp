@@ -189,7 +189,7 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
          * one of the following two: type declaration and initialization
          */
         case NodeType::VariableDefinition:
-            return 2U;
+            return 1U;
 
         /**
          * Since the number of parameters and statements in a function body is variable,
