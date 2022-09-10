@@ -60,5 +60,6 @@ $ ctest
 
 A1 is committed to a welcoming environment where everyone can contribute.
 
+- Join the design discussion at our [GitHub forum](https://github.com/Adamnite/A1/discussions)
 - See our [contributing guidelines](CONTRIBUTING.md) for information about the A1 development community
 - We discuss A1 and Adamnite Blockchain on [Discord](https://discord.gg/AxbRrXvS)
