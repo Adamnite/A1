@@ -27,7 +27,13 @@ std::optional< int > PushBackStream::pop() noexcept
     {
         if ( dataIndex_ < std::size( data_ ) )
         {
+            // reading data from the character array
             result = data_[ dataIndex_++ ];
+        }
+        else if ( dataFile_ != nullptr && !std::feof( dataFile_ ) )
+        {
+            // reading data from the file
+            result = std::fgetc( dataFile_ );
         }
         else
         {

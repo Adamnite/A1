@@ -8,8 +8,8 @@
 #include <CoreLib/Parser/ExpressionTree.hpp>
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
+#include "ExpressionTreeHelper.hpp"
 #include "Utils/Macros.hpp"
-#include "Operator.hpp"
 
 #include <stdexcept>
 #include <cstdint>
@@ -54,7 +54,7 @@ namespace
 
     struct OperatorInfo
     {
-        OperatorType type;
+        NodeType     type;
         std::size_t  lineNumber;
         std::size_t  charIndex;
         std::size_t  operandsCount;
@@ -69,14 +69,14 @@ namespace
     )
     {
 
-#define MAP_TOKEN_TO_OPERATOR( token, operator )                        \
-    case ReservedToken::token:                                          \
-        return                                                          \
-        {                                                               \
-            .type          = OperatorType::operator,                    \
-            .lineNumber    = lineNumber,                                \
-            .charIndex     = charIndex,                                 \
-            .operandsCount = getOperandsCount( OperatorType::operator ) \
+#define MAP_TOKEN_TO_OPERATOR( token, operator )                    \
+    case ReservedToken::token:                                      \
+        return                                                      \
+        {                                                           \
+            .type          = NodeType::operator,                    \
+            .lineNumber    = lineNumber,                            \
+            .charIndex     = charIndex,                             \
+            .operandsCount = getOperandsCount( NodeType::operator ) \
         }
 
 #define IGNORE_TOKEN( token ) case ReservedToken::token: break;
@@ -103,38 +103,38 @@ namespace
                 {
                     return
                     {
-                        .type          = OperatorType::UnaryPlus,
+                        .type          = NodeType::UnaryPlus,
                         .lineNumber    = lineNumber,
                         .charIndex     = charIndex,
-                        .operandsCount = getOperandsCount( OperatorType::UnaryPlus )
+                        .operandsCount = getOperandsCount( NodeType::UnaryPlus )
                     };
                 }
 
                 return
                 {
-                    .type          = OperatorType::Addition,
+                    .type          = NodeType::Addition,
                     .lineNumber    = lineNumber,
                     .charIndex     = charIndex,
-                    .operandsCount = getOperandsCount( OperatorType::Addition )
+                    .operandsCount = getOperandsCount( NodeType::Addition )
                 };
             case ReservedToken::OpSub:
                 if ( isPrefix )
                 {
                     return
                     {
-                        .type          = OperatorType::UnaryMinus,
+                        .type          = NodeType::UnaryMinus,
                         .lineNumber    = lineNumber,
                         .charIndex     = charIndex,
-                        .operandsCount = getOperandsCount( OperatorType::UnaryMinus )
+                        .operandsCount = getOperandsCount( NodeType::UnaryMinus )
                     };
                 }
 
                 return
                 {
-                    .type          = OperatorType::Subtraction,
+                    .type          = NodeType::Subtraction,
                     .lineNumber    = lineNumber,
                     .charIndex     = charIndex,
-                    .operandsCount = getOperandsCount( OperatorType::Subtraction )
+                    .operandsCount = getOperandsCount( NodeType::Subtraction )
                 };
 
             // Bitwise operators
@@ -232,13 +232,6 @@ namespace
         }
 
         throw std::runtime_error( "Syntax error - unexpected operand" );
-    }
-
-    bool hasHigherPrecedence( OperatorInfo const & lhs, OperatorInfo const & rhs ) noexcept
-    {
-        return getOperatorAssociativity( lhs.type ) == OperatorAssociativity::LeftToRight
-            ? getOperatorPrecedence( lhs.type ) <= getOperatorPrecedence( rhs.type )
-            : getOperatorPrecedence( lhs.type ) >  getOperatorPrecedence( rhs.type );
     }
 
     void popOneOperator
@@ -345,7 +338,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 )
             };
 
-            if ( operatorInfo.type == OperatorType::Unknown )
+            if ( operatorInfo.type == NodeType::Unknown )
             {
                 if ( std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwNumber )
                 {
@@ -364,12 +357,12 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 continue;
             }
 
-            if ( !operators.empty() && hasHigherPrecedence( operators.top(), operatorInfo ) )
+            if ( !operators.empty() && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
             {
                 popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex() );
             }
 
-            if ( operatorInfo.type == OperatorType::Call )
+            if ( operatorInfo.type == NodeType::Call )
             {
                 skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
@@ -408,13 +401,13 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     }
                 }
             }
-            else if ( operatorInfo.type == OperatorType::Index )
+            else if ( operatorInfo.type == NodeType::Index )
             {
                 skipOneOfReservedTokens< ReservedToken::OpSubscriptOpen >( tokenIt );
                 operands.push( parse( tokenIt ) );
                 skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
             }
-            else if ( operatorInfo.type == OperatorType::StatementIf )
+            else if ( operatorInfo.type == NodeType::StatementIf )
             {
                 skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
 
@@ -461,7 +454,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     operands.push( parse( tokenIt ) ); // parse body
                 }
             }
-            else if ( operatorInfo.type == OperatorType::StatementWhile )
+            else if ( operatorInfo.type == NodeType::StatementWhile )
             {
                 skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse condition
@@ -469,7 +462,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipNewline( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse while body
             }
-            else if ( operatorInfo.type == OperatorType::FunctionDefinition )
+            else if ( operatorInfo.type == NodeType::FunctionDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwDef >( tokenIt );
 
@@ -492,10 +485,10 @@ Node::Pointer parse( TokenIterator & tokenIt )
                         {
                             OperatorInfo const parameterDefinition
                             {
-                                .type          = OperatorType::FunctionParameterDefinition,
+                                .type          = NodeType::FunctionParameterDefinition,
                                 .lineNumber    = tokenIt->lineNumber(),
                                 .charIndex     = tokenIt->charIndex (),
-                                .operandsCount = getOperandsCount( OperatorType::FunctionParameterDefinition )
+                                .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
                             };
 
                             operands.push( parse( tokenIt ) ); // parse parameter name
@@ -563,7 +556,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     operatorInfo.operandsCount++;
                 }
             }
-            else if ( operatorInfo.type == OperatorType::VariableDefinition )
+            else if ( operatorInfo.type == NodeType::VariableDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
                 operands.push( parseOperand( tokenIt ) ); // parse variable name
@@ -593,7 +586,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     operands.push( parseOperand( tokenIt ) );
                 }
             }
-            else if ( operatorInfo.type == OperatorType::ContractDefinition )
+            else if ( operatorInfo.type == NodeType::ContractDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse contract name

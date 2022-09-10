@@ -18,7 +18,7 @@
 namespace A1
 {
 
-enum class OperatorType : std::uint8_t
+enum class NodeType : std::uint8_t
 {
     Unknown,
 
@@ -97,7 +97,14 @@ class Node
 {
 public:
     using Pointer   = std::unique_ptr< Node >;
-    using ValueType = std::variant< OperatorType, Identifier, String, Number, TypeID >;
+    using ValueType = std::variant
+    <
+        NodeType,   // Non-leaf nodes in expression tree
+        Identifier, // Names of variables, functions, smart contracts etc.
+        String,     // String literals
+        Number,     // Both integers and decimal numbers
+        TypeID      // Type declaration for variables, function parameters, return values etc.
+    >;
 
     Node
     (

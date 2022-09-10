@@ -17,24 +17,32 @@ namespace A1
 /**
  * class PushBackStream
  *
- * Allows us to return character back to the stream
- * until we are sure about the type of the specific token.
+ * Allows returning character back to the stream until it is
+ * certain what is the type of the specific token.
  *
- * CAUTION: This class does not own the data in the stream.
+ * CAUTION: Class does not own the data in the stream.
  */
 class PushBackStream
 {
 public:
-    PushBackStream( std::string_view const strv )
-    : lineNumber_{ 0U   }
-    , charIndex_ { 0U   }
-    , data_      { strv }
-    {}
+    /**
+     * Constructs the stream from the character array.
+     */
+    PushBackStream( std::string_view const data ) : data_{ data } {}
 
-    /** Pushes character back to the stream */
+    /**
+     * Constructs the stream by reading the characters from the specific file.
+     */
+    PushBackStream( std::FILE * f ) : dataFile_{ f } {}
+
+    /**
+     * Pushes character back to the stream
+     */
     void push( int const c ) noexcept;
 
-    /** Gets the next character from the stream */
+    /**
+     * Gets the next character from the stream
+     */
     [[ nodiscard ]] std::optional< int > pop() noexcept;
 
     [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
@@ -44,8 +52,10 @@ private:
     std::size_t lineNumber_{ 0U };
     std::size_t charIndex_ { 0U };
 
-    std::string_view data_;
-    std::size_t      dataIndex_{ 0U };
+    std::string_view   data_;
+    std::FILE        * dataFile_{ nullptr };
+
+    std::size_t dataIndex_{ 0U };
 
     std::stack< int > stack_;
 };
