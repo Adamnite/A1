@@ -35,10 +35,14 @@ public:
      */
     PushBackStream( std::FILE * f ) : dataFile_{ f } {}
 
-    /** Pushes character back to the stream */
+    /**
+     * Pushes character back to the stream
+     */
     void push( int const c ) noexcept;
 
-    /** Gets the next character from the stream */
+    /**
+     * Gets the next character from the stream
+     */
     [[ nodiscard ]] std::optional< int > pop() noexcept;
 
     [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }

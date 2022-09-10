@@ -5,7 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "Operator.hpp"
+#include "ExpressionTreeHelper.hpp"
 
 #include "Utils/Macros.hpp"
 
@@ -228,6 +228,13 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
 
     ASSERT( false );
     return 0U;
+}
+
+bool hasHigherPrecedence( NodeType const lhs, NodeType const rhs ) noexcept
+{
+    return getAssociativity( lhs ) == NodeAssociativity::LeftToRight
+        ? getPrecedence( lhs ) <= getPrecedence( rhs )
+        : getPrecedence( lhs ) >  getPrecedence( rhs );
 }
 
 } // namespace A1

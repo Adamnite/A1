@@ -573,7 +573,7 @@ INSTANTIATE_TEST_SUITE_P
             .expression = "let var = 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::OperatorType::VariableDefinition,
+                A1::NodeType::VariableDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),

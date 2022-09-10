@@ -68,9 +68,11 @@ enum class NodeAssociativity : std::uint8_t
     Count
 };
 
-[[ nodiscard ]] NodePrecedence    getPrecedence   ( NodeType const type ) noexcept;
+[[ nodiscard ]] NodePrecedence getPrecedence( NodeType const type ) noexcept;
 [[ nodiscard ]] NodeAssociativity getAssociativity( NodeType const type ) noexcept;
 
 [[ nodiscard ]] std::size_t getOperandsCount( NodeType const type ) noexcept;
+
+[[ nodiscard ]] bool hasHigherPrecedence( NodeType const lhs, NodeType const rhs ) noexcept;
 
 } // namespace A1

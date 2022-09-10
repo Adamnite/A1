@@ -8,8 +8,8 @@
 #include <CoreLib/Parser/ExpressionTree.hpp>
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
+#include "ExpressionTreeHelper.hpp"
 #include "Utils/Macros.hpp"
-#include "Operator.hpp"
 
 #include <stdexcept>
 #include <cstdint>
@@ -234,13 +234,6 @@ namespace
         throw std::runtime_error( "Syntax error - unexpected operand" );
     }
 
-    bool hasHigherPrecedence( OperatorInfo const & lhs, OperatorInfo const & rhs ) noexcept
-    {
-        return getAssociativity( lhs.type ) == NodeAssociativity::LeftToRight
-            ? getPrecedence( lhs.type ) <= getPrecedence( rhs.type )
-            : getPrecedence( lhs.type ) >  getPrecedence( rhs.type );
-    }
-
     void popOneOperator
     (
         std::stack< Node::Pointer >       & operands,
@@ -364,7 +357,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 continue;
             }
 
-            if ( !operators.empty() && hasHigherPrecedence( operators.top(), operatorInfo ) )
+            if ( !operators.empty() && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
             {
                 popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex() );
             }
