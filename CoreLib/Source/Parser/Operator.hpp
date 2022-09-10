@@ -15,14 +15,17 @@ namespace A1
 {
 
 /**
- * Operator precedence guides the order in which operations in
+ * Node precedence guides the order in which operations in
  * an expression are carried out.
  *
  * Following list is in descending order, i.e. upper group has
  * higher precedence than the lower one.
  */
-enum class [[ nodiscard ]] OperatorPrecedence : std::uint8_t
+enum class NodePrecedence : std::uint8_t
 {
+    /**
+     * Following groups are reserved for operators
+     */
     Group1,
     Group2,
     Group3,
@@ -38,29 +41,36 @@ enum class [[ nodiscard ]] OperatorPrecedence : std::uint8_t
     Group13,
     Group14,
     Group15,
+
+    /**
+     * Following group is reserved for all other node types
+     */
     Group16,
 
-    // Number of possible operator precedences
+    /**
+     * Number of possible precedences
+     */
     Count
 };
 
 /**
- * Operator associativity is the order in which an expression
+ * Node associativity is the order in which an expression
  * that has multiple operators of the same precedence is evaluated.
  */
-enum class [[ nodiscard ]] OperatorAssociativity : std::uint8_t
+enum class NodeAssociativity : std::uint8_t
 {
     LeftToRight,
     RightToLeft,
 
-    // Number of possible operator associativities
+    /**
+     * Number of possible associativities
+     */
     Count
 };
 
-OperatorPrecedence    getOperatorPrecedence   ( OperatorType const type ) noexcept;
-OperatorAssociativity getOperatorAssociativity( OperatorType const type ) noexcept;
+[[ nodiscard ]] NodePrecedence    getPrecedence   ( NodeType const type ) noexcept;
+[[ nodiscard ]] NodeAssociativity getAssociativity( NodeType const type ) noexcept;
 
-[[ nodiscard ]]
-std::size_t getOperandsCount( OperatorType const type ) noexcept;
+[[ nodiscard ]] std::size_t getOperandsCount( NodeType const type ) noexcept;
 
 } // namespace A1

@@ -12,217 +12,217 @@
 namespace A1
 {
 
-OperatorPrecedence getOperatorPrecedence( OperatorType const type ) noexcept
+NodePrecedence getPrecedence( NodeType const type ) noexcept
 {
     switch ( type )
     {
-        case OperatorType::Call:
-            return OperatorPrecedence::Group1;
+        case NodeType::Call:
+            return NodePrecedence::Group1;
 
-        case OperatorType::Index:
-            return OperatorPrecedence::Group2;
+        case NodeType::Index:
+            return NodePrecedence::Group2;
 
-        case OperatorType::Exponent:
-            return OperatorPrecedence::Group3;
+        case NodeType::Exponent:
+            return NodePrecedence::Group3;
 
-        case OperatorType::UnaryPlus:
-        case OperatorType::UnaryMinus:
-        case OperatorType::BitwiseNot:
-            return OperatorPrecedence::Group4;
+        case NodeType::UnaryPlus:
+        case NodeType::UnaryMinus:
+        case NodeType::BitwiseNot:
+            return NodePrecedence::Group4;
 
-        case OperatorType::Multiplication:
-        case OperatorType::Division:
-        case OperatorType::FloorDivision:
-        case OperatorType::Modulus:
-            return OperatorPrecedence::Group5;
+        case NodeType::Multiplication:
+        case NodeType::Division:
+        case NodeType::FloorDivision:
+        case NodeType::Modulus:
+            return NodePrecedence::Group5;
 
-        case OperatorType::Addition:
-        case OperatorType::Subtraction:
-            return OperatorPrecedence::Group6;
+        case NodeType::Addition:
+        case NodeType::Subtraction:
+            return NodePrecedence::Group6;
 
-        case OperatorType::BitwiseLeftShift:
-        case OperatorType::BitwiseRightShift:
-            return OperatorPrecedence::Group7;
+        case NodeType::BitwiseLeftShift:
+        case NodeType::BitwiseRightShift:
+            return NodePrecedence::Group7;
 
-        case OperatorType::BitwiseAnd:
-            return OperatorPrecedence::Group8;
+        case NodeType::BitwiseAnd:
+            return NodePrecedence::Group8;
 
-        case OperatorType::BitwiseXor:
-            return OperatorPrecedence::Group9;
+        case NodeType::BitwiseXor:
+            return NodePrecedence::Group9;
 
-        case OperatorType::BitwiseOr:
-            return OperatorPrecedence::Group10;
+        case NodeType::BitwiseOr:
+            return NodePrecedence::Group10;
 
-        case OperatorType::Equality:
-        case OperatorType::Inequality:
-        case OperatorType::GreaterThan:
-        case OperatorType::GreaterThanEqual:
-        case OperatorType::LessThan:
-        case OperatorType::LessThanEqual:
-        case OperatorType::IsIdentical:
-        case OperatorType::IsNotIdentical:
-        case OperatorType::IsMemberOf:
-        case OperatorType::IsNotMemberOf:
-            return OperatorPrecedence::Group11;
+        case NodeType::Equality:
+        case NodeType::Inequality:
+        case NodeType::GreaterThan:
+        case NodeType::GreaterThanEqual:
+        case NodeType::LessThan:
+        case NodeType::LessThanEqual:
+        case NodeType::IsIdentical:
+        case NodeType::IsNotIdentical:
+        case NodeType::IsMemberOf:
+        case NodeType::IsNotMemberOf:
+            return NodePrecedence::Group11;
 
-        case OperatorType::LogicalNot:
-            return OperatorPrecedence::Group12;
+        case NodeType::LogicalNot:
+            return NodePrecedence::Group12;
 
-        case OperatorType::LogicalAnd:
-            return OperatorPrecedence::Group13;
+        case NodeType::LogicalAnd:
+            return NodePrecedence::Group13;
 
-        case OperatorType::LogicalOr:
-            return OperatorPrecedence::Group14;
+        case NodeType::LogicalOr:
+            return NodePrecedence::Group14;
 
-        case OperatorType::Assign:
-        case OperatorType::AssignExponent:
-        case OperatorType::AssignAddition:
-        case OperatorType::AssignSubtraction:
-        case OperatorType::AssignMultiplication:
-        case OperatorType::AssignDivision:
-        case OperatorType::AssignFloorDivision:
-        case OperatorType::AssignModulus:
-        case OperatorType::AssignBitwiseLeftShift:
-        case OperatorType::AssignBitwiseRightShift:
-        case OperatorType::AssignBitwiseAnd:
-        case OperatorType::AssignBitwiseOr:
-        case OperatorType::AssignBitwiseXor:
-            return OperatorPrecedence::Group15;
+        case NodeType::Assign:
+        case NodeType::AssignExponent:
+        case NodeType::AssignAddition:
+        case NodeType::AssignSubtraction:
+        case NodeType::AssignMultiplication:
+        case NodeType::AssignDivision:
+        case NodeType::AssignFloorDivision:
+        case NodeType::AssignModulus:
+        case NodeType::AssignBitwiseLeftShift:
+        case NodeType::AssignBitwiseRightShift:
+        case NodeType::AssignBitwiseAnd:
+        case NodeType::AssignBitwiseOr:
+        case NodeType::AssignBitwiseXor:
+            return NodePrecedence::Group15;
 
         /**
          * All other types should fall into this precedence group
          */
-        case OperatorType::StatementIf:
-        case OperatorType::StatementWhile:
-        case OperatorType::StatementPass:
-        case OperatorType::StatementReturn:
-        case OperatorType::ContractDefinition:
-        case OperatorType::FunctionDefinition:
-        case OperatorType::FunctionParameterDefinition:
-        case OperatorType::VariableDefinition:
-            return OperatorPrecedence::Group16;
+        case NodeType::StatementIf:
+        case NodeType::StatementWhile:
+        case NodeType::StatementPass:
+        case NodeType::StatementReturn:
+        case NodeType::ContractDefinition:
+        case NodeType::FunctionDefinition:
+        case NodeType::FunctionParameterDefinition:
+        case NodeType::VariableDefinition:
+            return NodePrecedence::Group16;
 
-        case OperatorType::Unknown:
-        case OperatorType::Count:
+        case NodeType::Unknown:
+        case NodeType::Count:
             break;
     }
 
     ASSERT( false );
-    return OperatorPrecedence::Count;
+    return NodePrecedence::Count;
 }
 
-OperatorAssociativity getOperatorAssociativity( OperatorType const type ) noexcept
+NodeAssociativity getAssociativity( NodeType const type ) noexcept
 {
-    return type == OperatorType::Exponent
-        ? OperatorAssociativity::RightToLeft
-        : OperatorAssociativity::LeftToRight;
+    return type == NodeType::Exponent
+        ? NodeAssociativity::RightToLeft
+        : NodeAssociativity::LeftToRight;
 }
 
-std::size_t getOperandsCount( OperatorType const type ) noexcept
+std::size_t getOperandsCount( NodeType const type ) noexcept
 {
     switch ( type )
     {
-        case OperatorType::StatementPass:
-            return 0U;
-
         /**
          * The number of arguments in a function call is variable. Thus,
-         * it is detected by the parser itself. The only operand that's
+         * it is detected by the parser itself. The only operand that is
          * certain to exist is the function name identifier.
          */
-        case OperatorType::Call:
+        case NodeType::Call:
             return 1U;
 
+        case NodeType::UnaryPlus:
+        case NodeType::UnaryMinus:
+        case NodeType::BitwiseNot:
+        case NodeType::LogicalNot:
+            return 1U;
+
+        case NodeType::Index:
+        case NodeType::Exponent:
+        case NodeType::Multiplication:
+        case NodeType::Division:
+        case NodeType::FloorDivision:
+        case NodeType::Modulus:
+        case NodeType::Addition:
+        case NodeType::Subtraction:
+        case NodeType::BitwiseLeftShift:
+        case NodeType::BitwiseRightShift:
+        case NodeType::BitwiseAnd:
+        case NodeType::BitwiseOr:
+        case NodeType::BitwiseXor:
+        case NodeType::Equality:
+        case NodeType::Inequality:
+        case NodeType::GreaterThan:
+        case NodeType::GreaterThanEqual:
+        case NodeType::LessThan:
+        case NodeType::LessThanEqual:
+        case NodeType::IsIdentical:
+        case NodeType::IsNotIdentical:
+        case NodeType::IsMemberOf:
+        case NodeType::IsNotMemberOf:
+        case NodeType::LogicalAnd:
+        case NodeType::LogicalOr:
+        case NodeType::Assign:
+        case NodeType::AssignExponent:
+        case NodeType::AssignAddition:
+        case NodeType::AssignSubtraction:
+        case NodeType::AssignMultiplication:
+        case NodeType::AssignDivision:
+        case NodeType::AssignFloorDivision:
+        case NodeType::AssignModulus:
+        case NodeType::AssignBitwiseLeftShift:
+        case NodeType::AssignBitwiseRightShift:
+        case NodeType::AssignBitwiseAnd:
+        case NodeType::AssignBitwiseOr:
+        case NodeType::AssignBitwiseXor:
+            return 2U;
+
         /**
-         * The number of statements in a smart contract body is variable. Thus,
-         * it is detected by the parser itself. The only operand that's
+         * Since the number of statements in a smart contract body is variable,
+         * it is detected by the parser itself. The only operand that is
          * certain to exist is the smart contract name identifier.
          */
-        case OperatorType::ContractDefinition:
+        case NodeType::ContractDefinition:
             return 1U;
 
         /**
-         * Variable definition consists of a name identifier and type identifier or initialization.
+         * Variable definition consists of a name identifier and, at least, either
+         * one of the following two: type declaration and initialization
          */
-        case OperatorType::VariableDefinition:
-            return 1U;
+        case NodeType::VariableDefinition:
+            return 2U;
 
         /**
-         * The number of parameters and statements in a function body is variable.
-         * Thus, those are detected by the parser itself. Return type is required
-         * only if function returns a value. Therefore, the only operand that's
+         * Since the number of parameters and statements in a function body is variable,
+         * it is detected by the parser itself. Also, specifying return type is required
+         * only if function returns a value. Therefore, the only operand that is
          * certain to exist is the function name identifier.
          */
-        case OperatorType::FunctionDefinition:
+        case NodeType::FunctionDefinition:
             return 1U;
 
-        /**
-         * Function parameter definition consists of a name identifier and type identifier.
-         */
-        case OperatorType::FunctionParameterDefinition:
+        case NodeType::FunctionParameterDefinition:
             return 2U;
 
         /**
-         * Since the number of operands for if statement is variable,
-         * detecting it is done by the parser itself.
-         * It is certain that at least two operands should exist -
-         * if condition and if body.
+         * Since the number of operands (elif branches, else branch)
+         * for if statement is variable, it is detected by the parser
+         * itself. However, it is certain that two operands should exist
+         * - if condition and if body.
          */
-        case OperatorType::StatementIf:
-        case OperatorType::StatementWhile:
+        case NodeType::StatementIf:
             return 2U;
 
-        case OperatorType::StatementReturn:
-            return 1U;
-
-        case OperatorType::UnaryPlus:
-        case OperatorType::UnaryMinus:
-        case OperatorType::BitwiseNot:
-        case OperatorType::LogicalNot:
-            return 1U;
-
-        case OperatorType::Index:
-        case OperatorType::Exponent:
-        case OperatorType::Multiplication:
-        case OperatorType::Division:
-        case OperatorType::FloorDivision:
-        case OperatorType::Modulus:
-        case OperatorType::Addition:
-        case OperatorType::Subtraction:
-        case OperatorType::BitwiseLeftShift:
-        case OperatorType::BitwiseRightShift:
-        case OperatorType::BitwiseAnd:
-        case OperatorType::BitwiseOr:
-        case OperatorType::BitwiseXor:
-        case OperatorType::Equality:
-        case OperatorType::Inequality:
-        case OperatorType::GreaterThan:
-        case OperatorType::GreaterThanEqual:
-        case OperatorType::LessThan:
-        case OperatorType::LessThanEqual:
-        case OperatorType::IsIdentical:
-        case OperatorType::IsNotIdentical:
-        case OperatorType::IsMemberOf:
-        case OperatorType::IsNotMemberOf:
-        case OperatorType::LogicalAnd:
-        case OperatorType::LogicalOr:
-        case OperatorType::Assign:
-        case OperatorType::AssignExponent:
-        case OperatorType::AssignAddition:
-        case OperatorType::AssignSubtraction:
-        case OperatorType::AssignMultiplication:
-        case OperatorType::AssignDivision:
-        case OperatorType::AssignFloorDivision:
-        case OperatorType::AssignModulus:
-        case OperatorType::AssignBitwiseLeftShift:
-        case OperatorType::AssignBitwiseRightShift:
-        case OperatorType::AssignBitwiseAnd:
-        case OperatorType::AssignBitwiseOr:
-        case OperatorType::AssignBitwiseXor:
+        case NodeType::StatementWhile:
             return 2U;
 
-        case OperatorType::Unknown:
-        case OperatorType::Count:
+        case NodeType::StatementPass:
+            return 0U;
+
+        case NodeType::StatementReturn:
+            return 1U;
+
+        case NodeType::Unknown:
+        case NodeType::Count:
             break;
     }
 
