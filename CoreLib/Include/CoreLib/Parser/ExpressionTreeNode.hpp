@@ -101,8 +101,8 @@ public:
     <
         NodeType,   // Non-leaf nodes in expression tree
         Identifier, // Names of variables, functions, smart contracts etc.
-        String,     // String literals
         Number,     // Both integers and decimal numbers
+        String,     // String literals
         TypeID      // Type declaration for variables, function parameters, return values etc.
     >;
 
