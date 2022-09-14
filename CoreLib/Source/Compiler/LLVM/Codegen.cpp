@@ -42,9 +42,98 @@ namespace
         (
             Overload
             {
-                [ & ]( NodeType const ) -> llvm::Value *
+                [ & ]( NodeType const type ) -> llvm::Value *
                 {
-                    return codegenImpl( node );
+                    switch ( type ){
+                        case NodeType::Multiplication:{
+                            auto const & children{node -> children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+
+                            return builder -> CreateFMul(lhs, rhs, "multmp");
+                        }
+                        case NodeType::Division:{
+                            auto const & children{node -> children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+
+                            return builder -> CreateFDiv(lhs, rhs, "divtmp");
+                        }
+                        case NodeType::FloorDivision:{
+                            auto const & children{node -> children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+
+                            return builder -> CreateSDiv(lhs, rhs, "fdivtmp");
+                        }
+                        case NodeType::Modulus:{
+                            auto const & children{node -> children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+
+                            return builder -> CreateFRem(lhs, rhs, "modtmp");
+                        }
+
+                        case NodeType::Addition:{
+                            auto const & children{ node->children() };
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+
+                            return builder->CreateFAdd( lhs, rhs, "addtmp" );
+                        }
+                        case NodeType::Subtraction:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateFSub(lhs, rhs, "subtmp");
+                        }
+
+                        case NodeType::BitwiseLeftShift:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateShl(lhs, rhs, "lstmp");
+                        }
+                        case NodeType::BitwiseRightShift:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateShr(lhs, rhs, "rstmp");
+                        }
+                        case NodeType::BitwiseAnd:{
+                            auto const & children{node->children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateAnd(lhs, rhs, "andtmp");
+                        }
+                        case NodeType::BitwiseOr:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateOr(lhs, rhs, "ortmp");
+                        }
+                        case NodeType::BitwiseXor:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateXor(lhs, rhs, "xortmp");
+                        }
+                        case NodeType::BitwiseNot:{
+                            auto const & children{node->children()};
+                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            return builder->CreateNot(lhs, "nottmp");
+                        }
+
+                        default:
+                            return nullptr;
+                    }
                 },
                 []( Identifier const & ) -> llvm::Value *
                 {
