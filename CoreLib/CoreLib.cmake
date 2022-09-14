@@ -13,15 +13,6 @@ target_include_directories(
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source
 )
 
-include( FetchContent )
-
-# Use fmt library until C++20 std::format is supported by all compilers
-FetchContent_Declare( fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG 9.1.0
-)
-FetchContent_MakeAvailable( fmt )
-
 target_link_libraries( CoreLib PRIVATE fmt::fmt )
 
 if( ENABLE_LLVM )
