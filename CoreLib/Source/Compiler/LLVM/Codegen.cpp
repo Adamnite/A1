@@ -102,7 +102,7 @@ namespace
                             // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
                             auto * lhs{ codegenImpl( children[ 0U ] ) };
                             auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateShr(lhs, rhs, "rstmp");
+                            return builder->CreateAShr(lhs, rhs, "rstmp");//TODO: CHECK THIS OUT! 
                         }
                         case NodeType::BitwiseAnd:{
                             auto const & children{node->children()};
@@ -126,11 +126,23 @@ namespace
                         }
                         case NodeType::BitwiseNot:{
                             auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
                             auto * lhs{ codegenImpl( children[ 0U ] ) };
                             return builder->CreateNot(lhs, "nottmp");
                         }
 
+                        case NodeType::Equality:{
+                            auto const & children{node->children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateICmpEQ(lhs, rhs, "eqtmp");//TODO: check this is the correct EQ
+                        }
+                        case NodeType::Inequality:{
+                            auto const & children{node->children()};
+                            auto * lhs{ codegenImpl( children[ 0U ] ) };
+                            auto * rhs{ codegenImpl( children[ 1U ] ) };
+                            return builder->CreateNot(builder->CreateICmpEQ(lhs, rhs, "ieqtmp"));//TODO: check this is a valid statement
+                        }
+                        
                         default:
                             return nullptr;
                     }
