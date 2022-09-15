@@ -8,7 +8,7 @@ A1 programming language is a high-level programming language for developing smar
 
 <p align="center">
     <a href="#getting-started">Getting started</a> |
-    <a href="#getting-started">Development</a> |
+    <a href="#development">Development</a> |
     <a href="#join-us">Join us</a>
 </p>
 
