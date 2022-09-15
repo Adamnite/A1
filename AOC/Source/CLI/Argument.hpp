@@ -8,7 +8,7 @@
 #pragma once
 
 #include <string_view>
-#include <cstdint>
+#include <string>
 
 #include <fmt/format.h>
 
@@ -29,6 +29,11 @@ struct Argument
      * A description that will appear in the CLI help text.
      */
     std::string_view description;
+
+    /**
+     * An output variable to bind to.
+     */
+    std::string & output;
 };
 
 } // namespace A1::CLI

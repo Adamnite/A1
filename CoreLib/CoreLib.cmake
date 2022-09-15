@@ -31,6 +31,7 @@ if( ENABLE_LLVM )
         core
         irreader
         support
+        target
     )
 
     target_link_libraries( CoreLib PRIVATE ${LLVMLibs} )

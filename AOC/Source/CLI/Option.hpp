@@ -8,7 +8,8 @@
 #pragma once
 
 #include <string_view>
-#include <cstdint>
+#include <optional>
+#include <string>
 
 #include <fmt/format.h>
 
@@ -22,13 +23,15 @@ struct Option
 {
     /**
      * A short option used to specify an optional argument
-     * in the CLI. It is commonly prefixed with single dash.
+     * in the CLI. It is commonly prefixed with a single dash.
+     * E.g. -o
      */
     std::string_view short_;
 
     /**
      * A long option used to specify an optional argument
-     * in the CLI. It is commonly prefixed with double dash.
+     * in the CLI. It is commonly prefixed with double dashes.
+     * E.g. --option
      */
     std::string_view long_;
 
@@ -41,6 +44,11 @@ struct Option
      * A description that will appear in the CLI help text.
      */
     std::string_view description;
+
+    /**
+     * An output variable to bind to.
+     */
+    std::optional< std::string > & output;
 };
 
 } // namespace A1::CLI

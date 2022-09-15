@@ -23,22 +23,34 @@ struct Config
     std::string_view const version;
 };
 
+/**
+ * Represents a CLI application.
+ * Options -v/--version and -h/--help are added by default.
+ */
 class App
 {
 public:
-    App( Config config ) : config_{ config } {}
+    App( Config config );
 
     void addOption  ( Option   option   );
     void addArgument( Argument argument );
 
     void parse( int const argc, char * argv[] );
 
-    [[ nodiscard ]] std::string helpMessage   ();
-    [[ nodiscard ]] std::string versionMessage();
+    [[ nodiscard ]] bool writeHelp   () const noexcept { return helpOutput_   .has_value(); }
+    [[ nodiscard ]] bool writeVersion() const noexcept { return versionOutput_.has_value(); }
+
+    [[ nodiscard ]] std::string helpMessage   () const;
+    [[ nodiscard ]] std::string versionMessage() const;
 
 private:
     std::vector< Option   > options_;
     std::vector< Argument > arguments_;
+
+    std::vector< std::string_view > argumentNames_;
+
+    std::optional< std::string > helpOutput_;
+    std::optional< std::string > versionOutput_;
 
     Config config_;
 };
