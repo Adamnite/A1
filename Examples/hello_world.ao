@@ -1,3 +1,5 @@
-contract hello_world:
-    def hello_world() -> str:
-      return "hello world!"
+# Hello World example
+
+contract HelloWorld:
+    def get() -> str:
+        return "Hello, world!"
