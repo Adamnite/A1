@@ -40,11 +40,11 @@ bool compile( Node::Pointer const & node )
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.
      */
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeAllTargets    ();
-    llvm::InitializeAllTargetMCs  ();
-    llvm::InitializeAllAsmParsers ();
-    llvm::InitializeAllAsmPrinters();
+    // llvm::InitializeAllTargetInfos();
+    // llvm::InitializeAllTargets    ();
+    // llvm::InitializeAllTargetMCs  ();
+    // llvm::InitializeAllAsmParsers ();
+    // llvm::InitializeAllAsmPrinters();
 
     /**
      * In order to specify the architecture we want to target, we need the
