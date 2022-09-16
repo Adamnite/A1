@@ -19,7 +19,7 @@ int main( int argc, char * argv[] )
         {
             .title       = "aoc",
             .description = "A1 smart contract programming language compiler",
-            .version     = "0.1.0"
+            .version     = AOC_VERSION
         }
     };
 
