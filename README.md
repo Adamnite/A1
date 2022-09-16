@@ -18,6 +18,7 @@ Learn more about the A1 project:
 
 - [Types](Docs/Types.md)
 - [Declarations](Docs/Declarations.md)
+- [AOC](AOC/README.md)
 
 ## Development
 
