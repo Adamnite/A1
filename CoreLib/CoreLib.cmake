@@ -27,12 +27,5 @@ if( ENABLE_LLVM )
     target_include_directories( CoreLib AFTER PRIVATE ${LLVM_INCLUDE_DIRS} )
     add_definitions( ${LLVM_DEFINITIONS} )
 
-    llvm_map_components_to_libnames( LLVMLibs
-        core
-        irreader
-        support
-        target
-    )
-
-    target_link_libraries( CoreLib PRIVATE ${LLVMLibs} )
+    target_link_libraries( CoreLib PRIVATE ${LLVM_AVAILABLE_LIBS} )
 endif()
