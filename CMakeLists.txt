@@ -13,6 +13,15 @@ if( CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
     set( CMAKE_CXX_FLAGS "-Wall -Wextra -Werror" )
 endif()
 
+include( FetchContent )
+
+# Use fmt library until C++20 std::format is supported by all compilers
+FetchContent_Declare( fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 9.1.0
+)
+FetchContent_MakeAvailable( fmt )
+
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib/CoreLib.cmake )
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtils/CoreUtils.cmake )
 
@@ -22,3 +31,5 @@ message( STATUS "Testing enabled: ${ENABLE_TESTING}" )
 if( ENABLE_TESTING )
     include( ${CMAKE_CURRENT_LIST_DIR}/Test/Test.cmake )
 endif()
+
+include( ${CMAKE_CURRENT_LIST_DIR}/AOC/AOC.cmake )
