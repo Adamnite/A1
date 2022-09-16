@@ -495,7 +495,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinitionMultiline",
+            .title      = "FunctionDefinitionMultilineBody",
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    sum = param1 + param2\n"
