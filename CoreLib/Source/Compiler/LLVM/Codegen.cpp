@@ -7,6 +7,7 @@
 
 #include <CoreLib/Compiler/LLVM/Codegen.hpp>
 
+#include "Utils/Macros.hpp"
 #include "Utils/Utils.hpp"
 
 #if defined (__clang__)
@@ -27,6 +28,8 @@
 #   pragma GCC diagnostic pop
 #endif
 
+#include <span>
+
 namespace A1::LLVM
 {
 
@@ -35,6 +38,28 @@ namespace
     std::unique_ptr< llvm::LLVMContext > context;
     std::unique_ptr< llvm::IRBuilder<> > builder;
     std::unique_ptr< llvm::Module      > module_;
+
+    template< typename ... T >
+    using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
+
+    template< typename ... T >
+    llvm::Value * codegenUnaryExpression
+    (
+        IRBuilderUnaryClbk< T ... >      const,
+        std::span< Node::Pointer const > const,
+        std::string_view                 const
+    );
+
+    template< typename ... T >
+    using IRBuilderBinaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Value *, llvm::Twine const &, T ... );
+
+    template< typename ... T >
+    llvm::Value * codegenBinaryExpression
+    (
+        IRBuilderBinaryClbk< T ... >     const,
+        std::span< Node::Pointer const > const,
+        std::string_view                 const
+    );
 
     llvm::Value * codegenImpl( Node::Pointer const & node )
     {
@@ -45,104 +70,34 @@ namespace
                 [ & ]( NodeType const type ) -> llvm::Value *
                 {
                     switch ( type ){
-                        case NodeType::Multiplication:{
-                            auto const & children{node -> children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-
-                            return builder -> CreateFMul(lhs, rhs, "multmp");
-                        }
-                        case NodeType::Division:{
-                            auto const & children{node -> children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-
-                            return builder -> CreateFDiv(lhs, rhs, "divtmp");
-                        }
-                        case NodeType::FloorDivision:{
-                            auto const & children{node -> children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-
-                            return builder -> CreateSDiv(lhs, rhs, "fdivtmp");
-                        }
-                        case NodeType::Modulus:{
-                            auto const & children{node -> children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-
-                            return builder -> CreateFRem(lhs, rhs, "modtmp");
-                        }
-
-                        case NodeType::Addition:{
-                            auto const & children{ node->children() };
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-
-                            return builder->CreateFAdd( lhs, rhs, "addtmp" );
-                        }
-                        case NodeType::Subtraction:{
-                            auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateFSub(lhs, rhs, "subtmp");
-                        }
-
-                        case NodeType::BitwiseLeftShift:{
-                            auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateShl(lhs, rhs, "lstmp");
-                        }
-                        case NodeType::BitwiseRightShift:{
-                            auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateAShr(lhs, rhs, "rstmp");//TODO: CHECK THIS OUT! 
-                        }
-                        case NodeType::BitwiseAnd:{
-                            auto const & children{node->children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateAnd(lhs, rhs, "andtmp");
-                        }
-                        case NodeType::BitwiseOr:{
-                            auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateOr(lhs, rhs, "ortmp");
-                        }
-                        case NodeType::BitwiseXor:{
-                            auto const & children{node->children()};
-                            // TODO: Add check if there are 2 childs, so that we don't get out of bounds exception here
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateXor(lhs, rhs, "xortmp");
-                        }
-                        case NodeType::BitwiseNot:{
-                            auto const & children{node->children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            return builder->CreateNot(lhs, "nottmp");
-                        }
-
-                        case NodeType::Equality:{
-                            auto const & children{node->children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateICmpEQ(lhs, rhs, "eqtmp");//TODO: check this is the correct EQ
-                        }
-                        case NodeType::Inequality:{
-                            auto const & children{node->children()};
-                            auto * lhs{ codegenImpl( children[ 0U ] ) };
-                            auto * rhs{ codegenImpl( children[ 1U ] ) };
-                            return builder->CreateNot(builder->CreateICmpEQ(lhs, rhs, "ieqtmp"));//TODO: check this is a valid statement
-                        }
-                        
+                        case NodeType::Multiplication:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFMul, node->children(), "multmp" );
+                        case NodeType::Division:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFDiv, node->children(), "divtmp" );
+                        case NodeType::FloorDivision:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateSDiv, node->children(), "fdivtmp" );
+                        case NodeType::Modulus:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFRem, node->children(), "modtmp" );
+                        case NodeType::Addition:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFAdd, node->children(), "addtmp" );
+                        case NodeType::Subtraction:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFSub, node->children(), "subtmp" );
+                        case NodeType::BitwiseLeftShift:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateShl, node->children(), "lstmp" );
+                        case NodeType::BitwiseRightShift:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateAShr, node->children(), "rstmp" ); // TODO: Check this out!
+                        case NodeType::BitwiseAnd:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateAnd, node->children(), "andtmp" );
+                        case NodeType::BitwiseOr:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateOr, node->children(), "ortmp" );
+                        case NodeType::BitwiseXor:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateXor, node->children(), "xortmp" );
+                        case NodeType::BitwiseNot:
+                            return codegenUnaryExpression( &llvm::IRBuilder<>::CreateNot, node->children(), "nottmp" );
+                        case NodeType::Equality:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp" );
+                        case NodeType::Inequality:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp" );
                         default:
                             return nullptr;
                     }
@@ -166,6 +121,33 @@ namespace
             },
             node->value()
         );
+    }
+
+    template< typename ... T >
+    llvm::Value * codegenUnaryExpression
+    (
+        IRBuilderUnaryClbk< T ... >      const clbk,
+        std::span< Node::Pointer const > const nodes,
+        std::string_view                 const name
+    )
+    {
+        ASSERT( std::size( nodes ) == 1U );
+        auto * lhs{ codegenImpl( nodes[ 0U ] ) };
+        return ( *builder.*clbk )( lhs, name, T{} ... );
+    }
+
+    template< typename ... T >
+    llvm::Value * codegenBinaryExpression
+    (
+        IRBuilderBinaryClbk< T ... >     const clbk,
+        std::span< Node::Pointer const > const nodes,
+        std::string_view                 const name
+    )
+    {
+        ASSERT( std::size( nodes ) == 2U );
+        auto * lhs{ codegenImpl( nodes[ 0U ] ) };
+        auto * rhs{ codegenImpl( nodes[ 1U ] ) };
+        return ( *builder.*clbk )( lhs, rhs, name, T{} ... );
     }
 } // namespace
 
