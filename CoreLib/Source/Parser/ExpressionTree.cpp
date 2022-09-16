@@ -11,6 +11,8 @@
 #include "ExpressionTreeHelper.hpp"
 #include "Utils/Macros.hpp"
 
+#include <fmt/format.h>
+
 #include <stdexcept>
 #include <cstdint>
 
@@ -188,15 +190,17 @@ namespace
             MAP_TOKEN_TO_OPERATOR( KwContract, ContractDefinition );
 
             // Ignored tokens
+            IGNORE_TOKEN( Unknown            );
             IGNORE_TOKEN( OpParenthesisClose );
             IGNORE_TOKEN( OpSubscriptClose   );
             IGNORE_TOKEN( OpColon            );
             IGNORE_TOKEN( OpComma            );
             IGNORE_TOKEN( KwElse             );
             IGNORE_TOKEN( KwNumber           );
+            IGNORE_TOKEN( KwString           );
 
             default:
-                throw std::runtime_error( toStringView( token ).data() );
+                throw std::runtime_error( fmt::format( "Unknown token: {}", toStringView( token ) ) );
         }
 
         return {};
@@ -228,6 +232,10 @@ namespace
             if ( std::get< ReservedToken >( token ) == ReservedToken::KwNumber )
             {
                 return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
+            }
+            else if ( std::get< ReservedToken >( token ) == ReservedToken::KwString )
+            {
+                return std::make_unique< Node >( Registry::getStringLiteralHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
             }
         }
 
@@ -293,10 +301,13 @@ namespace
         {
             throw std::runtime_error
             (
-                std::string{ "Syntax error - missing " } +
+                fmt::format
                 (
-                    ( std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } ) + ... +
-                    ( std::string{ " or '" } + std::string{ toStringView( moreTokensToSkip ) } + std::string{ "'" } )
+                    "Syntax error - missing {}",
+                    (
+                        ( std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } ) + ... +
+                        ( std::string{ " or '" } + std::string{ toStringView( moreTokensToSkip ) } + std::string{ "'" } )
+                    )
                 )
             );
         }
@@ -340,7 +351,11 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             if ( operatorInfo.type == NodeType::Unknown )
             {
-                if ( std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwNumber )
+                if
+                (
+                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwNumber ||
+                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwString
+                )
                 {
                     if ( !expectingOperand )
                     {

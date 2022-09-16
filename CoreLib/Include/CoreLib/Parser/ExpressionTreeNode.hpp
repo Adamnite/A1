@@ -101,7 +101,7 @@ public:
     <
         NodeType,   // Non-leaf nodes in expression tree
         Identifier, // Names of variables, functions, smart contracts etc.
-        Number,     // Both integers and decimal numbers
+        Number,     // Both integers and decimal numbers. AKA, i32, i64, f32, or f64
         String,     // String literals
         TypeID      // Type declaration for variables, function parameters, return values etc.
     >;

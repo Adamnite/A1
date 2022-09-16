@@ -40,11 +40,11 @@ bool compile( Node::Pointer const & node )
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.
      */
-    // llvm::InitializeAllTargetInfos();
-    // llvm::InitializeAllTargets    ();
-    // llvm::InitializeAllTargetMCs  ();
-    // llvm::InitializeAllAsmParsers ();
-    // llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets    ();
+    llvm::InitializeAllTargetMCs  ();
+    llvm::InitializeAllAsmParsers ();
+    llvm::InitializeAllAsmPrinters();
 
     /**
      * In order to specify the architecture we want to target, we need the
@@ -57,7 +57,7 @@ bool compile( Node::Pointer const & node )
     std::string error;
     auto const * target{ llvm::TargetRegistry::lookupTarget( targetTriple, error ) };
 
-    if ( target != nullptr )
+    if ( target == nullptr )
     {
         /**
          * The requested target could not be found.
