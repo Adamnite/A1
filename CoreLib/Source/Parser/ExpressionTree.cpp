@@ -333,6 +333,17 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
     auto expectingOperand{ true };
 
+    while ( std::holds_alternative< Newline >( tokenIt->value() ) || std::holds_alternative< Eof >( tokenIt->value() ) )
+    {
+        // skip empty lines or comment lines
+        ++tokenIt;
+        if ( std::holds_alternative< Eof >( tokenIt->value() ) )
+        {
+            expectingOperand = false;
+            break;
+        }
+    }
+
     for ( ; !isEndOfExpression( *tokenIt ); ++tokenIt )
     {
         if ( std::holds_alternative< ReservedToken >( tokenIt->value() ) )
@@ -644,7 +655,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
         popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
     }
 
-    return std::move( operands.top() );
+    return operands.empty() ? nullptr : std::move( operands.top() );
 }
 
 } // namespace A1

@@ -63,6 +63,11 @@ namespace
 
     llvm::Value * codegenImpl( Node::Pointer const & node )
     {
+        if ( node == nullptr )
+        {
+            return nullptr;
+        }
+
         return std::visit
         (
             Overload
@@ -83,9 +88,9 @@ namespace
                         case NodeType::Subtraction:
                             return codegenBinaryExpression( &llvm::IRBuilder<>::CreateFSub, node->children(), "subtmp" );
                         case NodeType::BitwiseLeftShift:
-                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateShl, node->children(), "lstmp" );
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateShl, node->children(), "lshtmp" );
                         case NodeType::BitwiseRightShift:
-                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateAShr, node->children(), "rstmp" ); // TODO: Check this out!
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateAShr, node->children(), "rshtmp" );
                         case NodeType::BitwiseAnd:
                             return codegenBinaryExpression( &llvm::IRBuilder<>::CreateAnd, node->children(), "andtmp" );
                         case NodeType::BitwiseOr:
