@@ -546,15 +546,13 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 if
                 (
                     auto const & current{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( current )
+                    std::holds_alternative< ReservedToken >( current ) &&
+                    std::get< ReservedToken >( current ) == ReservedToken::OpReturnTypeAnnotation
                 )
                 {
-                    if ( std::get< ReservedToken >( current ) == ReservedToken::OpReturnTypeAnnotation )
-                    {
-                        ++tokenIt;
-                        operands.push( parse( tokenIt ) ); // parse type
-                        operatorInfo.operandsCount++;
-                    }
+                    ++tokenIt;
+                    operands.push( parse( tokenIt ) ); // parse type
+                    operatorInfo.operandsCount++;
                 }
 
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
@@ -564,11 +562,11 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 while ( !std::holds_alternative< Eof >( tokenIt->value() ) )
                 {
                     operands.push( parse( tokenIt ) ); // parse function body
+                    operatorInfo.operandsCount++;
                     if ( std::holds_alternative< Newline >( tokenIt->value() ) )
                     {
                         ++tokenIt;
                     }
-                    operatorInfo.operandsCount++;
                 }
             }
             else if ( operatorInfo.type == NodeType::VariableDefinition )
