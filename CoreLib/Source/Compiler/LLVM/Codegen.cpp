@@ -81,6 +81,12 @@ namespace
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
     llvm::Value    * codegenVariableDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
 
+    template< typename ... T >
+    llvm::Value * codegenIdenticalExpression
+    (
+        std::span< Node::Pointer const > const
+    );
+
     llvm::Value * codegenImpl( Node::Pointer const & node, ScopeIdentifiers & scope )
     {
         if ( node == nullptr )
@@ -123,6 +129,20 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
                         case NodeType::Inequality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
+                        case NodeType::GreaterThan:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGT, node->children(), "gttmp", scope );
+                        case NodeType::GreaterThanEqual:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGE, node->children(), "getmp", scope );
+                        case NodeType::LessThan:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLT, node->children(), "ltmp", scope );
+                        case NodeType::LessThanEqual:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLE, node->children(), "letmp", scope );
+
+                        case NodeType::IsIdentical:
+                            return codegenIdenticalExpression(node->children());
+                        case NodeType::IsNotIdentical:
+                            //i dont love this solution, as it breaks practice, but it looks like it just might work!
+                            return builder->CreateNot(codegenIdenticalExpression(node->children()), "nidenticaltmp");
 
                         case NodeType::StatementReturn:
                         {
@@ -196,6 +216,32 @@ namespace
     }
 
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const nodes )
+
+    template< typename ... T >
+    llvm::Value * codegenIdenticalExpression
+    (
+        std::span< Node::Pointer const > const nodes
+    )
+    {
+        // TODO: i do not believe this to be the best formatting of a solution, but i hope it can get us to testing
+        ASSERT( std::size( nodes ) == 2U );
+        auto * lhs{ codegenImpl( nodes[ 0U ] ) };
+        auto * rhs{ codegenImpl( nodes[ 1U ] ) };
+        if (typeid(lhs) != typeid(rhs)){
+            return ( builder->CreateFCmpOGE(lhs, lhs));//TODO: find a better way to add false
+        }
+        switch(nodes[0U].get()->value().index()){
+            case 2://Number type
+                return builder->CreateFCmpOEQ(lhs, rhs, "eqtmp");
+            case 3://string type
+                return nullptr;
+            default:
+                return nullptr;
+        }
+        return nullptr;
+    }
+
+    llvm::Function * codegenFunctionDefinitionExpression( std::span< Node::Pointer const > const children )
     {
         ASSERT( std::size( nodes ) >= 2U );
 
