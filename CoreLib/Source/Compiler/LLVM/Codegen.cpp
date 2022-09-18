@@ -113,6 +113,7 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFAdd, node->children(), "addtmp", scope );
                         case NodeType::Subtraction:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFSub, node->children(), "subtmp", scope );
+
                         case NodeType::BitwiseLeftShift:
                             return codegenBinary( &llvm::IRBuilder<>::CreateShl, node->children(), "lshtmp", scope );
                         case NodeType::BitwiseRightShift:
@@ -125,10 +126,12 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateXor, node->children(), "xortmp", scope );
                         case NodeType::BitwiseNot:
                             return codegenUnary( &llvm::IRBuilder<>::CreateNot, node->children(), "nottmp", scope );
+
                         case NodeType::Equality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
                         case NodeType::Inequality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
+
                         case NodeType::GreaterThan:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGT, node->children(), "gttmp", scope );
                         case NodeType::GreaterThanEqual:
@@ -137,6 +140,13 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLT, node->children(), "ltmp", scope );
                         case NodeType::LessThanEqual:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLE, node->children(), "letmp", scope );
+
+                        case NodeType::LogicalNot:
+                            return codegenUnaryExpression( &llvm::IRBuilder<>::CreateNot, node->children(), "lnottmp", scope );
+                        case NodeType::LogicalAnd:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateLogicalAnd, node->children(), "landtmp", scope );
+                        case NodeType::LogicalOr:
+                            return codegenBinaryExpression( &llvm::IRBuilder<>::CreateLogicalOr, node->children(), "lortmp", scope );
 
                         case NodeType::IsIdentical:
                             return codegenIdenticalExpression(node->children());
@@ -228,7 +238,7 @@ namespace
         auto * lhs{ codegenImpl( nodes[ 0U ] ) };
         auto * rhs{ codegenImpl( nodes[ 1U ] ) };
         if (typeid(lhs) != typeid(rhs)){
-            return ( builder->CreateFCmpOGE(lhs, lhs));//TODO: find a better way to add false
+            return ( builder->CreateFCmpONE(lhs, lhs));//TODO: find a better way to add false
         }
         switch(nodes[0U].get()->value().index()){
             case 2://Number type
