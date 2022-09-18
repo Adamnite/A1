@@ -7,9 +7,9 @@
 
 #include <CoreLib/Parser/ExpressionTree.hpp>
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/Utils/Macros.hpp>
 
 #include "ExpressionTreeHelper.hpp"
-#include "Utils/Macros.hpp"
 
 #include <fmt/format.h>
 
@@ -23,24 +23,16 @@ namespace
 {
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
-        if
-        (
-            std::holds_alternative< Eof     >( token.value() ) ||
-            std::holds_alternative< Newline >( token.value() )
-        )
+        if ( token.is< Eof >() || token.is< Newline >() )
         {
             return true;
         }
 
-        if
-        (
-            auto const & value{ token.value() };
-            std::holds_alternative< ReservedToken >( value )
-        )
+        if ( token.is< ReservedToken >() )
         {
             if
             (
-                auto const reservedToken{ std::get< ReservedToken >( value ) };
+                auto const reservedToken{ token.get< ReservedToken >() };
                 reservedToken == ReservedToken::OpParenthesisClose ||
                 reservedToken == ReservedToken::OpSubscriptClose   ||
                 reservedToken == ReservedToken::OpColon            ||
@@ -213,27 +205,26 @@ namespace
 
     Node::Pointer parseOperand( TokenIterator const & tokenIt )
     {
-        auto const & token{ tokenIt->value() };
-
-        if ( std::holds_alternative< Number >( token ) )
+        if ( tokenIt->is< Number >() )
         {
-            return std::make_unique< Node >( std::get< Number >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< Number >(), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
-        else if ( std::holds_alternative< String >( token ) )
+        else if ( tokenIt->is< String >() )
         {
-            return std::make_unique< Node >( std::get< String >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< String >(), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
-        else if ( std::holds_alternative< Identifier >( token ) )
+        else if ( tokenIt->is< Identifier >() )
         {
-            return std::make_unique< Node >( std::get< Identifier >( token ), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< Identifier >(), tokenIt->lineNumber(), tokenIt->charIndex() );
         }
-        else if ( std::holds_alternative< ReservedToken >( token ) )
+        else if ( tokenIt->is< ReservedToken >() )
         {
-            if ( std::get< ReservedToken >( token ) == ReservedToken::KwNumber )
+            auto const reservedToken{ tokenIt->get< ReservedToken >() };
+            if ( reservedToken == ReservedToken::KwNumber )
             {
                 return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
             }
-            else if ( std::get< ReservedToken >( token ) == ReservedToken::KwString )
+            else if ( reservedToken == ReservedToken::KwString )
             {
                 return std::make_unique< Node >( Registry::getStringLiteralHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
             }
@@ -287,11 +278,10 @@ namespace
     {
         if
         (
-            auto const & token{ tokenIt->value() };
-            std::holds_alternative< ReservedToken >( token ) &&
+            tokenIt->is< ReservedToken >() &&
             (
-                    std::get< ReservedToken >( token ) == tokenToSkip        ||
-                ( ( std::get< ReservedToken >( token ) == moreTokensToSkip ) || ... )
+                    tokenIt->get< ReservedToken >() == tokenToSkip        ||
+                ( ( tokenIt->get< ReservedToken >() == moreTokensToSkip ) || ... )
             )
         )
         {
@@ -315,7 +305,7 @@ namespace
 
     void skipNewline( TokenIterator & tokenIt )
     {
-        if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+        if ( tokenIt->is< Newline >() )
         {
             ++tokenIt;
         }
@@ -333,11 +323,11 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
     auto expectingOperand{ true };
 
-    while ( std::holds_alternative< Newline >( tokenIt->value() ) || std::holds_alternative< Eof >( tokenIt->value() ) )
+    while ( tokenIt->is< Newline >() || tokenIt->is< Eof >() )
     {
         // skip empty lines or comment lines
         ++tokenIt;
-        if ( std::holds_alternative< Eof >( tokenIt->value() ) )
+        if ( tokenIt->is< Eof >() )
         {
             expectingOperand = false;
             break;
@@ -346,14 +336,14 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
     for ( ; !isEndOfExpression( *tokenIt ); ++tokenIt )
     {
-        if ( std::holds_alternative< ReservedToken >( tokenIt->value() ) )
+        if ( tokenIt->is< ReservedToken >() )
         {
             auto const isTokenPrefix{ expectingOperand };
             auto       operatorInfo
             {
                 getOperatorInfo
                 (
-                    std::get< ReservedToken >( tokenIt->value() ),
+                    tokenIt->get< ReservedToken >(),
                     tokenIt->lineNumber(),
                     tokenIt->charIndex (),
                     isTokenPrefix
@@ -364,8 +354,9 @@ Node::Pointer parse( TokenIterator & tokenIt )
             {
                 if
                 (
-                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwNumber ||
-                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::KwString
+                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                    reservedToken == ReservedToken::KwNumber ||
+                    reservedToken == ReservedToken::KwString
                 )
                 {
                     if ( !expectingOperand )
@@ -392,12 +383,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
             {
                 skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    !std::holds_alternative< ReservedToken >( token ) ||
-                     std::get              < ReservedToken >( token ) != ReservedToken::OpParenthesisClose
-                )
+                if ( !tokenIt->is< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                 {
                     while ( true )
                     {
@@ -405,17 +391,14 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                         ++operatorInfo.operandsCount;
 
-                        if
-                        (
-                            auto const & current{ tokenIt->value() };
-                            std::holds_alternative< ReservedToken >( current )
-                        )
+                        if ( tokenIt->is< ReservedToken >() )
                         {
-                            if ( std::get< ReservedToken >( current ) == ReservedToken::OpParenthesisClose )
+                            auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                            if ( reservedToken == ReservedToken::OpParenthesisClose )
                             {
                                 break;
                             }
-                            else if ( std::get< ReservedToken >( current ) == ReservedToken::OpComma )
+                            else if ( reservedToken == ReservedToken::OpComma )
                             {
                                 ++tokenIt;
                             }
@@ -448,12 +431,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                 while ( true )
                 {
-                    if
-                    (
-                        auto const & token{ tokenIt->value() };
-                        std::holds_alternative< ReservedToken >( token ) &&
-                        std::get              < ReservedToken >( token ) == ReservedToken::KwElif
-                    )
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElif )
                     {
                         ++operatorInfo.operandsCount;
                         operands.push( parse( tokenIt ) ); // parse branch
@@ -464,12 +442,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     }
                 }
 
-                if
-                (
-                    auto const & token{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( token ) &&
-                    std::get              < ReservedToken >( token ) == ReservedToken::KwElse
-                )
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElse )
                 {
                     skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
                     skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
@@ -500,12 +473,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                     skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
-                    if
-                    (
-                        auto const & token{ tokenIt->value() };
-                        !std::holds_alternative< ReservedToken >( token ) ||
-                        std::get               < ReservedToken >( token ) != ReservedToken::OpParenthesisClose
-                    )
+                    if ( !tokenIt->is< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
                         while ( true )
                         {
@@ -530,17 +498,14 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                             operatorInfo.operandsCount++;
 
-                            if
-                            (
-                                auto const & current{ tokenIt->value() };
-                                std::holds_alternative< ReservedToken >( current )
-                            )
+                            if ( tokenIt->is< ReservedToken >() )
                             {
-                                if ( std::get< ReservedToken >( current ) == ReservedToken::OpParenthesisClose )
+                                auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                if ( reservedToken == ReservedToken::OpParenthesisClose )
                                 {
                                     break;
                                 }
-                                else if ( std::get< ReservedToken >( current ) == ReservedToken::OpComma )
+                                else if ( reservedToken == ReservedToken::OpComma )
                                 {
                                     ++tokenIt;
                                 }
@@ -554,12 +519,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
                 }
 
-                if
-                (
-                    auto const & current{ tokenIt->value() };
-                    std::holds_alternative< ReservedToken >( current ) &&
-                    std::get< ReservedToken >( current ) == ReservedToken::OpReturnTypeAnnotation
-                )
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpReturnTypeAnnotation )
                 {
                     ++tokenIt;
                     operands.push( parse( tokenIt ) ); // parse type
@@ -570,11 +530,11 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipNewline( tokenIt );
 
                 // TODO: Handle indentation
-                while ( !std::holds_alternative< Eof >( tokenIt->value() ) )
+                while ( !tokenIt->is< Eof >() )
                 {
                     operands.push( parse( tokenIt ) ); // parse function body
                     operatorInfo.operandsCount++;
-                    if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+                    if ( tokenIt->is< Newline >() )
                     {
                         ++tokenIt;
                     }
@@ -586,11 +546,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 operands.push( parseOperand( tokenIt ) ); // parse variable name
                 ++tokenIt;
 
-                if
-                (
-                    std::holds_alternative< ReservedToken >( tokenIt->value() ) &&
-                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::OpColon
-                )
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpColon )
                 {
                     // there is type declaration in this variable definition
                     ++tokenIt;
@@ -598,11 +554,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     operands.push( parse( tokenIt ) ); // parse type
                 }
 
-                if
-                (
-                    std::holds_alternative< ReservedToken >( tokenIt->value() ) &&
-                    std::get< ReservedToken >( tokenIt->value() ) == ReservedToken::OpAssign
-                )
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpAssign )
                 {
                     // there is initialization in this variable definition
                     ++tokenIt;
@@ -618,10 +570,10 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipNewline( tokenIt );
 
                 // TODO: Handle indentation
-                while ( !std::holds_alternative< Eof >( tokenIt->value() ) )
+                while ( !tokenIt->is< Eof >() )
                 {
                     operands.push( parse( tokenIt ) ); // parse contract body
-                    if ( std::holds_alternative< Newline >( tokenIt->value() ) )
+                    if ( tokenIt->is< Newline >() )
                     {
                         ++tokenIt;
                     }

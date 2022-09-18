@@ -6,8 +6,8 @@
  */
 
 #include <CoreLib/Compiler/LLVM/Codegen.hpp>
+#include <CoreLib/Utils/Macros.hpp>
 
-#include "Utils/Macros.hpp"
 #include "Utils/Utils.hpp"
 
 #if defined (__clang__)
@@ -199,20 +199,12 @@ namespace
         for ( auto i{ 0U }; i < std::size( children ); i++ )
         {
             auto const & child{ children[ i ] };
-            if
-            (
-                std::holds_alternative< NodeType >( child->value() ) &&
-                std::get< NodeType >( child->value() ) == NodeType::FunctionParameterDefinition
-            )
+            if ( child->is< NodeType >() && child->get< NodeType >() == NodeType::FunctionParameterDefinition )
             {
                 auto const & paramChildren{ child->children() };
-                paramNames.push_back( std::get< Identifier >( paramChildren[ 0 ]->value() ).name );
+                paramNames.push_back( paramChildren[ 0 ]->get< Identifier >().name );
             }
-            else if
-            (
-                !std::holds_alternative< Identifier >( child->value() ) &&
-                !std::holds_alternative< TypeID     >( child->value() )
-            )
+            else if ( !child->is< Identifier >() && !child->is< TypeID >() )
             {
                 functionBodyStartIdx = i;
             }
@@ -228,7 +220,7 @@ namespace
             (
                 functionType,
                 llvm::Function::ExternalLinkage,
-                std::get< Identifier >( children[ 0 ]->value() ).name,
+                children[ 0 ]->get< Identifier >().name,
                 module_.get()
             )
         };

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/ReservedToken.hpp>
+#include <CoreLib/Utils/Macros.hpp>
 
 #include <variant>
 #include <string>
@@ -46,6 +47,19 @@ public:
     , lineNumber_{ lineNumber         }
     , charIndex_ { charIndex          }
     {}
+
+    template< typename T >
+    [[ nodiscard ]] bool is() const noexcept
+    {
+        return std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
+    [[ nodiscard ]] T const & get() const noexcept
+    {
+        ASSERT( is< T >() );
+        return std::get< T >( value_ );
+    }
 
     [[ nodiscard ]] ValueType const & value() const noexcept { return value_; }
 
