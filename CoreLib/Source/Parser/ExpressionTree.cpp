@@ -551,7 +551,8 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     // there is type declaration in this variable definition
                     ++tokenIt;
                     operatorInfo.operandsCount++;
-                    operands.push( parse( tokenIt ) ); // parse type
+                    operands.push( parseOperand( tokenIt ) ); // parse type
+                    ++tokenIt;
                 }
 
                 if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpAssign )
@@ -559,6 +560,8 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     // there is initialization in this variable definition
                     ++tokenIt;
                     operatorInfo.operandsCount++;
+
+                    // TODO: Call parse here instead, in order to be able to parse more complex expressions
                     operands.push( parseOperand( tokenIt ) );
                 }
             }
@@ -594,6 +597,11 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
             operands.push( parseOperand( tokenIt ) );
             expectingOperand = false;
+        }
+
+        if ( tokenIt->is< Newline >() )
+        {
+            break;
         }
     }
 

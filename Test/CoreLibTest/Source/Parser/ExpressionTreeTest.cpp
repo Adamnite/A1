@@ -520,6 +520,7 @@ INSTANTIATE_TEST_SUITE_P
             .title      = "FunctionDefinitionMultilineBody",
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
+                "    let sum: num\n"
                 "    sum = param1 + param2\n"
                 "    return sum",
             .expectedRoot = std::make_shared< Node >
@@ -547,6 +548,15 @@ INSTANTIATE_TEST_SUITE_P
                         )
                     ),
                     std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::VariableDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "sum" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
                     std::make_unique< Node >
                     (
                         A1::NodeType::Assign,
