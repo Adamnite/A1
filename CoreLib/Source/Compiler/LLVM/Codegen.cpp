@@ -63,7 +63,7 @@ namespace
         IRBuilderUnaryClbk< T ... >      const,
         std::span< Node::Pointer const > const,
         std::string_view                 const,
-        ScopeIdentifiers                 const &
+        ScopeIdentifiers                       &
     );
 
     template< typename ... T >
@@ -75,12 +75,13 @@ namespace
         IRBuilderBinaryClbk< T ... >     const,
         std::span< Node::Pointer const > const,
         std::string_view                 const,
-        ScopeIdentifiers                 const &
+        ScopeIdentifiers                       &
     );
 
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
+    llvm::Value    * codegenVariableDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
 
-    llvm::Value * codegenImpl( Node::Pointer const & node, ScopeIdentifiers const & scope )
+    llvm::Value * codegenImpl( Node::Pointer const & node, ScopeIdentifiers & scope )
     {
         if ( node == nullptr )
         {
@@ -122,13 +123,18 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
                         case NodeType::Inequality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
-                        case NodeType::FunctionDefinition:
-                            return codegenFunctionDefinition( node->children() );
+
                         case NodeType::StatementReturn:
                         {
                             ASSERT( std::size( node->children() ) == 1U );
                             return codegenImpl( node->children()[ 0 ], scope );
                         }
+
+                        case NodeType::FunctionDefinition:
+                            return codegenFunctionDefinition( node->children() );
+                        case NodeType::VariableDefinition:
+                            return codegenVariableDefinition( node->children(), scope );
+
                         default:
                             return nullptr;
                     }
@@ -160,7 +166,7 @@ namespace
         IRBuilderUnaryClbk< T ... >      const   clbk,
         std::span< Node::Pointer const > const   nodes,
         std::string_view                 const   name,
-        ScopeIdentifiers                 const & scope
+        ScopeIdentifiers                       & scope
     )
     {
         ASSERT( std::size( nodes ) == 1U );
@@ -177,7 +183,7 @@ namespace
         IRBuilderBinaryClbk< T ... >     const   clbk,
         std::span< Node::Pointer const > const   nodes,
         std::string_view                 const   name,
-        ScopeIdentifiers                 const & scope
+        ScopeIdentifiers                       & scope
     )
     {
         ASSERT( std::size( nodes ) == 2U );
@@ -189,24 +195,25 @@ namespace
         return ( *builder.*clbk )( lhs, rhs, name, T{} ... );
     }
 
-    llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const children )
+    llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const nodes )
     {
-        ASSERT( std::size( children ) >= 2U );
+        ASSERT( std::size( nodes ) >= 2U );
 
-        auto functionBodyStartIdx{ 0 };
+        auto functionBodyStartIdx{ 0U };
 
         std::vector< std::string > paramNames;
-        for ( auto i{ 0U }; i < std::size( children ); i++ )
+        for ( auto i{ 0U }; i < std::size( nodes ); i++ )
         {
-            auto const & child{ children[ i ] };
-            if ( child->is< NodeType >() && child->get< NodeType >() == NodeType::FunctionParameterDefinition )
+            auto const & node{ nodes[ i ] };
+            if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::FunctionParameterDefinition )
             {
-                auto const & paramChildren{ child->children() };
-                paramNames.push_back( paramChildren[ 0 ]->get< Identifier >().name );
+                auto const & paramNodes{ node->children() };
+                paramNames.push_back( paramNodes[ 0 ]->get< Identifier >().name );
             }
-            else if ( !child->is< Identifier >() && !child->is< TypeID >() )
+            else if ( !node->is< Identifier >() && !node->is< TypeID >() )
             {
                 functionBodyStartIdx = i;
+                break;
             }
         }
 
@@ -220,7 +227,7 @@ namespace
             (
                 functionType,
                 llvm::Function::ExternalLinkage,
-                children[ 0 ]->get< Identifier >().name,
+                nodes[ 0 ]->get< Identifier >().name,
                 module_.get()
             )
         };
@@ -240,10 +247,19 @@ namespace
         // record the function arguments
         for ( auto & arg : function->args() )
         {
+            /**
+             * Since we do not support mutable function arguments,
+             * we don't need to create alloca for each argument.
+             */
             functionScope[ std::string{ arg.getName() }] = &arg;
         }
 
-        if ( auto * return_{ codegenImpl( children[ functionBodyStartIdx ], functionScope ) } )
+        for ( std::size_t i{ functionBodyStartIdx }; i < std::size( nodes ) - 1; i++ )
+        {
+            codegenImpl( nodes[ i ], functionScope );
+        }
+
+        if ( auto * return_{ codegenImpl( nodes[ std::size( nodes ) - 1 ], functionScope ) } )
         {
             builder->CreateRet( return_ );
 
@@ -256,6 +272,41 @@ namespace
         // error while reading the body, remove function.
         function->eraseFromParent();
         return nullptr;
+    }
+
+    llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        ASSERT( std::size( nodes ) == 2U );
+
+        ASSERT( nodes[ 0 ]->is< Identifier >() );
+        auto const name{ nodes[ 0 ]->get< Identifier >().name };
+
+        auto * parent{ builder->GetInsertBlock()->getParent() };
+
+        llvm::IRBuilder<> tmpBuilder{ &parent->getEntryBlock(), parent->getEntryBlock().begin() };
+        auto * alloca{ tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() ) };
+
+        if ( std::size( nodes ) == 2 )
+        {
+            if ( nodes[ 1 ]->is< TypeID >() )
+            {
+                builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), alloca );
+            }
+            else
+            {
+                auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
+                builder->CreateStore( initialization, alloca );
+            }
+        }
+        else
+        {
+            auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
+            builder->CreateStore( initialization, alloca );
+        }
+
+        scope[ name ] = alloca;
+
+        return alloca;
     }
 } // namespace
 
