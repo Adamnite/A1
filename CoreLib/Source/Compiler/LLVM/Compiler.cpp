@@ -90,6 +90,14 @@ bool compile( Node::Pointer const & node )
         return false;
     }
 
+    /**
+     * @note: Uncomment following line if you want
+     *        to print generated IR to the standard output.
+     *
+     * @todo: Support printing IR from the AOC CLI.
+     */
+    // module_->print( llvm::errs(), nullptr );
+
     llvm::legacy::PassManager pass;
 
     if ( targetMachine->addPassesToEmitFile( pass, dst, nullptr, llvm::CGFT_ObjectFile ) )
