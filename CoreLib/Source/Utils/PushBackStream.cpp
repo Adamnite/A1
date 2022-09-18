@@ -30,10 +30,14 @@ std::optional< int > PushBackStream::pop() noexcept
             // reading data from the character array
             result = data_[ dataIndex_++ ];
         }
-        else if ( dataFile_ != nullptr && !std::feof( dataFile_ ) )
+        else if ( dataFile_ != nullptr )
         {
             // reading data from the file
             result = std::fgetc( dataFile_ );
+            if ( std::feof( dataFile_ ) )
+            {
+                return {};
+            }
         }
         else
         {

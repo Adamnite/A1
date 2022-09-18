@@ -17,6 +17,12 @@ namespace
 
     void match( NodePtr const actual, NodePtr const expected )
     {
+        if ( actual == nullptr || expected == nullptr )
+        {
+            ASSERT_EQ( actual, expected );
+            return;
+        }
+
         EXPECT_EQ( actual->value(), expected->value() );
 
         auto const & actualChildren  { actual  ->children() };
@@ -98,6 +104,20 @@ INSTANTIATE_TEST_SUITE_P
     ExpressionTreeTestFixture,
     ::testing::Values
     (
+        TestParameter
+        {
+            .title        = "Empty",
+            .expression   = "",
+            .expectedRoot = nullptr
+        },
+        TestParameter
+        {
+            .title        = "CommentsOnly",
+            .expression   =
+                "# First comment line\n"
+                "# Second comment line\n",
+            .expectedRoot = nullptr
+        },
         TestParameter
         {
             .title        = "VariableAssignment",
@@ -447,6 +467,8 @@ INSTANTIATE_TEST_SUITE_P
         {
             .title      = "FunctionDefinition",
             .expression =
+                "# Simple function definition\n"
+                "\n"
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
             .expectedRoot = std::make_shared< Node >
@@ -498,6 +520,7 @@ INSTANTIATE_TEST_SUITE_P
             .title      = "FunctionDefinitionMultilineBody",
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
+                "    let sum: num\n"
                 "    sum = param1 + param2\n"
                 "    return sum",
             .expectedRoot = std::make_shared< Node >
@@ -525,6 +548,15 @@ INSTANTIATE_TEST_SUITE_P
                         )
                     ),
                     std::make_unique< Node >( A1::Registry::getNumberHandle() ),
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::VariableDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "sum" } ),
+                            std::make_unique< Node >( A1::Registry::getNumberHandle() )
+                        )
+                    ),
                     std::make_unique< Node >
                     (
                         A1::NodeType::Assign,

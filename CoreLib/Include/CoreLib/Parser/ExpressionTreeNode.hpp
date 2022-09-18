@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/Token.hpp>
+#include <CoreLib/Utils/Macros.hpp>
 #include <CoreLib/Types.hpp>
 
 #include <variant>
@@ -120,6 +121,19 @@ public:
         std::size_t            const lineNumber = 0U,
         std::size_t            const charIndex  = 0U
     );
+
+    template< typename T >
+    [[ nodiscard ]] bool is() const noexcept
+    {
+        return std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
+    [[ nodiscard ]] T const & get() const noexcept
+    {
+        ASSERT( is< T >() );
+        return std::get< T >( value_ );
+    }
 
     [[ nodiscard ]] ValueType              const & value   () const noexcept { return value_;    }
     [[ nodiscard ]] std::vector< Pointer > const & children() const noexcept { return children_; }
