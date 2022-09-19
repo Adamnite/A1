@@ -83,7 +83,7 @@ bool compile( Node::Pointer const & node )
     auto const outputFileName{ "output.o" };
 
     std::error_code errorCode;
-    llvm::raw_fd_ostream dst( outputFileName, errorCode, llvm::sys::fs::OF_None );
+    llvm::raw_fd_ostream dst{ outputFileName, errorCode, llvm::sys::fs::OF_None };
 
     if ( errorCode )
     {

@@ -78,6 +78,7 @@ namespace
         ScopeIdentifiers                       &
     );
 
+    llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
     llvm::Value    * codegenVariableDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
 
@@ -147,12 +148,16 @@ namespace
                         case NodeType::IsNotIdentical:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
 
+                        case NodeType::StatementIf:
+                            return codegenControlFlow( node->children(), scope );
                         case NodeType::StatementReturn:
                         {
                             ASSERT( std::size( node->children() ) == 1U );
                             return codegenImpl( node->children()[ 0 ], scope );
                         }
 
+                        case NodeType::ContractDefinition:
+                            return codegenContractDefinition( node->children() );
                         case NodeType::FunctionDefinition:
                             return codegenFunctionDefinition( node->children() );
                         case NodeType::VariableDefinition:
@@ -216,6 +221,57 @@ namespace
         if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
 
         return ( *builder.*clbk )( lhs, rhs, name, T{} ... );
+    }
+
+    llvm::Value * codegenControlFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        ASSERT( std::size( node->children() ) >= 2U );
+
+        auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
+        if ( condition == nullptr ) { return nullptr; }
+
+        // convert condition to boolean by comparing non-equal to 0.0
+        condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "ifcond" );
+
+        auto * then{ codegenImpl( nodes[ 1U ], scope ) };
+        if ( then == nullptr ) { return nullptr; }
+
+        auto * parent{ builder->GetInsertBlock()->getParent() };
+
+        // create conditions and blocks for if/elif/else
+
+        auto * thenBlock { llvm::BasicBlock::Create( *context, "then", parent ) };
+        auto * elseBlock { llvm::BasicBlock::Create( *context, "else"   ) };
+        auto * mergeBlock{ llvm::BasicBlock::Create( *context, "ifcont" ) };
+
+        builder->CreateCondBr( condition, thenBlock, elseBlock );
+        builder->SetInsertPoint( thenBlock );
+
+        builder->CreateBr( mergeBlock );
+
+        // codegen of 'then' can change the current block, update 'then' block for the PHI
+        thenBlock = builder->GetInsertBlock();
+
+        // emit else block
+        parent->getBasicBlockList().push_back( elseBlock );
+        builder->SetInsertPoint( elseBlock );
+
+        auto * else_{ codegenImpl( nodes[ 2 ], scope ) };
+        if ( else_ == nullptr ) { return nullptr; }
+
+        builder->CreateBr( mergeBlock );
+
+        // codegen of 'else' can change the current block, update 'else' block for the PHI
+        elseBlock = builder->GetInsertBlock();
+
+        parent->getBasicBlockList().push_back( mergeBlock );
+        builder->SetInsertPoint( mergeBlock );
+
+        auto * phi{ builder->CreatePHI( llvm::Type::getDoubleTy( *context ), 2, "iftmp" ) };
+
+        phi->addIncoming(then, thenBlock);
+        phi->addIncoming(else_, elseBlock);
+        return phi;
     }
 
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const nodes )
@@ -292,7 +348,7 @@ namespace
             return function;
         }
 
-        // error while reading the body, remove function.
+        // error while reading the body, remove function
         function->eraseFromParent();
         return nullptr;
     }
