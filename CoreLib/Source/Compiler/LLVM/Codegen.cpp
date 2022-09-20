@@ -96,6 +96,9 @@ namespace
                 [ & ]( NodeType const type ) -> llvm::Value *
                 {
                     switch ( type ){
+                        case NodeType::UnaryMinus:
+                            return codegenUnary( &llvm::IRBuilder<>::CreateFNeg, node->children(), "nottmp", scope );
+
                         case NodeType::Multiplication:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFMul, node->children(), "multmp", scope );
                         case NodeType::Division:
@@ -126,7 +129,6 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
                         case NodeType::Inequality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
-
                         case NodeType::GreaterThan:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGT, node->children(), "gttmp", scope );
                         case NodeType::GreaterThanEqual:
@@ -136,17 +138,17 @@ namespace
                         case NodeType::LessThanEqual:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLE, node->children(), "letmp", scope );
 
+                        case NodeType::IsIdentical:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
+                        case NodeType::IsNotIdentical:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
+
                         case NodeType::LogicalNot:
                             return codegenUnary( &llvm::IRBuilder<>::CreateNot, node->children(), "lnottmp", scope );
                         case NodeType::LogicalAnd:
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalAnd, node->children(), "landtmp", scope );
                         case NodeType::LogicalOr:
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalOr, node->children(), "lortmp", scope );
-
-                        case NodeType::IsIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
-                        case NodeType::IsNotIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
 
                         case NodeType::StatementIf:
                             return codegenControlFlow( node->children(), scope );
