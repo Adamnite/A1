@@ -85,6 +85,15 @@ namespace
     );
 
     llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
+    template< typename ... T>
+    llvm::Value    * codegenAssignerDefinition
+    (
+        IRBuilderBinaryClbk<T ...>       const,
+        std::span< Node::Pointer const > const,
+        std::string_view                 const,
+        ScopeIdentifiers                       &
+    );
+
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenContractDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
@@ -161,6 +170,31 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalAnd, node->children(), "landtmp", scope );
                         case NodeType::LogicalOr:
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalOr, node->children(), "lortmp", scope );
+
+                        case NodeType::Assign:
+                            return codegenVariableDefinition(node->children(), scope);
+                        case NodeType::AssignAddition:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFAdd, node->children(), "addvar", scope );
+                        case NodeType::AssignSubtraction:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFSub, node->children(), "subvar", scope );
+                        case NodeType::AssignMultiplication:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFMul, node->children(), "mulvar", scope );
+                        case NodeType::AssignDivision:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFDiv, node->children(), "divvar", scope );
+                        case NodeType::AssignFloorDivision:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateSDiv, node->children(), "fdivvar", scope );
+                        case NodeType::AssignModulus:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFRem, node->children(), "modvar", scope );
+                        case NodeType::AssignBitwiseLeftShift:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateShl, node->children(), "shlvar", scope );
+                        case NodeType::AssignBitwiseRightShift:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateAShr, node->children(), "shrvar", scope );
+                        case NodeType::AssignBitwiseAnd:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateAnd, node->children(), "andvar", scope );
+                        case NodeType::AssignBitwiseOr:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateOr, node->children(), "orvar", scope );
+                        case NodeType::AssignBitwiseXor:
+                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateXor, node->children(), "xorvar", scope );
 
                         case NodeType::StatementIf:
                             return codegenControlFlow( node->children(), scope );
@@ -494,6 +528,36 @@ namespace
         // error while reading the body, remove function
         function->eraseFromParent();
         return nullptr;
+    }
+
+    template< typename ... T >
+    llvm::Value * codegenAssignerDefinition
+    (
+        IRBuilderBinaryClbk<T ...>       const   clbk,
+        std::span< Node::Pointer const > const   nodes,
+        std::string_view                 const   opName,
+        ScopeIdentifiers                       & scope
+    )
+    {
+        ASSERT( std::size( nodes ) == 2U || std::size( nodes ) == 3U);
+
+        ASSERT( nodes[ 0 ]->is< Identifier >() );
+        auto const name{ nodes[ 0 ]->get< Identifier >().name };
+
+        auto * variable = getFromScope(scope, name);
+
+        if (variable == nullptr){return nullptr;}
+        auto * lhsVal = builder->CreateLoad(llvm::Type::getDoubleTy( *context ), variable, name.c_str());
+
+        auto * rhs{ codegenImpl( nodes[ 1U ], scope ) };
+        if(nodes[1]->is< TypeID >()){//check if nodes[1] is a type declaration
+            //TODO: if this is a type declaration, we should cast the result to that type
+            rhs = { codegenImpl( nodes[ 2U ], scope ) };
+        }
+
+        builder->CreateStore(( *builder.*clbk )( lhsVal, rhs, opName, T{} ... ), scope[name]);
+
+        return scope[name];
     }
 
     llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
