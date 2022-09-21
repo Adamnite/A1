@@ -60,9 +60,9 @@ int main( int argc, char * argv[] )
         else
         {
             // compile the given source file
-            if ( auto const success{ A1::load( inputFile ) }; success )
+            if ( auto const success{ A1::load( inputFile ) }; !success )
             {
-                std::printf( "File successfully compiled to: %s", outputFile.value_or( "output.o" ).c_str() );
+                std::printf( "Compilation error!" );
             }
         }
     }

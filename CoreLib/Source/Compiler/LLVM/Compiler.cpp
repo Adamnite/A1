@@ -96,17 +96,17 @@ bool compile( Node::Pointer const & node )
      *
      * @todo: Support printing IR from the AOC CLI.
      */
-    // module_->print( llvm::errs(), nullptr );
+    // module_->print( llvm::outs(), nullptr );
 
-    llvm::legacy::PassManager pass;
-
-    if ( targetMachine->addPassesToEmitFile( pass, dst, nullptr, llvm::CGFT_ObjectFile ) )
+    // save LLVM IR to string
+    std::string output;
     {
-        return false;
+        llvm::raw_string_ostream os{ output };
+        os << *module_;
+        os.flush();
     }
 
-    pass.run( *module_ );
-    dst.flush();
+    std::printf( "%s", output.c_str() );
 
     return true;
 }
