@@ -34,6 +34,10 @@ std::string Token::toString() const noexcept
             {
                 return str;
             },
+            []( Indentation )
+            {
+                return std::string{ "<Indentation>" };
+            },
             []( Newline )
             {
                 return std::string{ "<NEWLINE>" };

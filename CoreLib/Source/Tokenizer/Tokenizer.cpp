@@ -129,28 +129,47 @@ namespace
 
     [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )
     {
+        static constexpr auto whitespacesIndentationCount{ 4U };
+        auto consecutiveWhitespacesCount{ 0U };
+
         while ( auto const c{ stream.pop() } )
         {
             switch ( getCharType( *c ) )
             {
                 case CharType::Alphanumeric:
+                {
+                    consecutiveWhitespacesCount = 0U;
                     stream.push( *c );
                     return getWord( stream );
-
+                }
                 case CharType::Comment:
+                {
+                    consecutiveWhitespacesCount = 0U;
                     skipComment( stream );
                     continue;
-
+                }
                 case CharType::Newline:
+                {
+                    consecutiveWhitespacesCount = 0U;
                     return { Newline{}, stream.lineNumber(), stream.charIndex() };
-
+                }
                 case CharType::Quote:
+                {
+                    consecutiveWhitespacesCount = 0U;
                     return getString( stream );
-
+                }
                 case CharType::Whitespace:
+                {
+                    consecutiveWhitespacesCount++;
+                    if ( consecutiveWhitespacesCount == whitespacesIndentationCount )
+                    {
+                        return { Indentation{}, stream.lineNumber(), stream.charIndex() };
+                    }
                     continue;
-
+                }
                 case CharType::Operator:
+                {
+                    consecutiveWhitespacesCount = 0U;
                     stream.push( *c );
 
                     auto const op{ getOperator( stream ) };
@@ -160,6 +179,7 @@ namespace
                         return {};
                     }
                     return { op, stream.lineNumber(), stream.charIndex() };
+                }
             }
         }
 

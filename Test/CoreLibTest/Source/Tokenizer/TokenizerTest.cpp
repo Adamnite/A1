@@ -159,6 +159,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Newline{},
 
                 // 2nd line
+                A1::Indentation{},
                 A1::ReservedToken::KwIf,
                 A1::Identifier{ .name = "key" },
                 A1::ReservedToken::KwIn,
@@ -167,15 +168,20 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Newline{},
 
                 // 3rd line
+                A1::Indentation{},
+                A1::Indentation{},
                 A1::ReservedToken::KwPass,
                 A1::Newline{},
 
                 // 4th line
+                A1::Indentation{},
                 A1::ReservedToken::KwElse,
                 A1::ReservedToken::OpColon,
                 A1::Newline{},
 
                 // 5th line
+                A1::Indentation{},
+                A1::Indentation{},
                 A1::Identifier{ .name = "foo_dict" },
                 A1::ReservedToken::OpSubscriptOpen,
                 A1::Identifier{ .name = "key" },
@@ -252,6 +258,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Newline{},
 
                 // 2nd line
+                A1::Indentation{},
                 A1::ReservedToken::KwReturn,
                 A1::Identifier{ .name = "param1" },
                 A1::ReservedToken::OpAdd,
