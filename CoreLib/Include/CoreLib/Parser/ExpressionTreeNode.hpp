@@ -85,6 +85,7 @@ enum class NodeType : std::uint8_t
     StatementPass,           // pass
     StatementReturn,         // return <expression>
 
+    ModuleDefinition,
     ContractDefinition,
     FunctionDefinition,
     FunctionParameterDefinition,

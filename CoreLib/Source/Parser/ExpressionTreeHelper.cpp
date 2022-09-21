@@ -96,6 +96,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
         case NodeType::StatementWhile:
         case NodeType::StatementPass:
         case NodeType::StatementReturn:
+        case NodeType::ModuleDefinition:
         case NodeType::ContractDefinition:
         case NodeType::FunctionDefinition:
         case NodeType::FunctionParameterDefinition:
@@ -175,6 +176,13 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::AssignBitwiseOr:
         case NodeType::AssignBitwiseXor:
             return 2U;
+
+        /**
+         * Since the number of statements in a module is variable,
+         * it is detected by the parser itself.
+         */
+        case NodeType::ModuleDefinition:
+            return 0U;
 
         /**
          * Since the number of statements in a smart contract body is variable,
