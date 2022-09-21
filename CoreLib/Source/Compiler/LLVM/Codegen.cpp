@@ -243,22 +243,30 @@ namespace
             auto * valuePtr{ codegenImpl( nodes[ 1U ], scope ) };
 
             // works only for numbers for now
-            auto * value{ builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr ) };
+            llvm::Value * value{ nullptr };
 
             llvm::Constant * formatSpecifier{ nullptr };
             if ( nodes[ 1U ]->is< Number >() )
             {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%f", "numFormatSpecifier", 0, module_.get() );
+                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
             }
             else if ( nodes[ 1U ]->is< String >() )
             {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%s", "strFormatSpecifier", 0, module_.get() );
+                formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
             }
             else if ( nodes[ 1U ]->is< Identifier >() )
             {
-                if ( valuePtr->getType()->isPointerTy() )
+                if ( valuePtr->getType()->getContainedType(0)->isDoubleTy() )
                 {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%f", "numFormatSpecifier", 0, module_.get() );
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                    value = builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr );
+                }
+                else if ( valuePtr->getType()->getContainedType(0)->isArrayTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                    value = valuePtr;
                 }
             }
 
@@ -409,7 +417,8 @@ namespace
         auto * parent{ builder->GetInsertBlock()->getParent() };
 
         llvm::IRBuilder<> tmpBuilder{ &parent->getEntryBlock(), parent->getEntryBlock().begin() };
-        auto * alloca{ tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() ) };
+
+        llvm::Value * value{ nullptr };
 
         if ( std::size( nodes ) > 2U )
         {
@@ -417,17 +426,26 @@ namespace
             {
                 if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
                 {
-                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), alloca );
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
                 }
                 else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
                 {
-                    // handle strings
+                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
                 }
             }
-            else if ( std::size( nodes ) == 3U && nodes[ 1 ]->is< TypeID >() && ( nodes[ 2 ]->is< Number >() || nodes[ 2 ]->is< String >() ) )
+            else if ( std::size( nodes ) == 3U && nodes[ 1 ]->is< TypeID >() )
             {
-                auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
-                builder->CreateStore( initialization, alloca );
+                if ( nodes[ 2 ]->is< Number >() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
+                    builder->CreateStore( initialization, value );
+                }
+                else if ( nodes[ 2 ]->is< String >() )
+                {
+                    value = codegenImpl( nodes[ 2 ], scope );
+                }
             }
         }
         else
@@ -436,23 +454,32 @@ namespace
             {
                 if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
                 {
-                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), alloca );
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
                 }
                 else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
                 {
-                    // handle strings
+                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
                 }
             }
             else
             {
-                auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
-                builder->CreateStore( initialization, alloca );
+                if ( nodes[ 1 ]->is< Number >() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
+                    builder->CreateStore( initialization, value );
+                }
+                else if ( nodes[ 1 ]->is< String >() )
+                {
+                    value = codegenImpl( nodes[ 1 ], scope );
+                }
             }
         }
 
-        scope[ name ] = alloca;
+        scope[ name ] = value;
 
-        return alloca;
+        return value;
     }
 } // namespace
 

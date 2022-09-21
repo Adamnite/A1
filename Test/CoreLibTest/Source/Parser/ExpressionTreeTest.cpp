@@ -141,6 +141,34 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title        = "VariableAssignmentFromFunctionCall",
+            .expression   = "var = get()",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::Assign,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "get" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .title        = "FunctionCall",
             .expression   = "func(1.4, \"This is random string\", 5)",
             .expectedRoot = std::make_shared< Node >
@@ -157,6 +185,37 @@ INSTANTIATE_TEST_SUITE_P
                             std::make_unique< Node >( A1::Number{ 1.4 }                     ),
                             std::make_unique< Node >( A1::String{ "This is random string" } ),
                             std::make_unique< Node >( A1::Number{ 5 }                       )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title        = "NestedFunctionCalls",
+            .expression   = "print(func(1.4, \"This is random string\", 5))",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::Call,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
+                                    std::make_unique< Node >( A1::Number{ 1.4 }                     ),
+                                    std::make_unique< Node >( A1::String{ "This is random string" } ),
+                                    std::make_unique< Node >( A1::Number{ 5 }                       )
+                                )
+                            )
                         )
                     )
                 )
@@ -604,7 +663,8 @@ INSTANTIATE_TEST_SUITE_P
                 "    let sum: num\n"
                 "    sum = param1 + param2\n"
                 "    return sum\n"
-                "let var: num = 5",
+                "\n"
+                "let var = func(5, 5)",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -677,8 +737,16 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Registry::getNumberHandle() ),
-                            std::make_unique< Node >( A1::Number{ 5 } )
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                                    std::make_unique< Node >( A1::Number{ 5 }                  ),
+                                    std::make_unique< Node >( A1::Number{ 5 }                  )
+                                )
+                            )
                         )
                     )
                 )
@@ -721,6 +789,34 @@ INSTANTIATE_TEST_SUITE_P
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >( A1::Number{ 5 } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "VariableDefinitionWithFunctionCallInitialization",
+            .expression = "let var = get()",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::VariableDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "get" } )
+                                )
+                            )
                         )
                     )
                 )
