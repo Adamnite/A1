@@ -1,10 +1,10 @@
-# A1 Language: <br/> Develop smart contracts for the Adamnite blockchain
+# A1: <br/> Develop smart contracts for the Adamnite blockchain
 
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/m-peko/bitflags/blob/master/LICENSE)
 [![Build](https://github.com/Adamnite/A1/actions/workflows/build.yml/badge.svg)](https://github.com/Adamnite/A1/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/Adamnite/A1/branch/main/graph/badge.svg?token=YBUVS7JAEQ)](https://codecov.io/gh/Adamnite/A1)
 
-A1 programming language is a high-level programming language for developing smart contracts for the Adamnite blockchain. With its light syntax, it primarily strives for simplicity and ease of use.
+A1 programming language is a high-level programming language for developing smart contracts for the Adamnite blockchain. With its light syntax, it primarily strives for simplicity and ease of use while retaining the scalability and security required to write immutable multi-party smart contracts.
 
 <p align="center">
     <a href="#getting-started">Getting started</a> |
@@ -24,37 +24,40 @@ Learn more about the A1 project:
 
 ### Building
 
-In order to build the A1 compiler, execute the following commands:
+First, there are few prerequisites to be installed:
 
 ```sh
-$ # create build directory
-$ mkdir build
-$ cd build
+$ brew install wget llvm@14 cmake ninja
+$ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
+```
 
-$ # generate configuration files
-$ cmake -GNinja ..
+Then, execute the following commands in order to build the AOC - A1 compiler:
 
-$ # compile
+```sh
+$ mkdir -p build && cd build
+$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
 $ ninja
 ```
 
-### Testing
+Once the build is successful, you are ready to start playing around!
 
-In order to run unit tests, execute the following commands:
+There are many examples under `Examples` directory. Here is the basic `hello_world.ao`:
+
+```python
+contract HelloWorld:
+    def get() -> str:
+        return "Hello, world!"
+
+var = HelloWorld()
+print(var.get())
+```
+
+Try out the compiler by running the following command:
 
 ```sh
-$ # create build directory
-$ mkdir build
-$ cd build
-
-$ # generate configuration files
-$ cmake -GNinja -DENABLE_TESTING=ON ..
-
-$ # compile
-$ ninja
-
-$ # run tests
-$ ctest
+$ ./build/bin/aoc hello_world.ao > test.ll
+$ clang test.ll -o test
+$ ./test
 ```
 
 ## Join us
@@ -63,4 +66,4 @@ A1 is committed to a welcoming environment where everyone can contribute.
 
 - Join the design discussion at our [GitHub forum](https://github.com/Adamnite/A1/discussions)
 - See our [contributing guidelines](CONTRIBUTING.md) for information about the A1 development community
-- We discuss A1 and Adamnite Blockchain on [Discord](https://discord.gg/AxbRrXvS)
+- We discuss A1 and the Adamnite Blockchain on [Discord](https://discord.gg/AxbRrXvS)
