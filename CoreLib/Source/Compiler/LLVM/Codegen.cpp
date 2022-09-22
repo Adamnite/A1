@@ -58,6 +58,8 @@ namespace
     std::map< std::string, llvm::FunctionCallee > stdFunctions;
     std::map< std::string, llvm::FunctionCallee > nonStdFunctions;
 
+    std::map< std::string, llvm::Type * > contractTypes;
+
     template< typename ... T >
     using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
 
@@ -84,6 +86,7 @@ namespace
 
     llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
+    llvm::Value    * codegenContractDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
     llvm::Value    * codegenVariableDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
 
@@ -167,6 +170,8 @@ namespace
                             return codegenImpl( node->children()[ 0 ], scope );
                         }
 
+                        case NodeType::ContractDefinition:
+                            return codegenContractDefinition( node->children(), scope );
                         case NodeType::FunctionDefinition:
                             return codegenFunctionDefinition( node->children() );
                         case NodeType::VariableDefinition:
@@ -186,7 +191,7 @@ namespace
                 },
                 []( String const & str ) -> llvm::Value *
                 {
-                    return builder->CreateGlobalString( str, "", 0, module_.get() );
+                    return builder->CreateGlobalStringPtr( str, "", 0, module_.get() );
                 },
                 []( TypeID const ) -> llvm::Value *
                 {
@@ -278,7 +283,15 @@ namespace
             }
             else
             {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                auto * type{ valuePtr->getType() };
+                if ( type->isDoubleTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                }
+                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isIntegerTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                }
                 value = valuePtr;
             }
 
@@ -356,11 +369,40 @@ namespace
         return phi;
     }
 
+    llvm::Value * codegenContractDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        auto const & contractName{ nodes[ 0 ]->get< Identifier >().name };
+
+        auto * contractType{ llvm::StructType::create( *context, contractName ) };
+
+        std::vector< llvm::Type * > dataTypes;
+        for ( auto i{ 1U }; i < std::size( nodes ); i++ )
+        {
+            auto const & node{ nodes[ i ] };
+            if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::VariableDefinition )
+            {
+                dataTypes.push_back( llvm::Type::getDoubleTy( *context) );
+            }
+            else if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::FunctionDefinition )
+            {
+                auto * function{ codegenImpl( node, scope ) };
+                dataTypes.push_back( function->getType() );
+            }
+        }
+
+        contractType->setBody( dataTypes );
+
+        contractTypes[ contractName ] = contractType;
+
+        return nullptr;
+    }
+
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const nodes )
     {
         ASSERT( std::size( nodes ) >= 2U );
 
         auto functionBodyStartIdx{ 0U };
+        auto returnTypeIdx{ 0U };
 
         auto const & functionName{ nodes[ 0 ]->get< Identifier >().name };
 
@@ -378,11 +420,26 @@ namespace
                 functionBodyStartIdx = i;
                 break;
             }
+            else if ( node->is< TypeID >() )
+            {
+                returnTypeIdx = i;
+            }
         }
 
         // create function definition
         std::vector< llvm::Type * > params{ std::size( paramNames ), llvm::Type::getDoubleTy( *context ) };
-        auto * functionType{ llvm::FunctionType::get( llvm::Type::getDoubleTy( *context ), params, false ) };
+
+        llvm::Type * type{ nullptr };
+        if ( nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getNumberHandle() )
+        {
+            type = llvm::Type::getDoubleTy( *context );
+        }
+        else if ( nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getStringLiteralHandle() )
+        {
+            type = llvm::Type::getInt8PtrTy( *context );
+        }
+
+        auto * functionType{ llvm::FunctionType::get( type, params, false ) };
 
         auto * function
         {
@@ -505,6 +562,15 @@ namespace
                 else
                 {
                     value = codegenImpl( nodes[ 1 ], scope );
+
+                    // if
+                    // (
+                    //     auto it = contractTypes.find( nodes[ 1 ]->get< Identifier >().name );
+                    //     it != std::end( contractTypes )
+                    // )
+                    // {
+
+                    // }
                 }
             }
         }
