@@ -56,6 +56,7 @@ namespace
     std::unique_ptr< llvm::Module      > module_;
 
     std::map< std::string, llvm::FunctionCallee > stdFunctions;
+    std::map< std::string, llvm::FunctionCallee > nonStdFunctions;
 
     template< typename ... T >
     using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
@@ -243,9 +244,9 @@ namespace
             auto * valuePtr{ codegenImpl( nodes[ 1U ], scope ) };
 
             // works only for numbers for now
-            llvm::Value * value{ nullptr };
+            [[ maybe_unused ]] llvm::Value * value{ nullptr };
 
-            llvm::Constant * formatSpecifier{ nullptr };
+            [[ maybe_unused ]] llvm::Constant * formatSpecifier{ nullptr };
             if ( nodes[ 1U ]->is< Number >() )
             {
                 formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
@@ -258,20 +259,47 @@ namespace
             }
             else if ( nodes[ 1U ]->is< Identifier >() )
             {
-                if ( valuePtr->getType()->getContainedType(0)->isDoubleTy() )
+                auto * type{ valuePtr->getType() };
+                if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isDoubleTy() )
                 {
                     formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
                     value = builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr );
                 }
-                else if ( valuePtr->getType()->getContainedType(0)->isArrayTy() )
+                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isArrayTy() )
                 {
                     formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
                     value = valuePtr;
                 }
+                else
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                    value = valuePtr;
+                }
+            }
+            else
+            {
+                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
             }
 
             std::array< llvm::Value *, 2U > arguments{ formatSpecifier, value };
-            builder->CreateCall( stdFunctions[ "print" ], arguments, "print" );
+            return builder->CreateCall( stdFunctions[ "print" ], arguments, "print" );
+        }
+        else
+        {
+            std::vector< llvm::Value * > arguments;
+            for ( auto i{ 1U }; i < std::size( nodes ); i++ )
+            {
+                arguments.push_back( codegenImpl( nodes[ i ], scope ) );
+            }
+            if ( arguments.empty() )
+            {
+                return builder->CreateCall( nonStdFunctions[ functionName ], llvm::None, functionName );
+            }
+            else
+            {
+                return builder->CreateCall( nonStdFunctions[ functionName ], arguments, functionName );
+            }
         }
 
         return nullptr;
@@ -334,6 +362,8 @@ namespace
 
         auto functionBodyStartIdx{ 0U };
 
+        auto const & functionName{ nodes[ 0 ]->get< Identifier >().name };
+
         std::vector< std::string > paramNames;
         for ( auto i{ 0U }; i < std::size( nodes ); i++ )
         {
@@ -360,7 +390,7 @@ namespace
             (
                 functionType,
                 llvm::Function::ExternalLinkage,
-                nodes[ 0 ]->get< Identifier >().name,
+                functionName,
                 module_.get()
             )
         };
@@ -398,6 +428,8 @@ namespace
 
             // validate the generated code, checking for consistency
             verifyFunction( *function );
+
+            nonStdFunctions[ functionName ] = function;
 
             return function;
         }
@@ -442,7 +474,7 @@ namespace
                     auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
                     builder->CreateStore( initialization, value );
                 }
-                else if ( nodes[ 2 ]->is< String >() )
+                else
                 {
                     value = codegenImpl( nodes[ 2 ], scope );
                 }
@@ -470,7 +502,7 @@ namespace
                     auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
                     builder->CreateStore( initialization, value );
                 }
-                else if ( nodes[ 1 ]->is< String >() )
+                else
                 {
                     value = codegenImpl( nodes[ 1 ], scope );
                 }
@@ -521,9 +553,30 @@ std::unique_ptr< Module > codegen
 
     for ( auto const & n : node->children() )
     {
-        codegenImpl( n, moduleScope );
+        if ( n == nullptr ) { continue; }
+
+        if
+        (
+            n->is< NodeType >() &&
+            (
+                n->get< NodeType >() == NodeType::ContractDefinition ||
+                n->get< NodeType >() == NodeType::FunctionDefinition
+            )
+        )
+        {
+            if ( n != nullptr )
+            {
+                codegenImpl( n, moduleScope );
+            }
+        }
+        else
+        {
+            builder->SetInsertPoint( mainBlock );
+            codegenImpl( n, moduleScope );
+        }
     }
 
+    builder->SetInsertPoint( mainBlock );
     builder->CreateRetVoid();
 
     return std::move( module_ );
