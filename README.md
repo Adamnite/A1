@@ -47,9 +47,6 @@ There are many examples under `Examples` directory. Here is the basic `hello_wor
 contract HelloWorld:
     def get() -> str:
         return "Hello, world!"
-
-var = HelloWorld()
-print(var.get())
 ```
 
 Try out the compiler by running the following command:
