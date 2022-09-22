@@ -23,7 +23,7 @@ namespace
 {
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
-        if ( token.is< Eof >() || token.is< Newline >() )
+        if ( token.is< Eof >() || token.is< Indentation >() || token.is< Newline >() )
         {
             return true;
         }
@@ -314,14 +314,60 @@ namespace
             throw std::runtime_error( "Syntax error - missing newline" );
         }
     }
+
+    void skipIndentation( TokenIterator & tokenIt )
+    {
+        if ( tokenIt->is< Indentation >() )
+        {
+            ++tokenIt;
+        }
+        else
+        {
+            throw std::runtime_error( "Syntax error - missing indentation" );
+        }
+    }
 } // namespace
 
-Node::Pointer parse( TokenIterator & tokenIt )
+Node::Pointer parse
+(
+    TokenIterator       & tokenIt,
+    std::size_t   const   indentationLevelCount,
+    bool          const   alreadyInModule
+)
 {
     std::stack< Node::Pointer > operands;
     std::stack< OperatorInfo  > operators;
 
     auto expectingOperand{ true };
+
+    std::size_t indentationIdx{ 0U };
+    while ( indentationIdx != indentationLevelCount )
+    {
+        if ( tokenIt->is< Indentation >() )
+        {
+            ++tokenIt;
+            indentationIdx++;
+        }
+        else
+        {
+            indentationIdx = indentationLevelCount;
+            break;
+        }
+    }
+
+    if ( indentationLevelCount == 0U && !alreadyInModule )
+    {
+        operators.push
+        (
+            OperatorInfo
+            {
+                .type = NodeType::ModuleDefinition,
+                .lineNumber = tokenIt->lineNumber(),
+                .charIndex  = tokenIt->charIndex (),
+                .operandsCount = 0U
+            }
+        );
+    }
 
     while ( tokenIt->is< Newline >() || tokenIt->is< Eof >() )
     {
@@ -374,7 +420,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 continue;
             }
 
-            if ( !operators.empty() && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
+            if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
             {
                 popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex() );
             }
@@ -424,6 +470,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
+                skipIndentation( tokenIt );
 
                 operands.push( parse( tokenIt ) ); // parse body
 
@@ -447,6 +494,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                     skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
                     skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
+                    skipIndentation( tokenIt );
 
                     ++operatorInfo.operandsCount;
 
@@ -459,7 +507,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 operands.push( parse( tokenIt ) ); // parse condition
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse while body
+                operands.push( parse( tokenIt, indentationIdx + 1 ) ); // parse while body
             }
             else if ( operatorInfo.type == NodeType::FunctionDefinition )
             {
@@ -491,7 +539,7 @@ Node::Pointer parse( TokenIterator & tokenIt )
 
                             operators.push( parameterDefinition );
 
-                            while ( !operators.empty() )
+                            while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
                             {
                                 popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
                             }
@@ -529,14 +577,40 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                // TODO: Handle indentation
+                indentationIdx++;
+
                 while ( !tokenIt->is< Eof >() )
                 {
-                    operands.push( parse( tokenIt ) ); // parse function body
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
                     operatorInfo.operandsCount++;
-                    if ( tokenIt->is< Newline >() )
+
+                    auto prevTokenIt = tokenIt;
+
+                    // while ( tokenIt->is< Newline >() )
+                    // {
+                    //     // skip empty lines or comment lines
+                    //     ++tokenIt;
+                    // }
+
+                    std::size_t currentIndentationIdx{ 0U };
+                    while ( currentIndentationIdx != indentationIdx )
                     {
-                        ++tokenIt;
+                        if ( tokenIt->is< Indentation >() )
+                        {
+                            ++tokenIt;
+                            currentIndentationIdx++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if ( currentIndentationIdx < indentationIdx )
+                    {
+                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                        indentationIdx = currentIndentationIdx;
+                        break;
                     }
                 }
             }
@@ -572,16 +646,46 @@ Node::Pointer parse( TokenIterator & tokenIt )
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                // TODO: Handle indentation
                 while ( !tokenIt->is< Eof >() )
                 {
-                    operands.push( parse( tokenIt ) ); // parse contract body
-                    if ( tokenIt->is< Newline >() )
+                    indentationIdx++;
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse contract body
+                    operatorInfo.operandsCount++;
+
+                    auto prevTokenIt = tokenIt;
+
+                    while ( tokenIt->is< Newline >() )
                     {
+                        // skip empty lines or comment lines
                         ++tokenIt;
                     }
-                    operatorInfo.operandsCount++;
+
+                    std::size_t currentIndentationIdx{ 0U };
+                    while ( currentIndentationIdx != indentationIdx )
+                    {
+                        if ( tokenIt->is< Indentation >() )
+                        {
+                            ++tokenIt;
+                            currentIndentationIdx++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if ( currentIndentationIdx < indentationIdx )
+                    {
+                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                        indentationIdx = currentIndentationIdx;
+                        break;
+                    }
                 }
+            }
+
+            if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+            {
+                operators.top().operandsCount++;
             }
 
             operators.push( operatorInfo );
@@ -610,9 +714,23 @@ Node::Pointer parse( TokenIterator & tokenIt )
         throw std::runtime_error( "Syntax error - expecting an operand" );
     }
 
-    while ( !operators.empty() )
+    while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
     {
         popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+    }
+
+    if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+    {
+        while ( !tokenIt->is< Eof >() )
+        {
+            operands.push( parse( tokenIt, 0, true ) );
+            operators.top().operandsCount++;
+        }
+
+        while ( !operators.empty() )
+        {
+            popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+        }
     }
 
     return operands.empty() ? nullptr : std::move( operands.top() );

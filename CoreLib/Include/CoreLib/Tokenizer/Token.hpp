@@ -23,6 +23,11 @@ struct Identifier
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
+struct Indentation
+{
+    [[ nodiscard ]] bool operator==( Indentation const & ) const = default;
+};
+
 struct Newline
 {
     [[ nodiscard ]] bool operator==( Newline const & ) const = default;
@@ -39,7 +44,7 @@ using String = std::string;
 class Token
 {
 public:
-    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Newline, Eof >;
+    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Indentation, Newline, Eof >;
 
     Token() noexcept = default;
     Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )

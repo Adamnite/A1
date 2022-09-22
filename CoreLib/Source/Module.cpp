@@ -47,7 +47,7 @@ bool load( std::filesystem::path const inputFile )
     if ( FilePtr f{ std::fopen( inputFile.c_str(), "r" ), &std::fclose }; f != nullptr )
     {
         auto tokenIt{ tokenize( PushBackStream{ f.get() } ) };
-        auto rootNode{ parse( tokenIt ) };
+        auto rootNode{ parse( tokenIt, 0, false ) };
         return compile( rootNode );
     }
     else

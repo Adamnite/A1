@@ -7,6 +7,7 @@
 
 #include <CoreLib/Compiler/LLVM/Codegen.hpp>
 #include <CoreLib/Utils/Macros.hpp>
+#include <CoreLib/Types.hpp>
 
 #include "Utils/Utils.hpp"
 
@@ -54,6 +55,9 @@ namespace
     std::unique_ptr< llvm::IRBuilder<> > builder;
     std::unique_ptr< llvm::Module      > module_;
 
+    std::map< std::string, llvm::FunctionCallee > stdFunctions;
+    std::map< std::string, llvm::FunctionCallee > nonStdFunctions;
+
     template< typename ... T >
     using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
 
@@ -78,6 +82,7 @@ namespace
         ScopeIdentifiers                       &
     );
 
+    llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
     llvm::Value    * codegenVariableDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
@@ -95,7 +100,14 @@ namespace
             {
                 [ & ]( NodeType const type ) -> llvm::Value *
                 {
-                    switch ( type ){
+                    switch ( type )
+                    {
+                        case NodeType::Call:
+                            return codegenFunctionCall( node->children(), scope );
+
+                        case NodeType::UnaryMinus:
+                            return codegenUnary( &llvm::IRBuilder<>::CreateFNeg, node->children(), "nottmp", scope );
+
                         case NodeType::Multiplication:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFMul, node->children(), "multmp", scope );
                         case NodeType::Division:
@@ -126,7 +138,6 @@ namespace
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
                         case NodeType::Inequality:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
-
                         case NodeType::GreaterThan:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGT, node->children(), "gttmp", scope );
                         case NodeType::GreaterThanEqual:
@@ -136,17 +147,17 @@ namespace
                         case NodeType::LessThanEqual:
                             return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLE, node->children(), "letmp", scope );
 
+                        case NodeType::IsIdentical:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
+                        case NodeType::IsNotIdentical:
+                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
+
                         case NodeType::LogicalNot:
                             return codegenUnary( &llvm::IRBuilder<>::CreateNot, node->children(), "lnottmp", scope );
                         case NodeType::LogicalAnd:
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalAnd, node->children(), "landtmp", scope );
                         case NodeType::LogicalOr:
                             return codegenBinary( &llvm::IRBuilder<>::CreateLogicalOr, node->children(), "lortmp", scope );
-
-                        case NodeType::IsIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
-                        case NodeType::IsNotIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
 
                         case NodeType::StatementIf:
                             return codegenControlFlow( node->children(), scope );
@@ -156,8 +167,6 @@ namespace
                             return codegenImpl( node->children()[ 0 ], scope );
                         }
 
-                        case NodeType::ContractDefinition:
-                            return codegenContractDefinition( node->children() );
                         case NodeType::FunctionDefinition:
                             return codegenFunctionDefinition( node->children() );
                         case NodeType::VariableDefinition:
@@ -177,7 +186,7 @@ namespace
                 },
                 []( String const & str ) -> llvm::Value *
                 {
-                    return llvm::ConstantDataArray::getString( *context, str.data() );
+                    return builder->CreateGlobalString( str, "", 0, module_.get() );
                 },
                 []( TypeID const ) -> llvm::Value *
                 {
@@ -223,9 +232,82 @@ namespace
         return ( *builder.*clbk )( lhs, rhs, name, T{} ... );
     }
 
+    llvm::Value * codegenFunctionCall( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        ASSERT( std::size( nodes ) >= 1U );
+
+        auto const & functionName{ nodes[ 0U ]->get< Identifier >().name };
+        if ( functionName == "print" )
+        {
+            if ( std::size( nodes ) > 2U ) { return nullptr; }
+
+            auto * valuePtr{ codegenImpl( nodes[ 1U ], scope ) };
+
+            // works only for numbers for now
+            [[ maybe_unused ]] llvm::Value * value{ nullptr };
+
+            [[ maybe_unused ]] llvm::Constant * formatSpecifier{ nullptr };
+            if ( nodes[ 1U ]->is< Number >() )
+            {
+                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
+            }
+            else if ( nodes[ 1U ]->is< String >() )
+            {
+                formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
+            }
+            else if ( nodes[ 1U ]->is< Identifier >() )
+            {
+                auto * type{ valuePtr->getType() };
+                if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isDoubleTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                    value = builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr );
+                }
+                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isArrayTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                    value = valuePtr;
+                }
+                else
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                    value = valuePtr;
+                }
+            }
+            else
+            {
+                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
+            }
+
+            std::array< llvm::Value *, 2U > arguments{ formatSpecifier, value };
+            return builder->CreateCall( stdFunctions[ "print" ], arguments, "print" );
+        }
+        else
+        {
+            std::vector< llvm::Value * > arguments;
+            for ( auto i{ 1U }; i < std::size( nodes ); i++ )
+            {
+                arguments.push_back( codegenImpl( nodes[ i ], scope ) );
+            }
+            if ( arguments.empty() )
+            {
+                return builder->CreateCall( nonStdFunctions[ functionName ], llvm::None, functionName );
+            }
+            else
+            {
+                return builder->CreateCall( nonStdFunctions[ functionName ], arguments, functionName );
+            }
+        }
+
+        return nullptr;
+    }
+
     llvm::Value * codegenControlFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( node->children() ) >= 2U );
+        ASSERT( std::size( nodes ) >= 2U );
 
         auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
         if ( condition == nullptr ) { return nullptr; }
@@ -280,6 +362,8 @@ namespace
 
         auto functionBodyStartIdx{ 0U };
 
+        auto const & functionName{ nodes[ 0 ]->get< Identifier >().name };
+
         std::vector< std::string > paramNames;
         for ( auto i{ 0U }; i < std::size( nodes ); i++ )
         {
@@ -306,7 +390,7 @@ namespace
             (
                 functionType,
                 llvm::Function::ExternalLinkage,
-                nodes[ 0 ]->get< Identifier >().name,
+                functionName,
                 module_.get()
             )
         };
@@ -345,6 +429,8 @@ namespace
             // validate the generated code, checking for consistency
             verifyFunction( *function );
 
+            nonStdFunctions[ functionName ] = function;
+
             return function;
         }
 
@@ -355,7 +441,7 @@ namespace
 
     llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( nodes ) == 2U );
+        ASSERT( std::size( nodes ) >= 2U );
 
         ASSERT( nodes[ 0 ]->is< Identifier >() );
         auto const name{ nodes[ 0 ]->get< Identifier >().name };
@@ -363,29 +449,69 @@ namespace
         auto * parent{ builder->GetInsertBlock()->getParent() };
 
         llvm::IRBuilder<> tmpBuilder{ &parent->getEntryBlock(), parent->getEntryBlock().begin() };
-        auto * alloca{ tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() ) };
 
-        if ( std::size( nodes ) == 2 )
+        llvm::Value * value{ nullptr };
+
+        if ( std::size( nodes ) > 2U )
         {
-            if ( nodes[ 1 ]->is< TypeID >() )
+            if ( std::size( nodes ) == 2U && nodes[ 1 ]->is< TypeID >() )
             {
-                builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), alloca );
+                if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
+                }
+                else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
+                {
+                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
+                }
             }
-            else
+            else if ( std::size( nodes ) == 3U && nodes[ 1 ]->is< TypeID >() )
             {
-                auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
-                builder->CreateStore( initialization, alloca );
+                if ( nodes[ 2 ]->is< Number >() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
+                    builder->CreateStore( initialization, value );
+                }
+                else
+                {
+                    value = codegenImpl( nodes[ 2 ], scope );
+                }
             }
         }
         else
         {
-            auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
-            builder->CreateStore( initialization, alloca );
+            if ( nodes[ 1 ]->is< TypeID >() )
+            {
+                if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
+                }
+                else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
+                {
+                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
+                }
+            }
+            else
+            {
+                if ( nodes[ 1 ]->is< Number >() )
+                {
+                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
+                    auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
+                    builder->CreateStore( initialization, value );
+                }
+                else
+                {
+                    value = codegenImpl( nodes[ 1 ], scope );
+                }
+            }
         }
 
-        scope[ name ] = alloca;
+        scope[ name ] = value;
 
-        return alloca;
+        return value;
     }
 } // namespace
 
@@ -404,9 +530,54 @@ std::unique_ptr< Module > codegen
     module_->setDataLayout  ( dataLayout   );
     module_->setTargetTriple( targetTriple );
 
+    stdFunctions[ "print" ] = module_->getOrInsertFunction
+    (
+        "printf",
+        llvm::FunctionType::get
+        (
+            llvm::IntegerType::getInt32Ty( *context ),
+            llvm::PointerType::get( llvm::Type::getInt8Ty( *context ), 0 ),
+            true
+        )
+    );
+
+    auto * mainFunctionType{ llvm::FunctionType::get( llvm::Type::getVoidTy( *context ), false ) };
+    auto * mainFunction    { llvm::Function::Create( mainFunctionType, llvm::Function::ExternalLinkage, "main", *module_ ) };
+
+    auto * mainBlock{ llvm::BasicBlock::Create( *context, "entry", mainFunction ) };
+    builder->SetInsertPoint( mainBlock );
+
+    ASSERT( node->is< NodeType >() && node->get< NodeType >() == NodeType::ModuleDefinition );
+
     ScopeIdentifiers moduleScope;
 
-    codegenImpl( node, moduleScope );
+    for ( auto const & n : node->children() )
+    {
+        if ( n == nullptr ) { continue; }
+
+        if
+        (
+            n->is< NodeType >() &&
+            (
+                n->get< NodeType >() == NodeType::ContractDefinition ||
+                n->get< NodeType >() == NodeType::FunctionDefinition
+            )
+        )
+        {
+            if ( n != nullptr )
+            {
+                codegenImpl( n, moduleScope );
+            }
+        }
+        else
+        {
+            builder->SetInsertPoint( mainBlock );
+            codegenImpl( n, moduleScope );
+        }
+    }
+
+    builder->SetInsertPoint( mainBlock );
+    builder->CreateRetVoid();
 
     return std::move( module_ );
 }
