@@ -8,6 +8,7 @@
 #include "CLI/App.hpp"
 #include "CLI/Exception.hpp"
 
+#include <CoreLib/Compiler/Settings.hpp>
 #include <CoreLib/Module.hpp>
 
 #include <cstdio>
@@ -59,10 +60,10 @@ int main( int argc, char * argv[] )
         }
         else
         {
-            // compile the given source file
-            if ( auto const success{ A1::load( inputFile ) }; !success )
+            A1::Compiler::Settings settings{ .executableFilename = outputFile.value_or( "main" ) };
+            if ( auto const success{ A1::load( std::move( settings ), inputFile ) }; success )
             {
-                std::printf( "Compilation error!" );
+                std::printf( "Compilation successful!" );
             }
         }
     }

@@ -16,16 +16,22 @@ target_include_directories(
 target_link_libraries( CoreLib PRIVATE fmt::fmt )
 
 if( ENABLE_LLVM )
-    # Prerequisites:
-    # - install Clang / LLVM using Homebrew
-    #       $ brew install llvm
-    #       $ export PATH="$(brew --prefix llvm)/bin:${PATH}"
+    find_package( LLVM  REQUIRED CONFIG )
+    find_package( Clang REQUIRED CONFIG )
 
-    find_package( LLVM REQUIRED CONFIG )
     message( STATUS "LLVM version: ${LLVM_PACKAGE_VERSION}" )
 
     target_include_directories( CoreLib AFTER PRIVATE ${LLVM_INCLUDE_DIRS} )
     add_definitions( ${LLVM_DEFINITIONS} )
 
-    target_link_libraries( CoreLib PRIVATE ${LLVM_AVAILABLE_LIBS} )
+    target_link_libraries( CoreLib PRIVATE
+        ${LLVM_AVAILABLE_LIBS}
+        clangTooling
+    )
+
+    # In order to compile .ao source files programmatically,
+    # we need to use the Clang compiler coming with the LLVM package.
+    target_compile_definitions( CoreLib PRIVATE
+        CLANG_PATH=\"${LLVM_INSTALL_PREFIX}/bin/clang\"
+    )
 endif()

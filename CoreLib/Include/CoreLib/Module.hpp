@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include <CoreLib/Compiler/Settings.hpp>
+
 #include <filesystem>
 
 namespace A1
 {
 
-[[ nodiscard ]] bool load( std::filesystem::path const inputFile );
+[[ nodiscard ]] bool load( Compiler::Settings settings, std::filesystem::path const inputFile );
 
 } // namespace A1
