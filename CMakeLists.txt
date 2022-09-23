@@ -15,7 +15,7 @@ endif()
 
 include( FetchContent )
 
-# Use fmt library until C++20 std::format is supported by all compilers
+# Use fmt library until C++20 std::format is supported by all the compilers
 FetchContent_Declare( fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
     GIT_TAG 9.1.0

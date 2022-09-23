@@ -16,7 +16,7 @@
 namespace A1::CLI
 {
 
-struct Config
+struct Settings
 {
     std::string_view const title;
     std::string_view const description;
@@ -30,7 +30,7 @@ struct Config
 class App
 {
 public:
-    App( Config config );
+    App( Settings settings );
 
     void addOption  ( Option   option   );
     void addArgument( Argument argument );
@@ -52,7 +52,7 @@ private:
     std::optional< std::string > helpOutput_;
     std::optional< std::string > versionOutput_;
 
-    Config config_;
+    Settings settings_;
 };
 
 } // namespace A1::CLI

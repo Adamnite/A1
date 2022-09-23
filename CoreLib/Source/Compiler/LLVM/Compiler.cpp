@@ -11,20 +11,28 @@
 #if defined (__clang__)
 #   pragma clang diagnostic push
 #   pragma clang diagnostic ignored "-Wunused-parameter"
+#   pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #elif defined(__GNUC__) || defined(__GNUG__)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
+#   pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #endif
 
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/VirtualFileSystem.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+
+#include <clang/Driver/Driver.h>
+#include <clang/Driver/Compilation.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
@@ -35,7 +43,7 @@
 namespace A1::LLVM
 {
 
-bool compile( Node::Pointer const & node )
+bool compile( Compiler::Settings const settings, Node::Pointer const & node )
 {
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.
@@ -78,36 +86,47 @@ bool compile( Node::Pointer const & node )
 
     auto targetMachine{ target->createTargetMachine( targetTriple, cpu, features, options, relocationModel ) };
 
+    /**
+     * Generate LLVM IR code from the AST.
+     */
     auto module_{ codegen( node, targetMachine->createDataLayout(), targetTriple ) };
 
-    auto const outputFileName{ "output.o" };
-
-    std::error_code errorCode;
-    llvm::raw_fd_ostream dst{ outputFileName, errorCode, llvm::sys::fs::OF_None };
-
-    if ( errorCode )
-    {
-        return false;
-    }
-
     /**
-     * @note: Uncomment following line if you want
-     *        to print generated IR to the standard output.
-     *
-     * @todo: Support printing IR from the AOC CLI.
+     * Save generated LLVM IR to a file.
      */
-    // module_->print( llvm::outs(), nullptr );
-
-    // save LLVM IR to string
-    std::string output;
+    static constexpr auto IROutputFilename{ "output.ll" };
     {
-        llvm::raw_string_ostream os{ output };
+        std::error_code errorCode;
+        llvm::raw_fd_ostream os{ IROutputFilename, errorCode, llvm::sys::fs::OF_None };
         os << *module_;
         os.flush();
     }
 
-    std::printf( "%s", output.c_str() );
+    /**
+     * Compile LLVM IR file to an executable.
+     */
 
+    llvm::IntrusiveRefCntPtr< clang::DiagnosticOptions > diagnosticOptions{ new clang::DiagnosticOptions() };
+    clang::TextDiagnosticPrinter * diagnosticClient{ new clang::TextDiagnosticPrinter( llvm::errs(), &*diagnosticOptions ) };
+
+    llvm::IntrusiveRefCntPtr< clang::DiagnosticIDs > diagnosticIDs{ new clang::DiagnosticIDs() };
+    clang::DiagnosticsEngine diagnosticsEngine{ diagnosticIDs, &*diagnosticOptions, diagnosticClient };
+
+    clang::driver::Driver driver{ CLANG_PATH, targetTriple, diagnosticsEngine };
+    clang::ArrayRef< char const * > arguments{ "-g", "output.ll", "-o", settings.executableFilename.c_str() };
+
+    std::unique_ptr< clang::driver::Compilation > compilation{ driver.BuildCompilation( arguments ) };
+
+    if ( compilation == nullptr || compilation->containsError() )
+    {
+        std::remove( IROutputFilename );
+        return false;
+    }
+
+    clang::SmallVector< std::pair< int, clang::driver::Command const * >, 4U > failingCommands;
+    driver.ExecuteCompilation( *compilation, failingCommands );
+
+    std::remove( IROutputFilename );
     return true;
 }
 

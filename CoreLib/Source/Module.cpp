@@ -29,7 +29,7 @@ namespace
     constexpr auto requiredFileExtension{ ".ao" };
 } // namespace
 
-bool load( std::filesystem::path const inputFile )
+bool load( Compiler::Settings settings, std::filesystem::path const inputFile )
 {
     if ( inputFile.extension() != requiredFileExtension )
     {
@@ -48,7 +48,7 @@ bool load( std::filesystem::path const inputFile )
     {
         auto tokenIt{ tokenize( PushBackStream{ f.get() } ) };
         auto rootNode{ parse( tokenIt, 0, false ) };
-        return compile( {}, rootNode );
+        return compile( std::move( settings ), rootNode );
     }
     else
     {

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <string_view>
+#include <string>
 
 namespace A1::Compiler
 {
@@ -15,7 +15,7 @@ namespace A1::Compiler
 struct Settings
 {
     /** Name of the compiled executable file. */
-    std::string_view executableFilename;
+    std::string executableFilename;
 };
 
 } // namespace A1::Compiler

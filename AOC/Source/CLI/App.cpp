@@ -55,7 +55,7 @@ namespace
     }
 } // namespace
 
-App::App( Config config ) : config_{ config }
+App::App( Settings settings ) : settings_{ std::move( settings ) }
 {
     // add default options
     options_.push_back
@@ -171,9 +171,9 @@ std::string App::helpMessage() const
         "{}\n\n"
         "ARGS:\n"
         "{}",
-        config_.title,
-        config_.description,
-        config_.title,
+        settings_.title,
+        settings_.description,
+        settings_.title,
         fmt::join( argumentNames_, " "  ),
         fmt::join( options_      , "\n" ),
         fmt::join( arguments_    , "\n" )
@@ -185,8 +185,8 @@ std::string App::versionMessage() const
     return fmt::format
     (
         "{} version: {}\n",
-        config_.title,
-        config_.version
+        settings_.title,
+        settings_.version
     );
 }
 
