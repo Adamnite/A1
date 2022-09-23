@@ -52,9 +52,8 @@ contract HelloWorld:
 Try out the compiler by running the following command:
 
 ```sh
-$ ./build/bin/aoc hello_world.ao > test.ll
-$ clang test.ll -o test
-$ ./test
+$ ./build/bin/aoc hello_world.ao -o output
+$ ./output
 ```
 
 ## Join us
