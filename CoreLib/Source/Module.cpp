@@ -48,7 +48,7 @@ bool load( std::filesystem::path const inputFile )
     {
         auto tokenIt{ tokenize( PushBackStream{ f.get() } ) };
         auto rootNode{ parse( tokenIt, 0, false ) };
-        return compile( rootNode );
+        return compile( {}, rootNode );
     }
     else
     {

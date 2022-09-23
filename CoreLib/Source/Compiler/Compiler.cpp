@@ -11,9 +11,9 @@
 namespace A1
 {
 
-bool compile( Node::Pointer const & node )
+bool compile( Compiler::Settings const settings, Node::Pointer const & node )
 {
-    return LLVM::compile( node );
+    return LLVM::compile( settings, node );
 }
 
 } // namespace A1
