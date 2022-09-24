@@ -25,6 +25,7 @@ add_executable( CoreLibTests ${SOURCES} )
 target_link_libraries(
     CoreLibTests PRIVATE
     CoreLib
+    fmt::fmt
     gtest_main
 )
 
