@@ -531,6 +531,10 @@ namespace
                     auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
                     builder->CreateStore( initialization, value );
                 }
+                else if ( nodes[ 2 ]->is< String >() )
+                {
+                    value = builder->CreateGlobalString( nodes[ 2 ]->get< String >(), "", 0, module_.get() );
+                }
                 else
                 {
                     value = codegenImpl( nodes[ 2 ], scope );
@@ -559,18 +563,9 @@ namespace
                     auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
                     builder->CreateStore( initialization, value );
                 }
-                else
+                else if ( nodes[ 1 ]->is< String >() )
                 {
-                    value = codegenImpl( nodes[ 1 ], scope );
-
-                    // if
-                    // (
-                    //     auto it = contractTypes.find( nodes[ 1 ]->get< Identifier >().name );
-                    //     it != std::end( contractTypes )
-                    // )
-                    // {
-
-                    // }
+                    value = builder->CreateGlobalString( nodes[ 1 ]->get< String >(), "", 0, module_.get() );
                 }
             }
         }
