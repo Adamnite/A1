@@ -103,6 +103,7 @@ TEST_P( LLVMCompilerTestFixture, compilation )
 
     if ( status == std::future_status::timeout )
     {
+        std::remove( executableFilename );
         ASSERT_FALSE( true ) << "Timeout has exceeded";
     }
     else if ( status == std::future_status::ready )
@@ -116,6 +117,8 @@ TEST_P( LLVMCompilerTestFixture, compilation )
 
         EXPECT_EQ( actualOutput, expectedOutput );
     }
+
+    std::remove( executableFilename );
 }
 
 INSTANTIATE_TEST_SUITE_P
@@ -197,6 +200,42 @@ INSTANTIATE_TEST_SUITE_P
             .expectedOutput =
                 "Hello, folks!\n"
                 "450.000000"
+        },
+        TestParameter
+        {
+            .title = "FunctionWithoutReturnStatement",
+            .input =
+                "def func():\n"
+                "    print(\"Hello, from inside!\")\n"
+                "\n"
+                "func()",
+            .expectedOutput =
+                "Hello, from inside!"
+        },
+        TestParameter
+        {
+            .title = "FunctionWithoutParameters",
+            .input =
+                "def func() -> num:\n"
+                "    return 45\n"
+                "\n"
+                "print(func())",
+            .expectedOutput =
+                "45.000000"
+        },
+        TestParameter
+        {
+            .title = "Function",
+            .input =
+                "def sum(a: num, b: num) -> num:\n"
+                "    print(\"Summing...\")\n"
+                "    return a + b\n"
+                "\n"
+                "let var = sum(4, 5)\n"
+                "print(var)",
+            .expectedOutput =
+                "Summing...\n"
+                "9.000000"
         }
     ),
     LLVMCompilerTestFixture::PrintTitle()

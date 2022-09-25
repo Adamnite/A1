@@ -586,12 +586,6 @@ Node::Pointer parse
 
                     auto prevTokenIt = tokenIt;
 
-                    // while ( tokenIt->is< Newline >() )
-                    // {
-                    //     // skip empty lines or comment lines
-                    //     ++tokenIt;
-                    // }
-
                     std::size_t currentIndentationIdx{ 0U };
                     while ( currentIndentationIdx != indentationIdx )
                     {
@@ -599,6 +593,10 @@ Node::Pointer parse
                         {
                             ++tokenIt;
                             currentIndentationIdx++;
+                        }
+                        else if ( tokenIt->is< Newline >() )
+                        {
+                            skipNewline( tokenIt );
                         }
                         else
                         {

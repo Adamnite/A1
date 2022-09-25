@@ -16,6 +16,7 @@ OPTIONS:
         -h, --help <help> Print help
         -v, --version <version> Print version
         -o, --output <file> Write output to specific file
+        --llvm-ir <llvm-ir> Write generated LLVM IR code to standard output
 
 ARGS:
         file File to be compiled

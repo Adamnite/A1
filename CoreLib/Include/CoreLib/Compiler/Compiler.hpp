@@ -13,6 +13,6 @@
 namespace A1
 {
 
-[[ nodiscard ]] bool compile( Compiler::Settings const settings, Node::Pointer const & node );
+[[ nodiscard ]] bool compile( Compiler::Settings settings, Node::Pointer const & node );
 
 } // namespace A1

@@ -84,16 +84,16 @@ namespace
         ScopeIdentifiers                       &
     );
 
-    llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     template< typename ... T>
-    llvm::Value    * codegenAssignerDefinition
+    llvm::Value * codegenAssignerDefinition
     (
-        IRBuilderBinaryClbk<T ...>       const,
+        IRBuilderBinaryClbk< T ... >     const,
         std::span< Node::Pointer const > const,
         std::string_view                 const,
         ScopeIdentifiers                       &
     );
 
+    llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenContractDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
@@ -341,11 +341,11 @@ namespace
             }
             if ( arguments.empty() )
             {
-                return builder->CreateCall( nonStdFunctions[ functionName ], llvm::None, functionName );
+                return builder->CreateCall( nonStdFunctions[ functionName ], llvm::None, "" );
             }
             else
             {
-                return builder->CreateCall( nonStdFunctions[ functionName ], arguments, functionName );
+                return builder->CreateCall( nonStdFunctions[ functionName ], arguments, "" );
             }
         }
 
@@ -440,6 +440,8 @@ namespace
 
         auto const & functionName{ nodes[ 0 ]->get< Identifier >().name };
 
+        std::vector< std::size_t > returnStatementsIndices;
+
         std::vector< std::string > paramNames;
         for ( auto i{ 0U }; i < std::size( nodes ); i++ )
         {
@@ -449,14 +451,21 @@ namespace
                 auto const & paramNodes{ node->children() };
                 paramNames.push_back( paramNodes[ 0 ]->get< Identifier >().name );
             }
-            else if ( !node->is< Identifier >() && !node->is< TypeID >() )
+            else if ( !node->is< Identifier >() && !node->is< TypeID >() && functionBodyStartIdx == 0U )
             {
+                if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::StatementReturn )
+                {
+                    returnStatementsIndices.push_back( i );
+                }
                 functionBodyStartIdx = i;
-                break;
             }
             else if ( node->is< TypeID >() )
             {
                 returnTypeIdx = i;
+            }
+            else if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::StatementReturn )
+            {
+                returnStatementsIndices.push_back( i );
             }
         }
 
@@ -464,13 +473,17 @@ namespace
         std::vector< llvm::Type * > params{ std::size( paramNames ), llvm::Type::getDoubleTy( *context ) };
 
         llvm::Type * type{ nullptr };
-        if ( nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getNumberHandle() )
+        if ( returnTypeIdx != 0 && nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getNumberHandle() )
         {
             type = llvm::Type::getDoubleTy( *context );
         }
-        else if ( nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getStringLiteralHandle() )
+        else if ( returnTypeIdx != 0 && nodes[ returnTypeIdx ]->get< TypeID >() == Registry::getStringLiteralHandle() )
         {
             type = llvm::Type::getInt8PtrTy( *context );
+        }
+        else
+        {
+            type = llvm::Type::getVoidTy(*context);
         }
 
         auto * functionType{ llvm::FunctionType::get( type, params, false ) };
@@ -508,26 +521,32 @@ namespace
             functionScope[ std::string{ arg.getName() }] = &arg;
         }
 
-        for ( std::size_t i{ functionBodyStartIdx }; i < std::size( nodes ) - 1; i++ )
+        for ( std::size_t i{ functionBodyStartIdx }; i < std::size( nodes ); i++ )
         {
-            codegenImpl( nodes[ i ], functionScope );
+            if ( std::find( std::begin( returnStatementsIndices ), std::end( returnStatementsIndices ), i ) == std::end( returnStatementsIndices ) )
+            {
+                codegenImpl( nodes[ i ], functionScope );
+            }
+            else
+            {
+                if ( auto * return_{ codegenImpl( nodes[ i ], functionScope ) } )
+                {
+                    builder->CreateRet( return_ );
+                }
+            }
         }
 
-        if ( auto * return_{ codegenImpl( nodes[ std::size( nodes ) - 1 ], functionScope ) } )
+        if ( returnTypeIdx == 0 )
         {
-            builder->CreateRet( return_ );
-
-            // validate the generated code, checking for consistency
-            verifyFunction( *function );
-
-            nonStdFunctions[ functionName ] = function;
-
-            return function;
+            builder->CreateRet( nullptr );
         }
 
-        // error while reading the body, remove function
-        function->eraseFromParent();
-        return nullptr;
+        // validate the generated code, checking for consistency
+        verifyFunction( *function );
+
+        nonStdFunctions[ functionName ] = function;
+
+        return function;
     }
 
     template< typename ... T >
@@ -630,6 +649,10 @@ namespace
                 else if ( nodes[ 1 ]->is< String >() )
                 {
                     value = builder->CreateGlobalString( nodes[ 1 ]->get< String >(), "", 0, module_.get() );
+                }
+                else
+                {
+                    value = codegenImpl( nodes[ 1 ], scope );
                 }
             }
         }
