@@ -43,7 +43,7 @@
 namespace A1::LLVM
 {
 
-bool compile( Compiler::Settings const settings, Node::Pointer const & node )
+bool compile( Compiler::Settings settings, Node::Pointer const & node )
 {
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.
@@ -90,6 +90,14 @@ bool compile( Compiler::Settings const settings, Node::Pointer const & node )
      * Generate LLVM IR code from the AST.
      */
     auto module_{ codegen( node, targetMachine->createDataLayout(), targetTriple ) };
+
+    if ( settings.outputIR )
+    {
+        /**
+         * Write generated LLVM IR code to standard output.
+         */
+        module_->print( llvm::outs(), nullptr );
+    }
 
     /**
      * Save generated LLVM IR to a file.

@@ -16,6 +16,9 @@ struct Settings
 {
     /** Name of the compiled executable file. */
     std::string executableFilename;
+
+    /** Write generated LLVM IR code to standard output. */
+    bool outputIR{ false };
 };
 
 } // namespace A1::Compiler

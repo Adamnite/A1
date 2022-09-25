@@ -46,6 +46,11 @@ struct Option
     std::string_view description;
 
     /**
+     * A value should be omitted.
+     */
+    bool valueOmitted{ false };
+
+    /**
      * An output variable to bind to.
      */
     std::optional< std::string > & output;
@@ -65,14 +70,28 @@ struct fmt::formatter< A1::CLI::Option >
     template< typename FormatContext >
     auto format( A1::CLI::Option const & option, FormatContext & ctx ) const
     {
-        return fmt::format_to
-        (
-            ctx.out(),
-            "\t{0}, {1} <{2}> {3}",
-            option.short_,
-            option.long_,
-            option.name,
-            option.description
-        );
+        if ( option.short_.empty() )
+        {
+            return fmt::format_to
+            (
+                ctx.out(),
+                "\t{0} <{1}> {2}",
+                option.long_,
+                option.name,
+                option.description
+            );
+        }
+        else
+        {
+            return fmt::format_to
+            (
+                ctx.out(),
+                "\t{0}, {1} <{2}> {3}",
+                option.short_,
+                option.long_,
+                option.name,
+                option.description
+            );
+        }
     }
 };

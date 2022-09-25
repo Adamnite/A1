@@ -36,6 +36,18 @@ int main( int argc, char * argv[] )
         }
     );
 
+    std::optional< std::string > outputIR;
+    app.addOption
+    (
+        {
+            .long_        = "--llvm-ir",
+            .name         = "llvm-ir",
+            .description  = "Write generated LLVM IR code to standard output",
+            .valueOmitted = true,
+            .output       = outputIR
+        }
+    );
+
     std::string inputFile;
     app.addArgument
     (
@@ -60,7 +72,12 @@ int main( int argc, char * argv[] )
         }
         else
         {
-            A1::Compiler::Settings settings{ .executableFilename = outputFile.value_or( "main" ) };
+            A1::Compiler::Settings settings
+            {
+                .executableFilename = outputFile.value_or( "main" ),
+                .outputIR           = outputIR.has_value()
+            };
+
             if ( auto const success{ A1::load( std::move( settings ), inputFile ) }; success )
             {
                 std::printf( "Compilation successful!" );

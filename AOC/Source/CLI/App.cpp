@@ -61,21 +61,23 @@ App::App( Settings settings ) : settings_{ std::move( settings ) }
     options_.push_back
     (
         {
-            .short_      = "-h",
-            .long_       = "--help",
-            .name        = "help",
-            .description = "Print help",
-            .output      = helpOutput_
+            .short_       = "-h",
+            .long_        = "--help",
+            .name         = "help",
+            .description  = "Print help",
+            .valueOmitted = true,
+            .output       = helpOutput_
         }
     );
     options_.push_back
     (
         {
-            .short_      = "-v",
-            .long_       = "--version",
-            .name        = "version",
-            .description = "Print version",
-            .output      = versionOutput_
+            .short_       = "-v",
+            .long_        = "--version",
+            .name         = "version",
+            .description  = "Print version",
+            .valueOmitted = true,
+            .output       = versionOutput_
         }
     );
 }
@@ -107,7 +109,11 @@ void App::parse( int const argc, char * argv[] )
                 else if ( optionIt->name == "version" ) { versionOutput_ = ""; return; }
 
                 // parse value
-                if ( i + 1 < argc )
+                if ( optionIt->valueOmitted )
+                {
+                    optionIt->output = "";
+                }
+                else if ( i + 1 < argc )
                 {
                     optionIt->output = argv[ ++i ];
                 }
