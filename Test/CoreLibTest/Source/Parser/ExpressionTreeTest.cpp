@@ -510,6 +510,63 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title      = "WhileLoopMultilineBody",
+            .expression =
+                "while i < 5:\n"
+                "    print(i)\n"
+                "    i = i + 1",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::StatementWhile,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::LessThan,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                    std::make_unique< Node >( A1::Number{ 5 }               )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "i"     } )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Assign,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                    std::make_unique< Node >
+                                    (
+                                        A1::NodeType::Addition,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
+                                            std::make_unique< Node >( A1::Number{ 1 }               )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .title      = "FunctionDefinitionWithoutParameters",
             .expression =
                 "def func() -> num:\n"

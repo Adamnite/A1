@@ -507,7 +507,41 @@ Node::Pointer parse
                 operands.push( parse( tokenIt ) ); // parse condition
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
-                operands.push( parse( tokenIt, indentationIdx + 1 ) ); // parse while body
+
+                indentationIdx++;
+
+                while ( !tokenIt->is< Eof >() )
+                {
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
+                    operatorInfo.operandsCount++;
+
+                    auto prevTokenIt = tokenIt;
+
+                    std::size_t currentIndentationIdx{ 0U };
+                    while ( currentIndentationIdx != indentationIdx )
+                    {
+                        if ( tokenIt->is< Indentation >() )
+                        {
+                            ++tokenIt;
+                            currentIndentationIdx++;
+                        }
+                        else if ( tokenIt->is< Newline >() )
+                        {
+                            skipNewline( tokenIt );
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if ( currentIndentationIdx < indentationIdx )
+                    {
+                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                        indentationIdx = currentIndentationIdx;
+                        break;
+                    }
+                }
             }
             else if ( operatorInfo.type == NodeType::FunctionDefinition )
             {
