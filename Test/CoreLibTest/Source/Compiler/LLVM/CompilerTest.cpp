@@ -153,6 +153,33 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title = "ControlFlow",
+            .input =
+                "let i: num = 0\n"
+                "let j: num = 4\n"
+                "if i > j:\n"
+                "    print(i)\n"
+                "else:\n"
+                "    print(j)",
+            .expectedOutput =
+                "4.000000"
+        },
+        TestParameter
+        {
+            .title = "WhileLoop",
+            .input =
+                "let i: num = 0\n"
+                "while i < 4:\n"
+                "    print(i)\n"
+                "    i += 1",
+            .expectedOutput =
+                "0\n"
+                "1\n"
+                "2\n"
+                "3"
+        },
+        TestParameter
+        {
             .title = "VariableDefinitionWithoutInitialization",
             .input =
                 "let s: str\n"
