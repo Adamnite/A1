@@ -94,7 +94,7 @@ bool compile( Compiler::Settings const settings, Node::Pointer const & node )
     /**
      * Save generated LLVM IR to a file.
      */
-    static constexpr auto IROutputFilename{ "output.ll" };
+    static constexpr auto IROutputFilename{ "tmp.ll" };
     {
         std::error_code errorCode;
         llvm::raw_fd_ostream os{ IROutputFilename, errorCode, llvm::sys::fs::OF_None };
@@ -113,7 +113,7 @@ bool compile( Compiler::Settings const settings, Node::Pointer const & node )
     clang::DiagnosticsEngine diagnosticsEngine{ diagnosticIDs, &*diagnosticOptions, diagnosticClient };
 
     clang::driver::Driver driver{ CLANG_PATH, targetTriple, diagnosticsEngine };
-    clang::ArrayRef< char const * > arguments{ "-g", "output.ll", "-o", settings.executableFilename.c_str() };
+    clang::ArrayRef< char const * > arguments{ "-g", IROutputFilename, "-o", settings.executableFilename.c_str() };
 
     std::unique_ptr< clang::driver::Compilation > compilation{ driver.BuildCompilation( arguments ) };
 
