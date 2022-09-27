@@ -94,6 +94,7 @@ namespace
     );
 
     llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
+    llvm::Value    * codegenLoopFlow          ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenContractDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const );
@@ -198,6 +199,8 @@ namespace
 
                         case NodeType::StatementIf:
                             return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementWhile:
+                            return codegenLoopFlow( node->children(), scope );
                         case NodeType::StatementReturn:
                         {
                             ASSERT( std::size( node->children() ) == 1U );
@@ -217,7 +220,12 @@ namespace
                 },
                 [ & ]( Identifier const & identifier ) -> llvm::Value *
                 {
-                    return getFromScope( scope, identifier.name );
+                    auto * valuePtr{ getFromScope( scope, identifier.name ) };
+                    if ( valuePtr->getType()->getNumContainedTypes() > 0 && valuePtr->getType()->getContainedType( 0 )->isDoubleTy() )
+                    {
+                        return builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr );
+                    }
+                    return valuePtr;
                 },
                 []( Number const number ) -> llvm::Value *
                 {
@@ -352,6 +360,42 @@ namespace
         return nullptr;
     }
 
+    llvm::Value * codegenLoopFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        ASSERT( std::size( node->children() ) >= 1U );
+
+        auto * parent        { builder->GetInsertBlock()->getParent() };
+        auto * conditionBlock{ llvm::BasicBlock::Create( *context, "cond", parent ) };
+        auto * loopBlock     { llvm::BasicBlock::Create( *context, "loop", parent ) };
+
+        builder->CreateBr      ( conditionBlock );
+        builder->SetInsertPoint( conditionBlock );
+
+        auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
+        if ( condition == nullptr ) { return nullptr; }
+
+        // convert condition to boolean by comparing non-equal to 0.0
+        condition = builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *context ), "booltmp" );
+        condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "loopcond" );
+
+        auto * afterLoopBlock{ llvm::BasicBlock::Create( *context, "afterloop", parent ) };
+        builder->CreateCondBr( condition, loopBlock, afterLoopBlock );
+
+        builder->SetInsertPoint( loopBlock );
+
+        for ( std::size_t i{ 1U }; i < std::size( nodes ); i++ )
+        {
+            auto * then{ codegenImpl( nodes[ i ], scope ) };
+            if ( then == nullptr ) { return nullptr; }
+        }
+
+        builder->CreateBr( conditionBlock );
+
+        builder->SetInsertPoint( afterLoopBlock );
+
+        return nullptr;
+    }
+
     llvm::Value * codegenControlFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
         ASSERT( std::size( nodes ) >= 2U );
@@ -360,10 +404,8 @@ namespace
         if ( condition == nullptr ) { return nullptr; }
 
         // convert condition to boolean by comparing non-equal to 0.0
+        condition = builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *context ), "booltmp" );
         condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "ifcond" );
-
-        auto * then{ codegenImpl( nodes[ 1U ], scope ) };
-        if ( then == nullptr ) { return nullptr; }
 
         auto * parent{ builder->GetInsertBlock()->getParent() };
 
@@ -375,6 +417,9 @@ namespace
 
         builder->CreateCondBr( condition, thenBlock, elseBlock );
         builder->SetInsertPoint( thenBlock );
+
+        auto * then{ codegenImpl( nodes[ 1U ], scope ) };
+        if ( then == nullptr ) { return nullptr; }
 
         builder->CreateBr( mergeBlock );
 
@@ -396,7 +441,7 @@ namespace
         parent->getBasicBlockList().push_back( mergeBlock );
         builder->SetInsertPoint( mergeBlock );
 
-        auto * phi{ builder->CreatePHI( llvm::Type::getDoubleTy( *context ), 2, "iftmp" ) };
+        auto * phi{ builder->CreatePHI( llvm::IntegerType::getInt32Ty( *context ), 2, "iftmp" ) };
 
         phi->addIncoming(then, thenBlock);
         phi->addIncoming(else_, elseBlock);
@@ -724,7 +769,6 @@ std::unique_ptr< Module > codegen
         }
     }
 
-    builder->SetInsertPoint( mainBlock );
     builder->CreateRetVoid();
 
     return std::move( module_ );

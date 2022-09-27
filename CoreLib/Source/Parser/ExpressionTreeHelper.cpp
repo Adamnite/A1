@@ -220,8 +220,13 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::StatementIf:
             return 2U;
 
+        /**
+         * Since the number of statements in a while body is variable,
+         * it is detected by the parser itself. Therefore, the only operand that is
+         * certain to exist is the while loop condition.
+         */
         case NodeType::StatementWhile:
-            return 2U;
+            return 1U;
 
         case NodeType::StatementPass:
             return 0U;
