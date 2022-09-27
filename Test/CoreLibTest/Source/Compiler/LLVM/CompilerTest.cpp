@@ -173,10 +173,10 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(i)\n"
                 "    i += 1",
             .expectedOutput =
-                "0\n"
-                "1\n"
-                "2\n"
-                "3"
+                "0.000000\n"
+                "1.000000\n"
+                "2.000000\n"
+                "3.000000"
         },
         TestParameter
         {

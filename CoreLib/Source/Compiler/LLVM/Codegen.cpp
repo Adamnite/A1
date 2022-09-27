@@ -364,31 +364,36 @@ namespace
     {
         ASSERT( std::size( node->children() ) >= 1U );
 
-        auto * parent{ builder->GetInsertBlock()->getParent() };
-        auto * outsideLoop = builder->GetInsertBlock();
-        auto * conditionBlock{ llvm::BasicBlock::Create( *context, "loop", parent ) };
-        auto * loopBlock     { llvm::BasicBlock::Create( *context, "loop", parent, conditionBlock ) };
+        auto * parent        { builder->GetInsertBlock()->getParent() };
+        auto * conditionBlock{ llvm::BasicBlock::Create( *context, "cond", parent ) };
+        auto * loopBlock     { llvm::BasicBlock::Create( *context, "loop", parent ) };
 
-        builder->CreateBr(conditionBlock);
-        builder->SetInsertPoint(conditionBlock);
+        builder->CreateBr      ( conditionBlock );
+        builder->SetInsertPoint( conditionBlock );
 
         auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
         if ( condition == nullptr ) { return nullptr; }
 
         // convert condition to boolean by comparing non-equal to 0.0
+        condition = builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *context ), "booltmp" );
         condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "loopcond" );
-        builder->CreateCondBr(condition, loopBlock, outsideLoop);
 
-        builder->SetInsertPoint(loopBlock);
+        auto * afterLoopBlock{ llvm::BasicBlock::Create( *context, "afterloop", parent ) };
+        builder->CreateCondBr( condition, loopBlock, afterLoopBlock );
 
-        auto * then{ codegenImpl( nodes[ 1U ], scope ) };
-        if ( then == nullptr ) { return nullptr; }
+        builder->SetInsertPoint( loopBlock );
 
-        builder->CreateBr(conditionBlock);
+        for ( std::size_t i{ 1U }; i < std::size( nodes ); i++ )
+        {
+            auto * then{ codegenImpl( nodes[ i ], scope ) };
+            if ( then == nullptr ) { return nullptr; }
+        }
 
-        builder->SetInsertPoint(outsideLoop);
+        builder->CreateBr( conditionBlock );
 
-        return llvm::Constant::getNullValue(llvm::Type::getDoubleTy(*context));
+        builder->SetInsertPoint( afterLoopBlock );
+
+        return nullptr;
     }
 
     llvm::Value * codegenControlFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
