@@ -24,7 +24,7 @@ namespace
     }
 
     [[ nodiscard ]]
-    auto findOption( std::span< Option > const options, std::string_view const value ) noexcept
+    auto findOption( std::vector< Option > const & options, std::string_view const value ) noexcept
     {
         return std::find_if
         (

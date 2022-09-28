@@ -40,6 +40,7 @@ int main( int argc, char * argv[] )
     app.addOption
     (
         {
+            .short_       = "",
             .long_        = "--llvm-ir",
             .name         = "llvm-ir",
             .description  = "Write generated LLVM IR code to standard output",

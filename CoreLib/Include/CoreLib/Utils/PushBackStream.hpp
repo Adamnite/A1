@@ -9,6 +9,7 @@
 
 #include <string_view>
 #include <optional>
+#include <cstdio>
 #include <stack>
 
 namespace A1
