@@ -1,0 +1,52 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "A1",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#numbers"
+		}
+	],
+	"declaration": [
+		{
+			"patterns": [
+				{
+					"include": "#contracts"
+				}
+			]	
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.A1",
+				"match": "\\b(if|while|for|return|let|contract)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.A1",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.A1",
+					"match": "\\\\."
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "keyword.other.unit.suffix.integer.ao",
+					"match": "(^-? [0-9] "
+				}
+			]
+		}
+	},
+	"scopeName": ".ao"
+}
