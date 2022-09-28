@@ -23,7 +23,7 @@ Learn more about the A1 project:
 
 ### Building
 
-First, make sure you have Homebrew installed. You can install Homebrew by following the instructions <a href = "https://brew.sh/">here. Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
+First, make sure you have Homebrew installed. You can install Homebrew by following the instructions [here](https://brew.sh/). Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
 
 ```sh
 $ brew install wget llvm@14 cmake ninja
@@ -39,7 +39,7 @@ $ ninja
 ```
 
 Once the build is successfull, you are ready to start playing around!
-You can find examples of basic contracts in the <a href = https://github.com/Adamnite/A1/tree/main/Examples>Examples</a> directory, such as the "Hello World" example below.
+You can find examples of basic contracts in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory, such as the "Hello World" example below.
 
 ```python
 contract HelloWorld:
