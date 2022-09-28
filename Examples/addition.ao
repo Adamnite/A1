@@ -2,9 +2,13 @@
 #
 # Implements simple arithmetic operation
 
-contact addition:
+contact arithmetic:
     let sum: num = 0
 
     def addition(x: num, y: num, z: num) -> num:
         sum =  x + y + y
         return sum
+
+
+main = addition()
+print(main.addition(1,2,3))
