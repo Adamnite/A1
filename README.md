@@ -23,14 +23,14 @@ Learn more about the A1 project:
 
 ### Building
 
-First, make sure you have Homebrew installed. You can install Homebrew by following the instructions [here](https://brew.sh/). Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
+First, download this repo and extract to make sure it is an indepentdent directory. Then, make sure you have Homebrew installed. You can install Homebrew by following the instructions [here](https://brew.sh/). Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
 
 ```sh
 $ brew install wget llvm@14 cmake ninja
 $ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
 ```
 
-Then, execute the following commands in order to build the AOC - A1 compiler:
+Make sure you are in the A1 directory. Then, execute the following commands in order to build the AOC - A1 compiler:
 
 ```sh
 $ mkdir -p build && cd build
