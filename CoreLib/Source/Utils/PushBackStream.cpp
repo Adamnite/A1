@@ -33,7 +33,10 @@ std::optional< int > PushBackStream::pop() noexcept
         else if ( dataFile_ != nullptr )
         {
             // reading data from the file
+            std::fseek( dataFile_, dataFileIndex_, SEEK_SET );
             result = std::fgetc( dataFile_ );
+            dataFileIndex_ = std::ftell( dataFile_ );
+
             if ( std::feof( dataFile_ ) )
             {
                 return {};

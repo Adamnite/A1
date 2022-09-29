@@ -34,7 +34,10 @@ public:
     /**
      * Constructs the stream by reading the characters from the specific file.
      */
-    PushBackStream( std::FILE * f ) : dataFile_{ f } {}
+    PushBackStream( std::FILE * f )
+    : dataFile_     { f }
+    , dataFileIndex_{ std::ftell( f ) }
+    {}
 
     /**
      * Pushes character back to the stream
@@ -53,10 +56,13 @@ private:
     std::size_t lineNumber_{ 0U };
     std::size_t charIndex_ { 0U };
 
-    std::string_view   data_;
-    std::FILE        * dataFile_{ nullptr };
+    // in case stream is constructed from a string
+    std::string_view data_;
+    std::size_t      dataIndex_{ 0U };
 
-    std::size_t dataIndex_{ 0U };
+    // in case stream is constructed from a file
+    std::FILE * dataFile_     { nullptr };
+    long        dataFileIndex_{ 0 };
 
     std::stack< int > stack_;
 };
