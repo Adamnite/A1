@@ -77,8 +77,9 @@ namespace
 
         switch ( token )
         {
-            MAP_TOKEN_TO_OPERATOR( OpParenthesisOpen, Call  );
-            MAP_TOKEN_TO_OPERATOR( OpSubscriptOpen  , Index );
+            MAP_TOKEN_TO_OPERATOR( OpParenthesisOpen, Call       );
+            MAP_TOKEN_TO_OPERATOR( OpSubscriptOpen  , Index      );
+            MAP_TOKEN_TO_OPERATOR( OpDot            , MemberCall );
 
             // Arithmetic operators
             MAP_TOKEN_TO_OPERATOR( OpDiv     , Division       );
@@ -668,29 +669,27 @@ Node::Pointer parse
                     operatorInfo.operandsCount++;
 
                     // TODO: Call parse here instead, in order to be able to parse more complex expressions
-                    operands.push( parseOperand( tokenIt ) );
+                    operands.push( parse( tokenIt ) );
                 }
             }
             else if ( operatorInfo.type == NodeType::ContractDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse contract name
+
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
+                indentationIdx++;
+
                 while ( !tokenIt->is< Eof >() )
                 {
-                    indentationIdx++;
                     operands.push( parse( tokenIt, indentationIdx ) ); // parse contract body
                     operatorInfo.operandsCount++;
 
                     auto prevTokenIt = tokenIt;
+                    ++tokenIt;
 
-                    while ( tokenIt->is< Newline >() )
-                    {
-                        // skip empty lines or comment lines
-                        ++tokenIt;
-                    }
 
                     std::size_t currentIndentationIdx{ 0U };
                     while ( currentIndentationIdx != indentationIdx )
@@ -699,6 +698,10 @@ Node::Pointer parse
                         {
                             ++tokenIt;
                             currentIndentationIdx++;
+                        }
+                        else if ( tokenIt->is< Newline >() )
+                        {
+                            skipNewline( tokenIt );
                         }
                         else
                         {

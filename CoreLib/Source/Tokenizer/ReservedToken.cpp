@@ -112,6 +112,7 @@ namespace
         StringifiedToken{ "-"  , ReservedToken::OpSub                     },
         StringifiedToken{ "-=" , ReservedToken::OpAssignSub               },
         StringifiedToken{ "->" , ReservedToken::OpReturnTypeAnnotation    },
+        StringifiedToken{ "."  , ReservedToken::OpDot                     },
         StringifiedToken{ "/"  , ReservedToken::OpDiv                     },
         StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
         StringifiedToken{ "//=", ReservedToken::OpAssignFloorDiv          },

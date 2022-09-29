@@ -3,3 +3,6 @@
 contract HelloWorld:
     def get() -> str:
         return "Hello, world!"
+
+let var = HelloWorld()
+print(var.get())
