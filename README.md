@@ -45,8 +45,9 @@ You can find examples of basic contracts in the [Examples](https://github.com/Ad
 contract HelloWorld:
     def get() -> str:
         return "Hello World!"
-main = HelloWorld()
-print(HelloWorld.get())
+
+let var = HelloWorld()
+print(var.get())
 ```
 
 Once you have written your contract, save it with the ".ao" extention and run the following commands to compile the program and return an output. Be sure to replace "hello_world" with the name of your A1 file.
