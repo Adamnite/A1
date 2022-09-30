@@ -49,6 +49,8 @@ namespace
 
         std::optional< int > lastChar;
 
+        auto isNumber{ true };
+
         for
         (
             lastChar = stream.pop();
@@ -56,6 +58,15 @@ namespace
             lastChar = stream.pop()
         )
         {
+            if ( !std::isdigit( *lastChar ) && *lastChar != '.' )
+            {
+                isNumber = false;
+            }
+
+            if ( !isNumber && *lastChar == '.' )
+            {
+                break;
+            }
             result.push_back( static_cast< char >( *lastChar ) );
         }
 

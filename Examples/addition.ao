@@ -10,5 +10,5 @@ contact arithmetic:
         return sum
 
 
-main = addition()
-print(main.addition(1,2,3))
+let var = addition()
+print(var.addition(1, 2, 3))

@@ -265,6 +265,66 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Identifier{ .name = "param2" },
                 A1::Eof{}
             }
+        },
+        TestParameter
+        {
+            .title          = "ContractDefinition",
+            .expression     =
+                "contract HelloWorld:\n"
+                "    def get() -> str:\n"
+                "        return \"Hello, world!\"\n"
+                "\n"
+                "let var = HelloWorld()\n"
+                "print(var.get())",
+            .expectedTokens =
+            {
+                // 1st line
+                A1::ReservedToken::KwContract,
+                A1::Identifier{ .name = "HelloWorld" },
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 2nd line
+                A1::Indentation{},
+                A1::ReservedToken::KwDef,
+                A1::Identifier{ .name = "get" },
+                A1::ReservedToken::OpParenthesisOpen,
+                A1::ReservedToken::OpParenthesisClose,
+                A1::ReservedToken::OpReturnTypeAnnotation,
+                A1::ReservedToken::KwString,
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 3rd line
+                A1::Indentation{},
+                A1::Indentation{},
+                A1::ReservedToken::KwReturn,
+                A1::String{ "Hello, world!" },
+                A1::Newline{},
+
+                // 4th line
+                A1::Newline{},
+
+                // 5th line
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssign,
+                A1::Identifier{ .name = "HelloWorld" },
+                A1::ReservedToken::OpParenthesisOpen,
+                A1::ReservedToken::OpParenthesisClose,
+                A1::Newline{},
+
+                // 6th line
+                A1::Identifier{ .name = "print" },
+                A1::ReservedToken::OpParenthesisOpen,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpDot,
+                A1::Identifier{ .name = "get" },
+                A1::ReservedToken::OpParenthesisOpen,
+                A1::ReservedToken::OpParenthesisClose,
+                A1::ReservedToken::OpParenthesisClose,
+                A1::Eof{}
+            }
         }
     ),
     TokenizerTestFixture::PrintTitle()

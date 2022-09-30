@@ -263,6 +263,19 @@ INSTANTIATE_TEST_SUITE_P
             .expectedOutput =
                 "Summing...\n"
                 "9.000000"
+        },
+        TestParameter
+        {
+            .title = "Contract",
+            .input =
+                "contract HelloWorld:\n"
+                "    def get() -> str:\n"
+                "        return \"Hello, world!\"\n"
+                "\n"
+                "let var = HelloWorld()\n"
+                "print(var.get())",
+            .expectedOutput =
+                "Hello, world!"
         }
     ),
     LLVMCompilerTestFixture::PrintTitle()

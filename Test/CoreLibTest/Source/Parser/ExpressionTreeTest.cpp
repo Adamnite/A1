@@ -192,6 +192,27 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title        = "MemberCall",
+            .expression   = "var.member",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::MemberCall,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var"    } ),
+                            std::make_unique< Node >( A1::Identifier{ .name = "member" } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .title        = "NestedFunctionCalls",
             .expression   = "print(func(1.4, \"This is random string\", 5))",
             .expectedRoot = std::make_shared< Node >
@@ -936,7 +957,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "EmptySmartContract",
+            .title      = "EmptyContract",
             .expression =
                 "contract Example:\n"
                 "    pass\n"
@@ -973,13 +994,16 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "SmartContract",
+            .title      = "Contract",
             .expression =
                 "contract Example:\n"
                 "    let foo: num = 101\n"
                 "    def func(param1: num, param2: num) -> num:\n"
                 "        return param1 + param2\n"
-                "let var: num = 9",
+                "\n"
+                "let var = Example()\n"
+                "print(var.foo)\n"
+                "print(var.func(3, 4))",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -1052,8 +1076,57 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Registry::getNumberHandle() ),
-                            std::make_unique< Node >( A1::Number{ 9 } )
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "Example" } )
+                                )
+                            )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::Call,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::MemberCall,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "foo" } )
+                                )
+                            )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::Call,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::MemberCall,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                    std::make_unique< Node >
+                                    (
+                                        A1::NodeType::Call,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                                            std::make_unique< Node >( A1::Number{ 3 }                  ),
+                                            std::make_unique< Node >( A1::Number{ 4 }                  )
+                                        )
+                                    )
+                                )
+                            )
                         )
                     )
                 )

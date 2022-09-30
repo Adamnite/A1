@@ -25,6 +25,7 @@ enum class NodeType : std::uint8_t
 
     Call,                    // ( <operand>, <operand>, ... )
     Index,                   // [ <operand> ]
+    MemberCall,              // <operand>.<operand>
 
     Exponent,                // <operand> ** <operand>
 

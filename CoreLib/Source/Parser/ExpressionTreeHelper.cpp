@@ -92,6 +92,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
         /**
          * All other types should fall into this precedence group
          */
+        case NodeType::MemberCall:
         case NodeType::StatementIf:
         case NodeType::StatementWhile:
         case NodeType::StatementPass:
@@ -233,6 +234,9 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
 
         case NodeType::StatementReturn:
             return 1U;
+
+        case NodeType::MemberCall:
+            return 2U;
 
         case NodeType::Unknown:
         case NodeType::Count:

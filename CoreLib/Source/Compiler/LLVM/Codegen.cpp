@@ -94,6 +94,7 @@ namespace
     );
 
     llvm::Value    * codegenFunctionCall      ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
+    llvm::Value    * codegenMemberCall        ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenLoopFlow          ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenControlFlow       ( std::span< Node::Pointer const > const, ScopeIdentifiers & );
     llvm::Value    * codegenContractDefinition( std::span< Node::Pointer const > const, ScopeIdentifiers & );
@@ -117,6 +118,8 @@ namespace
                     {
                         case NodeType::Call:
                             return codegenFunctionCall( node->children(), scope );
+                        case NodeType::MemberCall:
+                            return codegenMemberCall( node->children(), scope );
 
                         case NodeType::UnaryMinus:
                             return codegenUnary( &llvm::IRBuilder<>::CreateFNeg, node->children(), "nottmp", scope );
@@ -289,6 +292,7 @@ namespace
             if ( std::size( nodes ) > 2U ) { return nullptr; }
 
             auto * valuePtr{ codegenImpl( nodes[ 1U ], scope ) };
+            if ( valuePtr == nullptr ) { return nullptr; }
 
             // works only for numbers for now
             [[ maybe_unused ]] llvm::Value * value{ nullptr };
@@ -323,6 +327,11 @@ namespace
                     value = valuePtr;
                 }
             }
+            else if ( nodes[ 1U ]->is< NodeType >() && nodes[ 1U ]->get< NodeType >() == NodeType::MemberCall )
+            {
+                formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                value = valuePtr;
+            }
             else
             {
                 auto * type{ valuePtr->getType() };
@@ -339,6 +348,10 @@ namespace
 
             std::array< llvm::Value *, 2U > arguments{ formatSpecifier, value };
             return builder->CreateCall( stdFunctions[ "print" ], arguments, "print" );
+        }
+        else if ( contractTypes.find( functionName ) != std::end( contractTypes ) )
+        {
+            return new llvm::GlobalVariable( *module_, contractTypes[ functionName ], true, llvm::GlobalVariable::ExternalLinkage, llvm::UndefValue::get( contractTypes[ functionName ] ) );
         }
         else
         {
@@ -358,6 +371,12 @@ namespace
         }
 
         return nullptr;
+    }
+
+    llvm::Value * codegenMemberCall( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
+    {
+        auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+        return builder->CreateStructGEP( scope[ name ]->getType()->getContainedType( 0 ), scope[ name ], 0);
     }
 
     llvm::Value * codegenLoopFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
