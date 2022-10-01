@@ -15,6 +15,12 @@ target_include_directories(
 
 target_link_libraries( CoreLib PRIVATE fmt::fmt )
 
+if( ENABLE_TESTS )
+    target_compile_definitions( CoreLib PRIVATE
+        TESTS_ENABLED=1
+    )
+endif()
+
 if( ENABLE_LLVM )
     find_package( LLVM  REQUIRED CONFIG )
     find_package( Clang REQUIRED CONFIG )

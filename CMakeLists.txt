@@ -25,10 +25,10 @@ FetchContent_MakeAvailable( fmt )
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib/CoreLib.cmake )
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtils/CoreUtils.cmake )
 
-option( ENABLE_TESTING "Enable testing" OFF )
-message( STATUS "Testing enabled: ${ENABLE_TESTING}" )
+option( ENABLE_TESTS "Enable tests" OFF )
+message( STATUS "Tests enabled: ${ENABLE_TESTS}" )
 
-if( ENABLE_TESTING )
+if( ENABLE_TESTS )
     include( ${CMAKE_CURRENT_LIST_DIR}/Test/Test.cmake )
 endif()
 

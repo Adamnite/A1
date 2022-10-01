@@ -7,10 +7,14 @@
 
 #pragma once
 
+#ifdef TESTS_ENABLED
+#   include <cassert>
+#endif // TESTS_ENABLED
+
 namespace A1
 {
 
-#ifdef ENABLE_TESTING
+#ifdef TESTS_ENABLED
 #   define ASSERT( expression ) assert( expression )
 #else
 #   define ASSERT( expression ) ( void ) 0

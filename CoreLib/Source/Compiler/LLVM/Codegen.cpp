@@ -381,7 +381,7 @@ namespace
 
     llvm::Value * codegenLoopFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( node->children() ) >= 1U );
+        ASSERT( std::size( nodes ) >= 1U );
 
         auto * parent        { builder->GetInsertBlock()->getParent() };
         auto * conditionBlock{ llvm::BasicBlock::Create( *context, "cond", parent ) };
