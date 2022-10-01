@@ -33,5 +33,6 @@ if( ENABLE_LLVM )
     # we need to use the Clang compiler coming with the LLVM package.
     target_compile_definitions( CoreLib PRIVATE
         CLANG_PATH=\"${LLVM_INSTALL_PREFIX}/bin/clang\"
+        LLVM_ENABLED=1
     )
 endif()

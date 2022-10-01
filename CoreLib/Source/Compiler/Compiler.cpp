@@ -6,14 +6,23 @@
  */
 
 #include <CoreLib/Compiler/Compiler.hpp>
-#include <CoreLib/Compiler/LLVM/Compiler.hpp>
+
+#ifdef LLVM_ENABLED
+#   include <CoreLib/Compiler/LLVM/Compiler.hpp>
+#endif // LLVM_ENABLED
 
 namespace A1
 {
 
 bool compile( Compiler::Settings settings, Node::Pointer const & node )
 {
+#ifdef LLVM_ENABLED
     return LLVM::compile( std::move( settings ), node );
+#else
+    ( void ) settings;
+    ( void ) node;
+    return false;
+#endif // LLVM_ENABLED
 }
 
 } // namespace A1
