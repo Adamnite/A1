@@ -24,11 +24,10 @@ enum class ReservedToken : std::uint8_t
     OpSubscriptOpen,
     OpSubscriptClose,
 
+    OpArrow,
     OpColon,
     OpComma,
     OpDot,
-
-    OpReturnTypeAnnotation,
 
     // Arithmetic operators
     OpAdd,

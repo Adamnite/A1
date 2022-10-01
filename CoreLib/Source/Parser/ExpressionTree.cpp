@@ -602,7 +602,7 @@ Node::Pointer parse
                     skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
                 }
 
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpReturnTypeAnnotation )
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpArrow )
                 {
                     ++tokenIt;
                     operands.push( parse( tokenIt ) ); // parse type
