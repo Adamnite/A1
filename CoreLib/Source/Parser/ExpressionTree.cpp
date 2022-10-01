@@ -430,7 +430,7 @@ Node::Pointer parse
             {
                 skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
-                if ( !tokenIt->is< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                 {
                     while ( true )
                     {
@@ -511,7 +511,7 @@ Node::Pointer parse
 
                 indentationIdx++;
 
-                while ( !tokenIt->is< Eof >() )
+                while ( tokenIt->is_not< Eof >() )
                 {
                     operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
                     operatorInfo.operandsCount++;
@@ -556,7 +556,7 @@ Node::Pointer parse
 
                     skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
-                    if ( !tokenIt->is< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                    if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
                         while ( true )
                         {
@@ -614,7 +614,7 @@ Node::Pointer parse
 
                 indentationIdx++;
 
-                while ( !tokenIt->is< Eof >() )
+                while ( tokenIt->is_not< Eof >() )
                 {
                     operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
                     operatorInfo.operandsCount++;
@@ -682,7 +682,7 @@ Node::Pointer parse
 
                 indentationIdx++;
 
-                while ( !tokenIt->is< Eof >() )
+                while ( tokenIt->is_not< Eof >() )
                 {
                     operands.push( parse( tokenIt, indentationIdx ) ); // parse contract body
                     operatorInfo.operandsCount++;
@@ -756,7 +756,7 @@ Node::Pointer parse
 
     if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
     {
-        while ( !tokenIt->is< Eof >() )
+        while ( tokenIt->is_not< Eof >() )
         {
             operands.push( parse( tokenIt, 0, true ) );
             operators.top().operandsCount++;

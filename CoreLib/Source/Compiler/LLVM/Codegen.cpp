@@ -515,7 +515,7 @@ namespace
                 auto const & paramNodes{ node->children() };
                 paramNames.push_back( paramNodes[ 0 ]->get< Identifier >().name );
             }
-            else if ( !node->is< Identifier >() && !node->is< TypeID >() && functionBodyStartIdx == 0U )
+            else if ( node->is_not< Identifier >() && node->is_not< TypeID >() && functionBodyStartIdx == 0U )
             {
                 if ( node->is< NodeType >() && node->get< NodeType >() == NodeType::StatementReturn )
                 {

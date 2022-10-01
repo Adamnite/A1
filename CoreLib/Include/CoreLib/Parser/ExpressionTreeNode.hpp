@@ -104,7 +104,7 @@ public:
     <
         NodeType,   // Non-leaf nodes in expression tree
         Identifier, // Names of variables, functions, smart contracts etc.
-        Number,     // Both integers and decimal numbers. AKA, i32, i64, f32, or f64
+        Number,     // Both integers and decimal numbers
         String,     // String literals
         TypeID      // Type declaration for variables, function parameters, return values etc.
     >;
@@ -128,6 +128,12 @@ public:
     [[ nodiscard ]] bool is() const noexcept
     {
         return std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
+    [[ nodiscard ]] bool is_not() const noexcept
+    {
+        return !std::holds_alternative< T >( value_ );
     }
 
     template< typename T >

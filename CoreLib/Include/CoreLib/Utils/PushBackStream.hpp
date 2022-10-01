@@ -29,15 +29,26 @@ public:
     /**
      * Constructs the stream from the character array.
      */
-    PushBackStream( std::string_view const data ) : data_{ data } {}
+    PushBackStream( std::string_view const data )
+    {
+        data_ = StringInfo
+        {
+            .value = data,
+            .index = 0U
+        };
+    }
 
     /**
      * Constructs the stream by reading the characters from the specific file.
      */
     PushBackStream( std::FILE * f )
-    : dataFile_     { f }
-    , dataFileIndex_{ std::ftell( f ) }
-    {}
+    {
+        data_ = FileInfo
+        {
+            .file    = f,
+            .filePos = std::ftell( f )
+        };
+    }
 
     /**
      * Pushes character back to the stream
@@ -53,18 +64,23 @@ public:
     [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
 
 private:
+    struct FileInfo
+    {
+        std::FILE * file{ nullptr };
+        long        filePos{ 0 };
+    };
+
+    struct StringInfo
+    {
+        std::string_view value;
+        std::size_t      index{ 0U };
+    };
+
+    std::variant< FileInfo, StringInfo > data_;
+    std::stack< int > stack_;
+
     std::size_t lineNumber_{ 0U };
     std::size_t charIndex_ { 0U };
-
-    // in case stream is constructed from a string
-    std::string_view data_;
-    std::size_t      dataIndex_{ 0U };
-
-    // in case stream is constructed from a file
-    std::FILE * dataFile_     { nullptr };
-    long        dataFileIndex_{ 0 };
-
-    std::stack< int > stack_;
 };
 
 } // namespace A1

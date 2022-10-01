@@ -23,20 +23,9 @@ struct Identifier
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
-struct Indentation
-{
-    [[ nodiscard ]] bool operator==( Indentation const & ) const = default;
-};
-
-struct Newline
-{
-    [[ nodiscard ]] bool operator==( Newline const & ) const = default;
-};
-
-struct Eof
-{
-    [[ nodiscard ]] bool operator==( Eof const & ) const = default;
-};
+struct Indentation : std::monostate {};
+struct Newline     : std::monostate {};
+struct Eof         : std::monostate {};
 
 using Number = double;
 using String = std::string;
@@ -60,6 +49,12 @@ public:
     }
 
     template< typename T >
+    [[ nodiscard ]] bool is_not() const noexcept
+    {
+        return !std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
     [[ nodiscard ]] T const & get() const noexcept
     {
         ASSERT( is< T >() );
@@ -75,8 +70,8 @@ public:
 
 private:
     ValueType   value_;
-    std::size_t lineNumber_;
-    std::size_t charIndex_;
+    std::size_t lineNumber_{ 0U };
+    std::size_t charIndex_ { 0U };
 };
 
 } // namespace A1
