@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/ReservedToken.hpp>
+#include <CoreLib/Errors/ErrorInfo.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
 #include <variant>
@@ -36,10 +37,9 @@ public:
     using ValueType = std::variant< ReservedToken, Identifier, Number, String, Indentation, Newline, Eof >;
 
     Token() noexcept = default;
-    Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )
-    : value_     { std::move( value ) }
-    , lineNumber_{ lineNumber         }
-    , charIndex_ { charIndex          }
+    Token( ValueType value, ErrorInfo errorInfo )
+    : value_    { std::move( value     ) }
+    , errorInfo_{ std::move( errorInfo ) }
     {}
 
     template< typename T >
@@ -61,17 +61,14 @@ public:
         return std::get< T >( value_ );
     }
 
-    [[ nodiscard ]] ValueType const & value() const noexcept { return value_; }
-
-    [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
-    [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
+    [[ nodiscard ]] ValueType const & value    () const noexcept { return value_;     }
+    [[ nodiscard ]] ErrorInfo         errorInfo() const noexcept { return errorInfo_; }
 
     [[ nodiscard ]] std::string toString() const noexcept;
 
 private:
-    ValueType   value_;
-    std::size_t lineNumber_{ 0U };
-    std::size_t charIndex_ { 0U };
+    ValueType value_;
+    ErrorInfo errorInfo_;
 };
 
 } // namespace A1

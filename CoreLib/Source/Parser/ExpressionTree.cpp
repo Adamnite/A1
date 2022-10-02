@@ -49,16 +49,14 @@ namespace
     struct OperatorInfo
     {
         NodeType     type;
-        std::size_t  lineNumber;
-        std::size_t  charIndex;
+        ErrorInfo    errorInfo;
         std::size_t  operandsCount;
     };
 
     [[ nodiscard ]] OperatorInfo getOperatorInfo
     (
         ReservedToken const token,
-        std::size_t   const lineNumber,
-        std::size_t   const charIndex,
+        ErrorInfo           errorInfo,
         bool          const isPrefix
     )
     {
@@ -68,8 +66,7 @@ namespace
         return                                                      \
         {                                                           \
             .type          = NodeType::operator,                    \
-            .lineNumber    = lineNumber,                            \
-            .charIndex     = charIndex,                             \
+            .errorInfo     = std::move( errorInfo ),                \
             .operandsCount = getOperandsCount( NodeType::operator ) \
         }
 
@@ -99,8 +96,7 @@ namespace
                     return
                     {
                         .type          = NodeType::UnaryPlus,
-                        .lineNumber    = lineNumber,
-                        .charIndex     = charIndex,
+                        .errorInfo     = std::move( errorInfo ),
                         .operandsCount = getOperandsCount( NodeType::UnaryPlus )
                     };
                 }
@@ -108,8 +104,7 @@ namespace
                 return
                 {
                     .type          = NodeType::Addition,
-                    .lineNumber    = lineNumber,
-                    .charIndex     = charIndex,
+                    .errorInfo     = std::move( errorInfo ),
                     .operandsCount = getOperandsCount( NodeType::Addition )
                 };
             case ReservedToken::OpSub:
@@ -118,8 +113,7 @@ namespace
                     return
                     {
                         .type          = NodeType::UnaryMinus,
-                        .lineNumber    = lineNumber,
-                        .charIndex     = charIndex,
+                        .errorInfo     = std::move( errorInfo ),
                         .operandsCount = getOperandsCount( NodeType::UnaryMinus )
                     };
                 }
@@ -127,8 +121,7 @@ namespace
                 return
                 {
                     .type          = NodeType::Subtraction,
-                    .lineNumber    = lineNumber,
-                    .charIndex     = charIndex,
+                    .errorInfo     = std::move( errorInfo ),
                     .operandsCount = getOperandsCount( NodeType::Subtraction )
                 };
 
@@ -208,26 +201,26 @@ namespace
     {
         if ( tokenIt->is< Number >() )
         {
-            return std::make_unique< Node >( tokenIt->get< Number >(), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< Number >(), tokenIt->errorInfo() );
         }
         else if ( tokenIt->is< String >() )
         {
-            return std::make_unique< Node >( tokenIt->get< String >(), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< String >(), tokenIt->errorInfo() );
         }
         else if ( tokenIt->is< Identifier >() )
         {
-            return std::make_unique< Node >( tokenIt->get< Identifier >(), tokenIt->lineNumber(), tokenIt->charIndex() );
+            return std::make_unique< Node >( tokenIt->get< Identifier >(), tokenIt->errorInfo() );
         }
         else if ( tokenIt->is< ReservedToken >() )
         {
             auto const reservedToken{ tokenIt->get< ReservedToken >() };
             if ( reservedToken == ReservedToken::KwNumber )
             {
-                return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
+                return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->errorInfo() );
             }
             else if ( reservedToken == ReservedToken::KwString )
             {
-                return std::make_unique< Node >( Registry::getStringLiteralHandle(), tokenIt->lineNumber(), tokenIt->charIndex() );
+                return std::make_unique< Node >( Registry::getStringLiteralHandle(), tokenIt->errorInfo() );
             }
         }
 
@@ -238,16 +231,14 @@ namespace
     (
         std::stack< Node::Pointer >       & operands,
         std::stack< OperatorInfo  >       & operators,
-        std::size_t                 const   lineNumber,
-        std::size_t                 const   charIndex
+        ErrorInfo                           errorInfo
     )
     {
         auto const & lastOperator{ operators.top() };
 
         if ( operands.size() < lastOperator.operandsCount )
         {
-            ( void ) lineNumber;
-            ( void ) charIndex;
+            ( void ) errorInfo;
             throw std::runtime_error( "Compile error" );
         }
 
@@ -266,8 +257,7 @@ namespace
             (
                 lastOperator.type,
                 std::move( lastOperatorOperands ),
-                lastOperator.lineNumber,
-                lastOperator.charIndex
+                lastOperator.errorInfo
             )
         );
 
@@ -363,8 +353,7 @@ Node::Pointer parse
             OperatorInfo
             {
                 .type = NodeType::ModuleDefinition,
-                .lineNumber = tokenIt->lineNumber(),
-                .charIndex  = tokenIt->charIndex (),
+                .errorInfo = tokenIt->errorInfo(),
                 .operandsCount = 0U
             }
         );
@@ -391,8 +380,7 @@ Node::Pointer parse
                 getOperatorInfo
                 (
                     tokenIt->get< ReservedToken >(),
-                    tokenIt->lineNumber(),
-                    tokenIt->charIndex (),
+                    tokenIt->errorInfo(),
                     isTokenPrefix
                 )
             };
@@ -423,7 +411,7 @@ Node::Pointer parse
 
             if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
             {
-                popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex() );
+                popOneOperator( operands, operators, tokenIt->errorInfo() );
             }
 
             if ( operatorInfo.type == NodeType::Call )
@@ -563,8 +551,7 @@ Node::Pointer parse
                             OperatorInfo const parameterDefinition
                             {
                                 .type          = NodeType::FunctionParameterDefinition,
-                                .lineNumber    = tokenIt->lineNumber(),
-                                .charIndex     = tokenIt->charIndex (),
+                                .errorInfo     = tokenIt->errorInfo(),
                                 .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
                             };
 
@@ -576,7 +563,7 @@ Node::Pointer parse
 
                             while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
                             {
-                                popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+                                popOneOperator( operands, operators, tokenIt->errorInfo());
                             }
 
                             operatorInfo.operandsCount++;
@@ -751,7 +738,7 @@ Node::Pointer parse
 
     while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
     {
-        popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+        popOneOperator( operands, operators, tokenIt->errorInfo());
     }
 
     if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
@@ -764,7 +751,7 @@ Node::Pointer parse
 
         while ( !operators.empty() )
         {
-            popOneOperator( operands, operators, tokenIt->lineNumber(), tokenIt->charIndex());
+            popOneOperator( operands, operators, tokenIt->errorInfo());
         }
     }
 

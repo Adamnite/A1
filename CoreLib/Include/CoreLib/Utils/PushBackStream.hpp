@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <CoreLib/Errors/ErrorInfo.hpp>
+
 #include <string_view>
 #include <optional>
 #include <cstdio>
@@ -60,8 +62,7 @@ public:
      */
     [[ nodiscard ]] std::optional< int > pop() noexcept;
 
-    [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
-    [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
+    [[ nodiscard ]] ErrorInfo errorInfo() const noexcept { return errorInfo_; }
 
 private:
     struct FileInfo
@@ -79,8 +80,7 @@ private:
     std::variant< FileInfo, StringInfo > data_;
     std::stack< int > stack_;
 
-    std::size_t lineNumber_{ 0U };
-    std::size_t charIndex_ { 0U };
+    ErrorInfo errorInfo_;
 };
 
 } // namespace A1

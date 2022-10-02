@@ -14,9 +14,9 @@ void PushBackStream::push( int const c ) noexcept
 {
     stack_.push( c );
 
-    if ( c== '\n' ) { --lineNumber_; }
+    if ( c== '\n' ) { --errorInfo_.lineNumber; }
 
-    --charIndex_;
+    --errorInfo_.charIndex;
 }
 
 std::optional< int > PushBackStream::pop() noexcept
@@ -66,9 +66,9 @@ std::optional< int > PushBackStream::pop() noexcept
         stack_.pop();
     }
 
-    if ( result == '\n' ) { ++lineNumber_; }
+    if ( result == '\n' ) { ++errorInfo_.lineNumber; }
 
-    ++charIndex_;
+    ++errorInfo_.charIndex;
 
     return result;
 }
