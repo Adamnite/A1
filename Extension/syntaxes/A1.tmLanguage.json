@@ -10,6 +10,9 @@
 		},
 		{
 			"include": "#numbers"
+		},
+		{
+			"include": "ctrl+statements"	
 		}
 	],
 	"declaration": [
@@ -24,7 +27,7 @@
 	"repository": {
 		"keywords": {
 			"patterns": [{
-				"name": "keyword.control.A1",
+				"name": "keyword.control.untitled",
 				"match": "\\b(if|while|for|return|let|contract)\\b"
 			}]
 		},
@@ -43,7 +46,7 @@
 			"patterns": [
 				{
 					"name": "keyword.other.unit.suffix.integer.ao",
-					"match": "(^-? [0-9] "
+					"match": "(^-? [0-9]"
 				}
 			]
 		}
