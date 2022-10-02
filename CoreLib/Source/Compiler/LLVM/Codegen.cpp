@@ -661,11 +661,12 @@ namespace
         return scope[name];
     }
 
+    [[ nodiscard ]]
     llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( nodes ) >= 2U );
+        ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of identifier and either type annotation or initialization or both" );
 
-        ASSERT( nodes[ 0U ]->is< Identifier >() );
+        ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in variable definition" );
         auto const & name{ nodes[ 0U ]->get< Identifier >().name };
 
         auto * parent{ builder->GetInsertBlock()->getParent() };
