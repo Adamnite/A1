@@ -11,6 +11,7 @@
 
 #include <string_view>
 #include <optional>
+#include <variant>
 #include <cstdio>
 #include <stack>
 
@@ -32,25 +33,15 @@ public:
      * Constructs the stream from the character array.
      */
     PushBackStream( std::string_view const data )
-    {
-        data_ = StringInfo
-        {
-            .value = data,
-            .index = 0U
-        };
-    }
+    : data_{ StringInfo { .value = data, .index = 0U } }
+    {}
 
     /**
      * Constructs the stream by reading the characters from the specific file.
      */
     PushBackStream( std::FILE * f )
-    {
-        data_ = FileInfo
-        {
-            .file    = f,
-            .filePos = std::ftell( f )
-        };
-    }
+    : data_{ FileInfo { .file = f, .filePos = std::ftell( f ) } }
+    {}
 
     /**
      * Pushes character back to the stream

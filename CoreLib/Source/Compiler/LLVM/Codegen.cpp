@@ -42,15 +42,6 @@ namespace
 {
     using ScopeIdentifiers = std::map< std::string, llvm::Value * >;
 
-    llvm::Value * getFromScope( ScopeIdentifiers const & scope, std::string const & name ) noexcept
-    {
-        if ( auto it{ scope.find( name ) }; it != std::end( scope ) )
-        {
-            return it->second;
-        }
-        return nullptr;
-    }
-
     std::unique_ptr< llvm::LLVMContext > context;
     std::unique_ptr< llvm::IRBuilder<> > builder;
     std::unique_ptr< llvm::Module      > module_;
@@ -60,10 +51,53 @@ namespace
 
     std::map< std::string, llvm::Type * > contractTypes;
 
+    [[ nodiscard ]]
+    llvm::Value * getFromScope( ScopeIdentifiers const & scope, std::string const & name ) noexcept
+    {
+        if ( auto it{ scope.find( name ) }; it != std::end( scope ) )
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    [[ nodiscard ]]
+    llvm::Constant * getFormat( llvm::Type const * type )
+    {
+        if ( type->isDoubleTy() )
+        {
+            return builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0, module_.get() );
+        }
+        else if
+        (
+            type->getNumContainedTypes() > 0 &&
+            (
+                type->getContainedType( 0 )->isArrayTy  () ||
+                type->getContainedType( 0 )->isIntegerTy()
+            )
+        )
+        {
+            return builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0, module_.get() );
+        }
+        return nullptr;
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * allocate( llvm::IRBuilder<> & builder, std::string_view const name, llvm::Type * type, llvm::Value * initialValue )
+    {
+        auto * value{ builder.CreateAlloca( type, 0, name.data() ) };
+        if ( initialValue != nullptr )
+        {
+            builder.CreateStore( initialValue, value );
+        }
+        return value;
+    }
+
     template< typename ... T >
     using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
 
     template< typename ... T >
+    [[ nodiscard ]]
     llvm::Value * codegenUnary
     (
         IRBuilderUnaryClbk< T ... >      const,
@@ -76,6 +110,7 @@ namespace
     using IRBuilderBinaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Value *, llvm::Twine const &, T ... );
 
     template< typename ... T >
+    [[ nodiscard ]]
     llvm::Value * codegenBinary
     (
         IRBuilderBinaryClbk< T ... >     const,
@@ -85,7 +120,8 @@ namespace
     );
 
     template< typename ... T>
-    llvm::Value * codegenAssignerDefinition
+    [[ nodiscard ]]
+    llvm::Value * codegenAssignExpression
     (
         IRBuilderBinaryClbk< T ... >     const,
         std::span< Node::Pointer const > const,
@@ -103,10 +139,7 @@ namespace
 
     llvm::Value * codegenImpl( Node::Pointer const & node, ScopeIdentifiers & scope )
     {
-        if ( node == nullptr )
-        {
-            return nullptr;
-        }
+        if ( node == nullptr ) { return nullptr; }
 
         return std::visit
         (
@@ -116,106 +149,61 @@ namespace
                 {
                     switch ( type )
                     {
-                        case NodeType::Call:
-                            return codegenFunctionCall( node->children(), scope );
-                        case NodeType::MemberCall:
-                            return codegenMemberCall( node->children(), scope );
+#define CODEGEN( type, codegenFunc, builderFunc, opName ) \
+    case NodeType::type: return codegenFunc( &llvm::IRBuilder<>::builderFunc, node->children(), opName, scope )
 
-                        case NodeType::UnaryMinus:
-                            return codegenUnary( &llvm::IRBuilder<>::CreateFNeg, node->children(), "nottmp", scope );
+                        CODEGEN( UnaryMinus       , codegenUnary , CreateFNeg      , "nottemp" );
+                        CODEGEN( LogicalNot       , codegenUnary , CreateNot       , "lnottmp" );
+                        CODEGEN( LogicalAnd       , codegenBinary, CreateLogicalAnd, "landtmp" );
+                        CODEGEN( LogicalOr        , codegenBinary, CreateLogicalOr , "lortmp"  );
+                        CODEGEN( Multiplication   , codegenBinary, CreateFMul      , "multmp"  );
+                        CODEGEN( Division         , codegenBinary, CreateFDiv      , "divtmp"  );
+                        CODEGEN( FloorDivision    , codegenBinary, CreateSDiv      , "fdivtmp" );
+                        CODEGEN( Modulus          , codegenBinary, CreateFRem      , "modtmp"  );
+                        CODEGEN( Addition         , codegenBinary, CreateFAdd      , "addtmp"  );
+                        CODEGEN( Subtraction      , codegenBinary, CreateFSub      , "subtmp"  );
+                        CODEGEN( BitwiseLeftShift , codegenBinary, CreateShl       , "lshtmp"  );
+                        CODEGEN( BitwiseRightShift, codegenBinary, CreateAShr      , "rshtmp"  );
+                        CODEGEN( BitwiseAnd       , codegenBinary, CreateAnd       , "andtmp"  );
+                        CODEGEN( BitwiseOr        , codegenBinary, CreateOr        , "ortmp "  );
+                        CODEGEN( BitwiseXor       , codegenBinary, CreateXor       , "xortmp"  );
+                        CODEGEN( BitwiseNot       , codegenUnary , CreateNot       , "nottmp"  );
+                        CODEGEN( Equality         , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
+                        CODEGEN( Inequality       , codegenBinary, CreateFCmpONE   , "netmp"   );
+                        CODEGEN( GreaterThan      , codegenBinary, CreateFCmpOGT   , "gttmp"   );
+                        CODEGEN( GreaterThanEqual , codegenBinary, CreateFCmpOGE   , "getmp"   );
+                        CODEGEN( LessThan         , codegenBinary, CreateFCmpOLT   , "ltmp"    );
+                        CODEGEN( LessThanEqual    , codegenBinary, CreateFCmpOLE   , "letmp"   );
+                        CODEGEN( IsIdentical      , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
+                        CODEGEN( IsNotIdentical   , codegenBinary, CreateFCmpONE   , "netmp"   );
 
-                        case NodeType::Multiplication:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFMul, node->children(), "multmp", scope );
-                        case NodeType::Division:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFDiv, node->children(), "divtmp", scope );
-                        case NodeType::FloorDivision:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateSDiv, node->children(), "fdivtmp", scope );
-                        case NodeType::Modulus:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFRem, node->children(), "modtmp", scope );
-                        case NodeType::Addition:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFAdd, node->children(), "addtmp", scope );
-                        case NodeType::Subtraction:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFSub, node->children(), "subtmp", scope );
+                        CODEGEN( AssignAddition         , codegenAssignExpression, CreateFAdd, "addtmp"  );
+                        CODEGEN( AssignSubtraction      , codegenAssignExpression, CreateFSub, "subtmp"  );
+                        CODEGEN( AssignMultiplication   , codegenAssignExpression, CreateFMul, "multmp"  );
+                        CODEGEN( AssignDivision         , codegenAssignExpression, CreateFDiv, "divtmp"  );
+                        CODEGEN( AssignFloorDivision    , codegenAssignExpression, CreateSDiv, "fdivtmp" );
+                        CODEGEN( AssignModulus          , codegenAssignExpression, CreateFRem, "modtmp"  );
+                        CODEGEN( AssignBitwiseLeftShift , codegenAssignExpression, CreateShl , "shltmp"  );
+                        CODEGEN( AssignBitwiseRightShift, codegenAssignExpression, CreateAShr, "shrtmp"  );
+                        CODEGEN( AssignBitwiseAnd       , codegenAssignExpression, CreateAnd , "andtmp"  );
+                        CODEGEN( AssignBitwiseOr        , codegenAssignExpression, CreateOr  , "ortmp"   );
+                        CODEGEN( AssignBitwiseXor       , codegenAssignExpression, CreateXor , "xortmp"  );
+#undef CODEGEN
+                        case NodeType::Call      : return codegenFunctionCall      ( node->children(), scope );
+                        case NodeType::MemberCall: return codegenMemberCall        ( node->children(), scope );
+                        case NodeType::Assign    : return codegenVariableDefinition( node->children(), scope );
 
-                        case NodeType::BitwiseLeftShift:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateShl, node->children(), "lshtmp", scope );
-                        case NodeType::BitwiseRightShift:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateAShr, node->children(), "rshtmp", scope );
-                        case NodeType::BitwiseAnd:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateAnd, node->children(), "andtmp", scope );
-                        case NodeType::BitwiseOr:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateOr, node->children(), "ortmp", scope );
-                        case NodeType::BitwiseXor:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateXor, node->children(), "xortmp", scope );
-                        case NodeType::BitwiseNot:
-                            return codegenUnary( &llvm::IRBuilder<>::CreateNot, node->children(), "nottmp", scope );
-
-                        case NodeType::Equality:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
-                        case NodeType::Inequality:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
-                        case NodeType::GreaterThan:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGT, node->children(), "gttmp", scope );
-                        case NodeType::GreaterThanEqual:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOGE, node->children(), "getmp", scope );
-                        case NodeType::LessThan:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLT, node->children(), "ltmp", scope );
-                        case NodeType::LessThanEqual:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOLE, node->children(), "letmp", scope );
-
-                        case NodeType::IsIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpOEQ, node->children(), "eqtmp", scope );
-                        case NodeType::IsNotIdentical:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateFCmpONE, node->children(), "netmp", scope );
-
-                        case NodeType::LogicalNot:
-                            return codegenUnary( &llvm::IRBuilder<>::CreateNot, node->children(), "lnottmp", scope );
-                        case NodeType::LogicalAnd:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateLogicalAnd, node->children(), "landtmp", scope );
-                        case NodeType::LogicalOr:
-                            return codegenBinary( &llvm::IRBuilder<>::CreateLogicalOr, node->children(), "lortmp", scope );
-
-                        case NodeType::Assign:
-                            return codegenVariableDefinition(node->children(), scope);
-                        case NodeType::AssignAddition:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFAdd, node->children(), "addvar", scope );
-                        case NodeType::AssignSubtraction:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFSub, node->children(), "subvar", scope );
-                        case NodeType::AssignMultiplication:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFMul, node->children(), "mulvar", scope );
-                        case NodeType::AssignDivision:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFDiv, node->children(), "divvar", scope );
-                        case NodeType::AssignFloorDivision:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateSDiv, node->children(), "fdivvar", scope );
-                        case NodeType::AssignModulus:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateFRem, node->children(), "modvar", scope );
-                        case NodeType::AssignBitwiseLeftShift:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateShl, node->children(), "shlvar", scope );
-                        case NodeType::AssignBitwiseRightShift:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateAShr, node->children(), "shrvar", scope );
-                        case NodeType::AssignBitwiseAnd:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateAnd, node->children(), "andvar", scope );
-                        case NodeType::AssignBitwiseOr:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateOr, node->children(), "orvar", scope );
-                        case NodeType::AssignBitwiseXor:
-                            return codegenAssignerDefinition( &llvm::IRBuilder<>::CreateXor, node->children(), "xorvar", scope );
-
-                        case NodeType::StatementIf:
-                            return codegenControlFlow( node->children(), scope );
-                        case NodeType::StatementWhile:
-                            return codegenLoopFlow( node->children(), scope );
+                        case NodeType::StatementIf    : return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementWhile : return codegenLoopFlow   ( node->children(), scope );
                         case NodeType::StatementReturn:
                         {
                             ASSERT( std::size( node->children() ) == 1U );
                             return codegenImpl( node->children()[ 0 ], scope );
                         }
 
-                        case NodeType::ContractDefinition:
-                            return codegenContractDefinition( node->children(), scope );
-                        case NodeType::FunctionDefinition:
-                            return codegenFunctionDefinition( node->children() );
-                        case NodeType::VariableDefinition:
-                            return codegenVariableDefinition( node->children(), scope );
+                        case NodeType::ContractDefinition: return codegenContractDefinition( node->children(), scope );
+                        case NodeType::FunctionDefinition: return codegenFunctionDefinition( node->children() );
+                        case NodeType::VariableDefinition: return codegenVariableDefinition( node->children(), scope );
 
                         default:
                             return nullptr;
@@ -252,7 +240,7 @@ namespace
     (
         IRBuilderUnaryClbk< T ... >      const   clbk,
         std::span< Node::Pointer const > const   nodes,
-        std::string_view                 const   name,
+        std::string_view                 const   opName,
         ScopeIdentifiers                       & scope
     )
     {
@@ -261,7 +249,7 @@ namespace
 
         if ( lhs == nullptr ) { return nullptr; }
 
-        return ( *builder.*clbk )( lhs, name, T{} ... );
+        return ( *builder.*clbk )( lhs, opName, T{} ... );
     }
 
     template< typename ... T >
@@ -269,7 +257,7 @@ namespace
     (
         IRBuilderBinaryClbk< T ... >     const   clbk,
         std::span< Node::Pointer const > const   nodes,
-        std::string_view                 const   name,
+        std::string_view                 const   opName,
         ScopeIdentifiers                       & scope
     )
     {
@@ -279,7 +267,35 @@ namespace
 
         if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
 
-        return ( *builder.*clbk )( lhs, rhs, name, T{} ... );
+        return ( *builder.*clbk )( lhs, rhs, opName, T{} ... );
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * create( llvm::IRBuilder<> & inScopeBuilder, Node::Pointer const & node, std::string_view const name, ScopeIdentifiers & scope )
+    {
+        if ( node->is< TypeID >() )
+        {
+            if ( node->get< TypeID >() == Registry::getNumberHandle() )
+            {
+                return allocate( inScopeBuilder, name, llvm::Type::getDoubleTy( *context ), llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ) );
+            }
+            else if ( node->get< TypeID >() == Registry::getStringLiteralHandle() )
+            {
+                return builder->CreateGlobalStringPtr( "", "", 0, module_.get() );
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+        else if ( node->is< Number >() )
+        {
+            return allocate( inScopeBuilder, name, llvm::Type::getDoubleTy( *context ), codegenImpl( node, scope ) );
+        }
+        else
+        {
+            return codegenImpl( node, scope );
+        }
     }
 
     llvm::Value * codegenFunctionCall( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
@@ -291,70 +307,10 @@ namespace
         {
             if ( std::size( nodes ) > 2U ) { return nullptr; }
 
-            auto * valuePtr{ codegenImpl( nodes[ 1U ], scope ) };
-            if ( valuePtr == nullptr ) { return nullptr; }
+            auto * value{ codegenImpl( nodes[ 1U ], scope ) };
+            if ( value == nullptr ) { return nullptr; }
 
-            // works only for numbers for now
-            [[ maybe_unused ]] llvm::Value * value{ nullptr };
-
-            [[ maybe_unused ]] llvm::Constant * formatSpecifier{ nullptr };
-            if ( nodes[ 1U ]->is< Number >() )
-            {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
-                value = valuePtr;
-            }
-            else if ( nodes[ 1U ]->is< String >() )
-            {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
-                value = valuePtr;
-            }
-            else if ( nodes[ 1U ]->is< Identifier >() )
-            {
-                auto * type{ valuePtr->getType() };
-                if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isDoubleTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
-                    value = builder->CreateLoad( llvm::Type::getDoubleTy( *context ), valuePtr );
-                }
-                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isArrayTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
-                    value = valuePtr;
-                }
-                else
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
-                    value = valuePtr;
-                }
-            }
-            else if ( nodes[ 1U ]->is< NodeType >() && nodes[ 1U ]->get< NodeType >() == NodeType::MemberCall )
-            {
-                auto * type{ valuePtr->getType() };
-                if ( type->isDoubleTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
-                }
-                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isIntegerTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
-                }
-                value = valuePtr;
-            }
-            else
-            {
-                auto * type{ valuePtr->getType() };
-                if ( type->isDoubleTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
-                }
-                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isIntegerTy() )
-                {
-                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
-                }
-                value = valuePtr;
-            }
-
-            std::array< llvm::Value *, 2U > arguments{ formatSpecifier, value };
+            std::array< llvm::Value *, 2U > arguments{ getFormat( value->getType() ), value };
             return builder->CreateCall( stdFunctions[ "print" ], arguments, "print" );
         }
         else if ( contractTypes.find( functionName ) != std::end( contractTypes ) )
@@ -633,115 +589,38 @@ namespace
     }
 
     template< typename ... T >
-    llvm::Value * codegenAssignerDefinition
+    llvm::Value * codegenAssignExpression
     (
-        IRBuilderBinaryClbk<T ...>       const   clbk,
+        IRBuilderBinaryClbk< T ... >     const   clbk,
         std::span< Node::Pointer const > const   nodes,
         std::string_view                 const   opName,
         ScopeIdentifiers                       & scope
     )
     {
-        ASSERT( std::size( nodes ) == 2U || std::size( nodes ) == 3U);
+        ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of identifier and value to be assigned" );
 
-        ASSERT( nodes[ 0 ]->is< Identifier >() );
-        auto const name{ nodes[ 0 ]->get< Identifier >().name };
+        ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
+        auto const & name{ nodes[ 0U ]->get< Identifier >().name };
 
-        auto * variable = getFromScope(scope, name);
+        auto * value{ getFromScope( scope, name ) };
+        if ( value == nullptr ) { return nullptr; }
 
-        if (variable == nullptr){return nullptr;}
-        auto * lhsVal = builder->CreateLoad(llvm::Type::getDoubleTy( *context ), variable, name.c_str());
-
-        auto * rhs{ codegenImpl( nodes[ 1U ], scope ) };
-        if(nodes[1]->is< TypeID >()){//check if nodes[1] is a type declaration
-            //TODO: if this is a type declaration, we should cast the result to that type
-            rhs = { codegenImpl( nodes[ 2U ], scope ) };
-        }
-
-        builder->CreateStore(( *builder.*clbk )( lhsVal, rhs, opName, T{} ... ), scope[name]);
-
-        return scope[name];
+        builder->CreateStore( codegenBinary( clbk, nodes, opName, scope ), value );
+        return value;
     }
 
     llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( nodes ) >= 2U );
+        ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of identifier and either type annotation or initialization or both" );
 
-        ASSERT( nodes[ 0 ]->is< Identifier >() );
-        auto const name{ nodes[ 0 ]->get< Identifier >().name };
+        ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
+        auto const & name{ nodes[ 0U ]->get< Identifier >().name };
 
         auto * parent{ builder->GetInsertBlock()->getParent() };
+        llvm::IRBuilder<> inScopeBuilder{ &parent->getEntryBlock(), parent->getEntryBlock().begin() };
 
-        llvm::IRBuilder<> tmpBuilder{ &parent->getEntryBlock(), parent->getEntryBlock().begin() };
-
-        llvm::Value * value{ nullptr };
-
-        if ( std::size( nodes ) > 2U )
-        {
-            if ( std::size( nodes ) == 2U && nodes[ 1 ]->is< TypeID >() )
-            {
-                if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
-                {
-                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
-                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
-                }
-                else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
-                {
-                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
-                }
-            }
-            else if ( std::size( nodes ) == 3U && nodes[ 1 ]->is< TypeID >() )
-            {
-                if ( nodes[ 2 ]->is< Number >() )
-                {
-                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
-                    auto * initialization{ codegenImpl( nodes[ 2 ], scope ) };
-                    builder->CreateStore( initialization, value );
-                }
-                else if ( nodes[ 2 ]->is< String >() )
-                {
-                    value = builder->CreateGlobalString( nodes[ 2 ]->get< String >(), "", 0, module_.get() );
-                }
-                else
-                {
-                    value = codegenImpl( nodes[ 2 ], scope );
-                }
-            }
-        }
-        else
-        {
-            if ( nodes[ 1 ]->is< TypeID >() )
-            {
-                if ( nodes[ 1U ]->get< TypeID >() == Registry::getNumberHandle() )
-                {
-                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
-                    builder->CreateStore( llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), value );
-                }
-                else if ( nodes[ 1U ]->get< TypeID >() == Registry::getStringLiteralHandle() )
-                {
-                    value = builder->CreateGlobalString( "", "", 0, module_.get() );
-                }
-            }
-            else
-            {
-                if ( nodes[ 1 ]->is< Number >() )
-                {
-                    value = tmpBuilder.CreateAlloca( llvm::Type::getDoubleTy( *context ), 0, name.data() );
-                    auto * initialization{ codegenImpl( nodes[ 1 ], scope ) };
-                    builder->CreateStore( initialization, value );
-                }
-                else if ( nodes[ 1 ]->is< String >() )
-                {
-                    value = builder->CreateGlobalString( nodes[ 1 ]->get< String >(), "", 0, module_.get() );
-                }
-                else
-                {
-                    value = codegenImpl( nodes[ 1 ], scope );
-                }
-            }
-        }
-
+        auto * value{ create( inScopeBuilder, std::size( nodes ) <= 2U ? nodes[ 1U ] : nodes[ 2U ], name, scope ) };
         scope[ name ] = value;
-
         return value;
     }
 } // namespace
@@ -795,10 +674,7 @@ std::unique_ptr< Module > codegen
             )
         )
         {
-            if ( n != nullptr )
-            {
-                codegenImpl( n, moduleScope );
-            }
+            codegenImpl( n, moduleScope );
         }
         else
         {
