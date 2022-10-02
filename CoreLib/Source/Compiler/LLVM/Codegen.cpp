@@ -329,7 +329,15 @@ namespace
             }
             else if ( nodes[ 1U ]->is< NodeType >() && nodes[ 1U ]->get< NodeType >() == NodeType::MemberCall )
             {
-                formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                auto * type{ valuePtr->getType() };
+                if ( type->isDoubleTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%f\n", "numFormatSpecifier", 0, module_.get() );
+                }
+                else if ( type->getNumContainedTypes() > 0 && type->getContainedType( 0 )->isIntegerTy() )
+                {
+                    formatSpecifier = builder->CreateGlobalStringPtr( "%s\n", "strFormatSpecifier", 0, module_.get() );
+                }
                 value = valuePtr;
             }
             else
@@ -351,7 +359,7 @@ namespace
         }
         else if ( contractTypes.find( functionName ) != std::end( contractTypes ) )
         {
-            return new llvm::GlobalVariable( *module_, contractTypes[ functionName ], true, llvm::GlobalVariable::ExternalLinkage, llvm::UndefValue::get( contractTypes[ functionName ] ) );
+            return new llvm::GlobalVariable( *module_, contractTypes[ functionName ], true, llvm::GlobalVariable::ExternalLinkage, llvm::Constant::getNullValue( contractTypes[ functionName ] ) );
         }
         else
         {
@@ -375,8 +383,19 @@ namespace
 
     llvm::Value * codegenMemberCall( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-        return builder->CreateStructGEP( scope[ name ]->getType()->getContainedType( 0 ), scope[ name ], 0);
+        auto const & member{ nodes[ 1U ] };
+        if ( member->is< Identifier >() )
+        {
+            // accessing data member
+            return nullptr;
+        }
+        else if ( member->is< NodeType >() && member->get< NodeType >() == NodeType::Call )
+        {
+            // accessing function member
+            return codegenImpl( member, scope );
+        }
+
+        return nullptr;
     }
 
     llvm::Value * codegenLoopFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
