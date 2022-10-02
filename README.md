@@ -43,7 +43,8 @@ $ cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
 $ ninja
 ```
 
-Once the build is successfull, you are ready to start playing around!
+Once the build is successfull, you are ready to start playing around! We recommend using[Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
+
 You can find examples of basic contracts in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory, such as the "Hello World" example below.
 
 ```python
