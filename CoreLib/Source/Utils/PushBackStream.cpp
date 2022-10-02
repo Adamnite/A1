@@ -14,9 +14,9 @@ void PushBackStream::push( int const c ) noexcept
 {
     stack_.push( c );
 
-    if ( c== '\n' ) { --lineNumber_; }
+    if ( c== '\n' ) { --errorInfo_.lineNumber; }
 
-    --charIndex_;
+    --errorInfo_.charIndex;
 }
 
 std::optional< int > PushBackStream::pop() noexcept
@@ -25,19 +25,32 @@ std::optional< int > PushBackStream::pop() noexcept
 
     if ( stack_.empty() )
     {
-        if ( dataIndex_ < std::size( data_ ) )
+        if ( std::holds_alternative< StringInfo >( data_ ) )
         {
-            // reading data from the character array
-            result = data_[ dataIndex_++ ];
+            auto & info{ std::get< StringInfo >( data_ ) };
+            if ( info.index < std::size( info.value ) )
+            {
+                // reading data from the character array
+                result = info.value[ info.index++ ];
+            }
+            else
+            {
+                return {};
+            }
         }
-        else if ( dataFile_ != nullptr )
+        else if ( std::holds_alternative< FileInfo >( data_ ) )
         {
-            // reading data from the file
-            std::fseek( dataFile_, dataFileIndex_, SEEK_SET );
-            result = std::fgetc( dataFile_ );
-            dataFileIndex_ = std::ftell( dataFile_ );
+            auto & info{ std::get< FileInfo >( data_ ) };
+            if ( info.file != nullptr )
+            {
+                // reading data from the file
+                std::fseek( info.file, info.filePos, SEEK_SET );
+                result = std::fgetc( info.file );
+                info.filePos = std::ftell( info.file );
 
-            if ( std::feof( dataFile_ ) )
+                if ( std::feof( info.file ) ) { return {}; }
+            }
+            else
             {
                 return {};
             }
@@ -53,9 +66,9 @@ std::optional< int > PushBackStream::pop() noexcept
         stack_.pop();
     }
 
-    if ( result == '\n' ) { ++lineNumber_; }
+    if ( result == '\n' ) { ++errorInfo_.lineNumber; }
 
-    ++charIndex_;
+    ++errorInfo_.charIndex;
 
     return result;
 }

@@ -111,7 +111,7 @@ namespace
         StringifiedToken{ ","  , ReservedToken::OpComma                   },
         StringifiedToken{ "-"  , ReservedToken::OpSub                     },
         StringifiedToken{ "-=" , ReservedToken::OpAssignSub               },
-        StringifiedToken{ "->" , ReservedToken::OpReturnTypeAnnotation    },
+        StringifiedToken{ "->" , ReservedToken::OpArrow                   },
         StringifiedToken{ "."  , ReservedToken::OpDot                     },
         StringifiedToken{ "/"  , ReservedToken::OpDiv                     },
         StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
@@ -186,9 +186,7 @@ std::string_view toStringView( ReservedToken const token ) noexcept
             }
         )
     };
-    return it == std::end( allTokens )
-        ? ""
-        : it->tokenStr;
+    return it == std::end( allTokens ) ? "" : it->tokenStr;
 }
 
 ReservedToken getKeyword( std::string_view const word ) noexcept
@@ -205,9 +203,7 @@ ReservedToken getKeyword( std::string_view const word ) noexcept
         )
     };
 
-    return it == std::end( keywords )
-        ? ReservedToken::Unknown
-        : it->token;
+    return it == std::end( keywords ) ? ReservedToken::Unknown : it->token;
 }
 
 ReservedToken getOperator( PushBackStream & stream ) noexcept

@@ -29,11 +29,6 @@ target_link_libraries(
     gtest_main
 )
 
-target_compile_definitions(
-    CoreLibTests PRIVATE
-    -DENABLE_TESTING
-)
-
 target_include_directories(
     CoreLibTests
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source

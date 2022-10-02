@@ -75,7 +75,7 @@ namespace
 
         if ( auto const keyword{ getKeyword( result ) }; keyword != ReservedToken::Unknown )
         {
-            return Token{ keyword, stream.lineNumber(), stream.charIndex() };
+            return Token{ keyword, stream.errorInfo() };
         }
         else
         {
@@ -90,10 +90,10 @@ namespace
                     // TODO: Throw an unexpected error instead here
                 }
 
-                return Token{ number, stream.lineNumber(), stream.charIndex() };
+                return Token{ number, stream.errorInfo() };
             }
 
-            return Token{ Identifier{ std::move( result ) }, stream.lineNumber(), stream.charIndex() };
+            return Token{ Identifier{ std::move( result ) }, stream.errorInfo() };
         }
     }
 
@@ -126,7 +126,7 @@ namespace
             else if ( c == '"' )
             {
                 // we have read the closing quote, thus we have read the word
-                return Token{ std::move( result ), stream.lineNumber(), stream.charIndex() };
+                return Token{ std::move( result ), stream.errorInfo() };
             }
             else
             {
@@ -162,7 +162,7 @@ namespace
                 case CharType::Newline:
                 {
                     consecutiveWhitespacesCount = 0U;
-                    return { Newline{}, stream.lineNumber(), stream.charIndex() };
+                    return { Newline{}, stream.errorInfo() };
                 }
                 case CharType::Quote:
                 {
@@ -174,7 +174,7 @@ namespace
                     consecutiveWhitespacesCount++;
                     if ( consecutiveWhitespacesCount == whitespacesIndentationCount )
                     {
-                        return { Indentation{}, stream.lineNumber(), stream.charIndex() };
+                        return { Indentation{}, stream.errorInfo() };
                     }
                     continue;
                 }
@@ -189,12 +189,12 @@ namespace
                         // TODO: Throw parsing error
                         return {};
                     }
-                    return { op, stream.lineNumber(), stream.charIndex() };
+                    return { op, stream.errorInfo() };
                 }
             }
         }
 
-        return { Eof{}, stream.lineNumber(), stream.charIndex() };
+        return { Eof{}, stream.errorInfo() };
     }
 } // namespace
 

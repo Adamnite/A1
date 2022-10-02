@@ -27,7 +27,7 @@ public:
     using const_reference   = value_type const &;
 
     TokenIterator( PushBackStream stream )
-    : current_{ Eof{}, 0U, 0U       }
+    : current_{ Eof{}, ErrorInfo{} }
     , stream_ { std::move( stream ) }
     {
         ++*this;

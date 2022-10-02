@@ -13,28 +13,15 @@
 namespace A1
 {
 
-Node::Node
-(
-    ValueType         value,
-    std::size_t const lineNumber,
-    std::size_t const charIndex
-)
-: value_     { std::move( value  ) }
-, lineNumber_{ lineNumber          }
-, charIndex_ { charIndex           }
+Node::Node( ValueType value, ErrorInfo errorInfo )
+: value_    { std::move( value     ) }
+, errorInfo_{ std::move( errorInfo ) }
 {}
 
-Node::Node
-(
-    ValueType                    value,
-    std::vector< Pointer >       children,
-    std::size_t            const lineNumber,
-    std::size_t            const charIndex
-)
-: value_     { std::move( value    ) }
-, children_  { std::move( children ) }
-, lineNumber_{ lineNumber            }
-, charIndex_ { charIndex             }
+Node::Node ( ValueType value, std::vector< Pointer > children, ErrorInfo errorInfo )
+: value_    { std::move( value     ) }
+, children_ { std::move( children  ) }
+, errorInfo_{ std::move( errorInfo ) }
 {}
 
 } // namespace A1

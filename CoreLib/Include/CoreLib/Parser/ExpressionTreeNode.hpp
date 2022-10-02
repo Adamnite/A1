@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/Token.hpp>
+#include <CoreLib/Errors/ErrorInfo.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 #include <CoreLib/Types.hpp>
 
@@ -104,30 +105,24 @@ public:
     <
         NodeType,   // Non-leaf nodes in expression tree
         Identifier, // Names of variables, functions, smart contracts etc.
-        Number,     // Both integers and decimal numbers. AKA, i32, i64, f32, or f64
+        Number,     // Both integers and decimal numbers
         String,     // String literals
         TypeID      // Type declaration for variables, function parameters, return values etc.
     >;
 
-    Node
-    (
-        ValueType         value,
-        std::size_t const lineNumber = 0U,
-        std::size_t const charIndex  = 0U
-    );
-
-    Node
-    (
-        ValueType                    value,
-        std::vector< Pointer >       children,
-        std::size_t            const lineNumber = 0U,
-        std::size_t            const charIndex  = 0U
-    );
+    Node( ValueType value, ErrorInfo errorInfo = {} );
+    Node( ValueType value, std::vector< Pointer > children, ErrorInfo errorInfo = {} );
 
     template< typename T >
     [[ nodiscard ]] bool is() const noexcept
     {
         return std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
+    [[ nodiscard ]] bool is_not() const noexcept
+    {
+        return !std::holds_alternative< T >( value_ );
     }
 
     template< typename T >
@@ -140,15 +135,13 @@ public:
     [[ nodiscard ]] ValueType              const & value   () const noexcept { return value_;    }
     [[ nodiscard ]] std::vector< Pointer > const & children() const noexcept { return children_; }
 
-    [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
-    [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
+    [[ nodiscard ]] ErrorInfo errorInfo() const noexcept { return errorInfo_; }
 
 private:
     ValueType              value_;
     std::vector< Pointer > children_;
 
-    std::size_t lineNumber_{ 0U };
-    std::size_t charIndex_ { 0U };
+    ErrorInfo errorInfo_;
 };
 
 } // namespace A1

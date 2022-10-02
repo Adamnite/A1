@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/ReservedToken.hpp>
+#include <CoreLib/Errors/ErrorInfo.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
 #include <variant>
@@ -23,20 +24,9 @@ struct Identifier
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
-struct Indentation
-{
-    [[ nodiscard ]] bool operator==( Indentation const & ) const = default;
-};
-
-struct Newline
-{
-    [[ nodiscard ]] bool operator==( Newline const & ) const = default;
-};
-
-struct Eof
-{
-    [[ nodiscard ]] bool operator==( Eof const & ) const = default;
-};
+struct Indentation : std::monostate {};
+struct Newline     : std::monostate {};
+struct Eof         : std::monostate {};
 
 using Number = double;
 using String = std::string;
@@ -47,10 +37,9 @@ public:
     using ValueType = std::variant< ReservedToken, Identifier, Number, String, Indentation, Newline, Eof >;
 
     Token() noexcept = default;
-    Token( ValueType value, std::size_t const lineNumber, std::size_t const charIndex )
-    : value_     { std::move( value ) }
-    , lineNumber_{ lineNumber         }
-    , charIndex_ { charIndex          }
+    Token( ValueType value, ErrorInfo errorInfo )
+    : value_    { std::move( value     ) }
+    , errorInfo_{ std::move( errorInfo ) }
     {}
 
     template< typename T >
@@ -60,23 +49,26 @@ public:
     }
 
     template< typename T >
+    [[ nodiscard ]] bool is_not() const noexcept
+    {
+        return !std::holds_alternative< T >( value_ );
+    }
+
+    template< typename T >
     [[ nodiscard ]] T const & get() const noexcept
     {
         ASSERT( is< T >() );
         return std::get< T >( value_ );
     }
 
-    [[ nodiscard ]] ValueType const & value() const noexcept { return value_; }
-
-    [[ nodiscard ]] std::size_t lineNumber() const noexcept { return lineNumber_; }
-    [[ nodiscard ]] std::size_t charIndex () const noexcept { return charIndex_;  }
+    [[ nodiscard ]] ValueType const & value    () const noexcept { return value_;     }
+    [[ nodiscard ]] ErrorInfo         errorInfo() const noexcept { return errorInfo_; }
 
     [[ nodiscard ]] std::string toString() const noexcept;
 
 private:
-    ValueType   value_;
-    std::size_t lineNumber_;
-    std::size_t charIndex_;
+    ValueType value_;
+    ErrorInfo errorInfo_;
 };
 
 } // namespace A1

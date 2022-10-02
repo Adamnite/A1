@@ -15,6 +15,12 @@ target_include_directories(
 
 target_link_libraries( CoreLib PRIVATE fmt::fmt )
 
+if( ENABLE_TESTS )
+    target_compile_definitions( CoreLib PRIVATE
+        TESTS_ENABLED=1
+    )
+endif()
+
 if( ENABLE_LLVM )
     find_package( LLVM  REQUIRED CONFIG )
     find_package( Clang REQUIRED CONFIG )
@@ -33,5 +39,6 @@ if( ENABLE_LLVM )
     # we need to use the Clang compiler coming with the LLVM package.
     target_compile_definitions( CoreLib PRIVATE
         CLANG_PATH=\"${LLVM_INSTALL_PREFIX}/bin/clang\"
+        LLVM_ENABLED=1
     )
 endif()
