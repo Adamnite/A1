@@ -193,6 +193,78 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .title      = "ControlFlowSpacesIndentation",
+            .expression =
+                "if var == 5:\n"
+                "    pass\n"
+                "else:\n"
+                "    var += 10",
+            .expectedTokens =
+            {
+                // 1st line
+                A1::ReservedToken::KwIf,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpEqual,
+                A1::Number{ 5 },
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 2nd line
+                A1::Indentation{},
+                A1::ReservedToken::KwPass,
+                A1::Newline{},
+
+                // 3rd line
+                A1::ReservedToken::KwElse,
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 4th line
+                A1::Indentation{},
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssignAdd,
+                A1::Number{ 10 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .title      = "ControlFlowTabsIndentation",
+            .expression =
+                "if var == 5:\n"
+                "\tpass\n"
+                "else:\n"
+                "\tvar += 10",
+            .expectedTokens =
+            {
+                // 1st line
+                A1::ReservedToken::KwIf,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpEqual,
+                A1::Number{ 5 },
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 2nd line
+                A1::Indentation{},
+                A1::ReservedToken::KwPass,
+                A1::Newline{},
+
+                // 3rd line
+                A1::ReservedToken::KwElse,
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 4th line
+                A1::Indentation{},
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssignAdd,
+                A1::Number{ 10 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .title          = "VariableDefinition",
             .expression     = "let var: num = 0",
             .expectedTokens =
@@ -234,8 +306,8 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "FunctionDefinition",
-            .expression     =
+            .title      = "FunctionDefinition",
+            .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
             .expectedTokens =
@@ -268,8 +340,8 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "ContractDefinition",
-            .expression     =
+            .title      = "ContractDefinition",
+            .expression =
                 "contract HelloWorld:\n"
                 "    def get() -> str:\n"
                 "        return \"Hello, world!\"\n"

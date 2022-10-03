@@ -21,15 +21,17 @@ namespace
         Newline,
         Operator,
         Quote,
+        Tab,
         Whitespace
     };
 
     [[ nodiscard ]] CharType getCharType( int const c ) noexcept
     {
+             if ( std::isalnum( c )     ) { return CharType::Alphanumeric; }
              if ( c == '#'              ) { return CharType::Comment;      }
         else if ( c == '\n'             ) { return CharType::Newline;      }
         else if ( c == '"' || c == '\'' ) { return CharType::Quote;        }
-        else if ( std::isalnum( c )     ) { return CharType::Alphanumeric; }
+        else if ( c == '\t'             ) { return CharType::Tab;          }
         else if ( std::isspace( c )     ) { return CharType::Whitespace;   }
         else                              { return CharType::Operator;     }
     }
@@ -163,6 +165,11 @@ namespace
                 {
                     consecutiveWhitespacesCount = 0U;
                     return { Newline{}, stream.errorInfo() };
+                }
+                case CharType::Tab:
+                {
+                    consecutiveWhitespacesCount = 0U;
+                    return { Indentation{}, stream.errorInfo() };
                 }
                 case CharType::Quote:
                 {
