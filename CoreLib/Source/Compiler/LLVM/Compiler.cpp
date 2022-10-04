@@ -15,7 +15,6 @@
 #elif defined(__GNUC__) || defined(__GNUG__)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
-#   pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #endif
 
 #include <llvm/ADT/APInt.h>
