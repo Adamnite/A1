@@ -28,7 +28,7 @@ Learn more about the A1 project:
 
 ### Building
 
-First, download this repo and extract to make sure it is an indepentdent directory. Then, make sure you have Homebrew installed. You can install Homebrew by following the instructions [here](https://brew.sh/). Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
+First, download this repo and extract to make sure it is an independent directory. Then, make sure you have Homebrew installed. You can install Homebrew by following the instructions [here](https://brew.sh/). Make sure you follow the appropriate instructions after installation to add Homebrew to your path. Once you have installed Homebrew, run the following commands to install the prerequisites:
 
 ```sh
 $ brew install wget llvm@14 cmake ninja
@@ -43,7 +43,7 @@ $ cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
 $ ninja
 ```
 
-Once the build is successfull, you are ready to start playing around! We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
+Once the build is successful, you are ready to start playing around! We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
 
 You can find examples of basic contracts in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory, such as the "Hello World" example below.
 
@@ -56,7 +56,7 @@ let var = HelloWorld()
 print(var.get())
 ```
 
-Once you have written your contract, save it with the ".ao" extention and run the following commands to compile the program and return an output. Be sure to replace "hello_world" with the name of your A1 file.
+Once you have written your contract, save it with the ".ao" extension and run the following commands to compile the program and return an output. Be sure to replace "hello_world" with the name of your A1 file.
 
 ```sh
 $ ./build/bin/aoc hello_world.ao -o output
