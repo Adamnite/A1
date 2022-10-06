@@ -1,5 +1,5 @@
 {
-	"comment": "update version here",
+	"version": "1.0",
 	"name": "A1",
 	"scopeName": ".ao",
 	"patterns": [
@@ -269,7 +269,7 @@
 			]
 		},
 		"expression-bare": {
-			"comment": "valid ao expressions w/o comments and line continuation",
+			"comment": "valid A1 expressions w/o comments and line continuation",
 			"patterns": [
 				{
 					"include": "#backticks"
@@ -349,7 +349,7 @@
 			]
 		},
 		"expression-base": {
-			"comment": "valid ao expressions with comments and line continuation",
+			"comment": "valid A1 expressions with comments and line continuation",
 			"patterns": [
 				{
 					"include": "#comments"
@@ -363,7 +363,7 @@
 			]
 		},
 		"expression": {
-			"comment": "All valid ao expressions",
+			"comment": "All valid A1 expressions",
 			"patterns": [
 				{
 					"include": "#expression-base"
@@ -1241,7 +1241,7 @@
 		},
 		"function-declaration": {
 			"name": "meta.function.ao",
-			"begin": "(?x)\n  \\s*\n  (?:\\b(async) \\s+)? \\b(def)\\s+\n    (?=\n      [[:alpha:]_][[:word:]]* \\s* \\(\n    )\n",
+			"begin": "(?x)\n  \\s*\n  (?:\\b(async) \\s+)? \\b(def)\\s+\n    (?=\n      [[:alpha:]_][[:word:]]* \\s* \\(\n    )\n contract",
 			"end": "(:|(?=[#'\"\\n]))",
 			"beginCaptures": {
 				"1": {
