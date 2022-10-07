@@ -57,6 +57,7 @@ $ sudo apt update
 $ sudo apt install build-essential llvm-14 zlib1g-dev clang
 $ sudo apt-get -y install clang-14 libclang-14-dev libffi-dev libedit-dev libpfm4-dev libtinfo-dev
 $ # Hacky workaround to trick LLVM
+$ touch /usr/lib/llvm-14/lib/libMLIRSupportIndentedOstream.a
 ```
 
 ### Building
