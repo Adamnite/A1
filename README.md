@@ -38,7 +38,7 @@ $ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
 
 ### Install prerequisites on Windows
 
-Please use the following [guide] (https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/) for setting up a Linux Subsystem and running the Bash shell on your windows machine. Then proceed to follow the A1 installation instructions for Ubuntu Linux.
+Please use the following [guide](https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/) for setting up a Linux Subsystem and running the Bash shell on your windows machine. Then proceed to follow the A1 installation instructions for Ubuntu Linux.
 
 
 ### Install prerequisites on Ubuntu Linux
