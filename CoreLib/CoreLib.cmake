@@ -30,6 +30,16 @@ if( ENABLE_LLVM )
     target_include_directories( CoreLib AFTER PRIVATE ${LLVM_INCLUDE_DIRS} )
     add_definitions( ${LLVM_DEFINITIONS} )
 
+    if( UNIX AND NOT APPLE )
+        # Following library is missing in LLVM@14 package on Linux systems.
+        # Therefore, avoid linking to it.
+        string(
+            REPLACE "LLVMWindowsManifestLTOMLIRSupportIndentedOstream" ""
+            LLVM_AVAILABLE_LIBS
+            ${LLVM_AVAILABLE_LIBS}
+        )
+    endif()
+
     target_link_libraries( CoreLib PRIVATE
         ${LLVM_AVAILABLE_LIBS}
         clangTooling
