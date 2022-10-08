@@ -326,7 +326,7 @@
 					"include": "#builtin-exceptions"
 				},
 				{
-					"include": "#magic-names"
+					"include": "#A1-names"
 				},
 				{
 					"include": "#special-names"
@@ -401,7 +401,7 @@
 		"member-access-base": {
 			"patterns": [
 				{
-					"include": "#magic-names"
+					"include": "#A1-names"
 				},
 				{
 					"include": "#illegal-names"
@@ -427,7 +427,7 @@
 		},
 		"special-names": {
 			"name": "constant.other.caps.ao",
-			"match": "(?x)\n  \\b\n    # we want to see \"enough\", meaning 2 or more upper-case\n    # letters in the beginning of the constant\n    #\n    # for more details refer to:\n    #   https://github.com/MagicStack/Magicao/issues/42\n    (\n      _* [[:upper:]] [_\\d]* [[:upper:]]\n    )\n    [[:upper:]\\d]* (_\\w*)?\n  \\b\n"
+			"match": "(?x)\n  \\b\n    # we want to see \"enough\", meaning 2 or more upper-case\n    # letters in the beginning of the constant\n    #\n    # for more details refer to:\n    #   https://github.com/A1Stack/A1ao/issues/42\n    (\n      _* [[:upper:]] [_\\d]* [[:upper:]]\n    )\n    [[:upper:]\\d]* (_\\w*)?\n  \\b\n"
 		},
 		"curly-braces": {
 			"begin": "\\{",
@@ -1685,7 +1685,7 @@
 					"include": "#builtin-callables"
 				},
 				{
-					"include": "#magic-names"
+					"include": "#A1-names"
 				}
 			]
 		},
@@ -1709,31 +1709,31 @@
 			"name": "support.type.ao",
 			"match": "(?x)\n  (?<!\\.) \\b(\n    bool | bytearray | bytes | classmethod | complex | dict\n    | float | frozenset | int | list | object | property\n    | set | slice | staticmethod | str | tuple | type\n\n    (?# Although 'super' is not a type, it's related to types,\n        and is special enough to be highlighted differently from\n        other built-ins)\n    | super\n  )\\b\n"
 		},
-		"magic-function-names": {
-			"comment": "these methods have magic interpretation by ao and are generally called\nindirectly through syntactic constructs\n",
+		"A1-function-names": {
+			"comment": "these methods have A1 interpretation by ao and are generally called\nindirectly through syntactic constructs\n",
 			"match": "(?x)\n  \\b(\n    __(?:\n      abs | add | aenter | aexit | aiter | and | anext | await\n      | bool | call | ceil | cmp | coerce | complex | contains | contract\n      | copy | deepcopy | del | delattr | delete | delitem\n      | delslice | dir | div | divmod | enter | eq | exit | float\n      | floor | floordiv | format | ge | get | getattr\n      | getattribute | getinitargs | getitem | getnewargs\n      | getslice | getstate | gt | hash | hex | iadd | iand | idiv\n      | ifloordiv | ilshift | imod | imul | index | init\n      | instancecheck | int | invert | ior | ipow | irshift | isub\n      | iter | itruediv | ixor | le | len | long | lshift | lt\n      | missing | mod | mul | ne | neg | new | next | nonzero | oct | or\n      | pos | pow | radd | rand | rdiv | rdivmod | reduce\n      | reduce_ex | repr | reversed | rfloordiv | rlshift | rmod\n      | rmul | ror | round | rpow | rrshift | rshift | rsub\n      | rtruediv | rxor | set | setattr | setitem | setslice\n      | setstate | sizeof | str | sub | subclasscheck | truediv\n      | trunc | unicode | xor | matmul | rmatmul | imatmul\n      | init_subclass | set_name | fspath | bytes | prepare\n    )__\n  )\\b\n",
 			"captures": {
 				"1": {
-					"name": "support.function.magic.ao"
+					"name": "support.function.A1.ao"
 				}
 			}
 		},
-		"magic-variable-names": {
-			"comment": "magic variables which a class/module may have.",
-			"match": "(?x)\n  \\b(\n    __(?:\n      all | bases | builtins | class | class_getitem | code | debug\n      | defaults | dict | doc | file | func | kwdefaults | members\n      | metaclass | methods | module | mro | mro_entries | msg.sender | name\n      | qualname | post_init | self | signature | slots | subclasses\n      | version | weakref | wrapped | annotations | classcell\n      | spec | path | package | future | traceback\n    )__\n  )\\b\n",
+		"A1-variable-names": {
+			"comment": "A1 variables which a class/module may have.",
+			"match": "(?x)\n  \\b(\n    __(?:\n      all | address | bases | builtins | class | class_getitem | code | debug\n      | defaults | dict | doc | file | func | kwdefaults | members\n      | metaclass | methods | module | mro | mro_entries | msg.sender | name\n      | qualname | post_init | self | signature | slots | subclasses\n      | version | weakref | wrapped | annotations | classcell\n      | spec | path | package | future | traceback\n    )__\n  )\\b\n",
 			"captures": {
 				"1": {
-					"name": "support.variable.magic.ao"
+					"name": "support.variable.A1.ao"
 				}
 			}
 		},
-		"magic-names": {
+		"A1-names": {
 			"patterns": [
 				{
-					"include": "#magic-function-names"
+					"include": "#A1-function-names"
 				},
 				{
-					"include": "#magic-variable-names"
+					"include": "#A1-variable-names"
 				}
 			]
 		},
