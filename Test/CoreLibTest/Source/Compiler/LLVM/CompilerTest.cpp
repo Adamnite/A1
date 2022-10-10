@@ -153,16 +153,57 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "ControlFlow",
+            .title = "IfCondition",
+            .input =
+                "let i: num = 0\n"
+                "if i == 0:\n"
+                "    print(\"Inside 1st if\")\n"
+                "    print(\"i is 0\")\n"
+                "\n"
+                "if i == 5:\n"
+                "    print(\"Inside 2nd if\")\n"
+                "    print(\"i is 5\")",
+            .expectedOutput =
+                "Inside 1st if\n"
+                "i is 0"
+        },
+        TestParameter
+        {
+            .title = "IfElseCondition",
             .input =
                 "let i: num = 0\n"
                 "let j: num = 4\n"
                 "if i > j:\n"
+                "    print(\"Inside if\")\n"
                 "    print(i)\n"
                 "else:\n"
+                "    print(\"Inside else\")\n"
                 "    print(j)",
             .expectedOutput =
+                "Inside else\n"
                 "4.000000"
+        },
+        TestParameter
+        {
+            .title = "IfElifElseCondition",
+            .input =
+                "let i: num = 0\n"
+                "let j: num = 4\n"
+                "if i > j:\n"
+                "    print(\"Inside if\")\n"
+                "    print(i)\n"
+                "elif i != 0:\n"
+                "    print(\"Inside 1st elif\")\n"
+                "    print(\"i is not 0\")\n"
+                "elif j == 4:\n"
+                "    print(\"Inside 2nd elif\")\n"
+                "    print(\"j is 4\")\n"
+                "else:\n"
+                "    print(\"Inside else\")\n"
+                "    print(j)",
+            .expectedOutput =
+                "Inside 2nd elif\n"
+                "j is 4"
         },
         TestParameter
         {
