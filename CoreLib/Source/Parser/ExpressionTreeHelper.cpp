@@ -94,6 +94,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
          */
         case NodeType::MemberCall:
         case NodeType::StatementIf:
+        case NodeType::StatementElse:
         case NodeType::StatementWhile:
         case NodeType::StatementPass:
         case NodeType::StatementReturn:
@@ -213,13 +214,15 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
             return 2U;
 
         /**
-         * Since the number of operands (elif branches, else branch)
-         * for if statement is variable, it is detected by the parser
-         * itself. However, it is certain that two operands should exist
-         * - if condition and if body.
+         * Since the number of statements in an if body is variable,
+         * it is detected by the parser itself. Therefore, the only operand that is
+         * certain to exist is the if condition.
          */
         case NodeType::StatementIf:
-            return 2U;
+            return 1U;
+
+        case NodeType::StatementElse:
+            return 0U;
 
         /**
          * Since the number of statements in a while body is variable,

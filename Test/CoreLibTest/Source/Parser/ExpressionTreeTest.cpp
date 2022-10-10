@@ -326,12 +326,15 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "IfElseBranch",
+            .title      = "IfCondition",
             .expression =
                 "if var == 5:\n"
                 "    new_var = 1\n"
-                "else:\n"
-                "    new_var = 2",
+                "    print(\"new_var is 1\")\n"
+                "\n"
+                "if var == 6:\n"
+                "    new_var = 2\n"
+                "    print(\"new_var is 2\")",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -358,6 +361,31 @@ INSTANTIATE_TEST_SUITE_P
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
                                     std::make_unique< Node >( A1::Number{ 1 }                     )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                )
+                            )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::StatementIf,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Equality,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                    std::make_unique< Node >( A1::Number{ 6 }                 )
                                 )
                             ),
                             std::make_unique< Node >
@@ -368,6 +396,15 @@ INSTANTIATE_TEST_SUITE_P
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
                                     std::make_unique< Node >( A1::Number{ 2 }                     )
                                 )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                    std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                )
                             )
                         )
                     )
@@ -376,16 +413,14 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "IfElifElseBranch",
+            .title      = "IfElseCondition",
             .expression =
                 "if var == 5:\n"
                 "    new_var = 1\n"
-                "elif var == 6:\n"
-                "    new_var = 2\n"
-                "elif var == 7:\n"
-                "    new_var = 3\n"
+                "    print(\"new_var is 1\")\n"
                 "else:\n"
-                "    new_var = 4",
+                "    new_var = 2\n"
+                "    print(\"new_var is 2\")",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -393,7 +428,6 @@ INSTANTIATE_TEST_SUITE_P
                 (
                     std::make_unique< Node >
                     (
-                        // if branch
                         A1::NodeType::StatementIf,
                         makeChildren
                         (
@@ -415,7 +449,98 @@ INSTANTIATE_TEST_SUITE_P
                                     std::make_unique< Node >( A1::Number{ 1 }                     )
                                 )
                             ),
-                            // first elif branch
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::StatementElse,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        A1::NodeType::Assign,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                            std::make_unique< Node >( A1::Number{ 2 }                     )
+                                        )
+                                    ),
+                                    std::make_unique< Node >
+                                    (
+                                        A1::NodeType::Call,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                            std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .title      = "IfElifElseCondition",
+            .expression =
+                "if var == 5:\n"
+                "    new_var = 1\n"
+                "    print(\"new_var is 1\")\n"
+                "elif var == 6:\n"
+                "    new_var = 2\n"
+                "    print(\"new_var is 2\")\n"
+                "elif var == 7:\n"
+                "    new_var = 3\n"
+                "    print(\"new_var is 3\")\n"
+                "else:\n"
+                "    new_var = 4\n"
+                "    print(\"new_var is 4\")",
+            .expectedRoot = std::make_shared< Node >
+            (
+                A1::NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        A1::NodeType::StatementIf,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Equality,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                                    std::make_unique< Node >( A1::Number{ 5 }                 )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Assign,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                    std::make_unique< Node >( A1::Number{ 1 }                     )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                A1::NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                )
+                            ),
                             std::make_unique< Node >
                             (
                                 A1::NodeType::StatementIf,
@@ -439,7 +564,15 @@ INSTANTIATE_TEST_SUITE_P
                                             std::make_unique< Node >( A1::Number{ 2 }                     )
                                         )
                                     ),
-                                    // second elif branch
+                                    std::make_unique< Node >
+                                    (
+                                        A1::NodeType::Call,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                            std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                        )
+                                    ),
                                     std::make_unique< Node >
                                     (
                                         A1::NodeType::StatementIf,
@@ -463,14 +596,38 @@ INSTANTIATE_TEST_SUITE_P
                                                     std::make_unique< Node >( A1::Number{ 3 }                     )
                                                 )
                                             ),
-                                            // else branch
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::Assign,
+                                                A1::NodeType::Call,
                                                 makeChildren
                                                 (
-                                                    std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                                    std::make_unique< Node >( A1::Number{ 4 }                     )
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                                    std::make_unique< Node >( A1::String{ "new_var is 3" }      )
+                                                )
+                                            ),
+                                            std::make_unique< Node >
+                                            (
+                                                A1::NodeType::StatementElse,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >
+                                                    (
+                                                        A1::NodeType::Assign,
+                                                        makeChildren
+                                                        (
+                                                            std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
+                                                            std::make_unique< Node >( A1::Number{ 4 }                     )
+                                                        )
+                                                    ),
+                                                    std::make_unique< Node >
+                                                    (
+                                                        A1::NodeType::Call,
+                                                        makeChildren
+                                                        (
+                                                            std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
+                                                            std::make_unique< Node >( A1::String{ "new_var is 4" }      )
+                                                        )
+                                                    )
                                                 )
                                             )
                                         )

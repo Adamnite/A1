@@ -83,6 +83,7 @@ enum class NodeType : std::uint8_t
     AssignBitwiseXor,        // <operand>  ^= <operand>
 
     StatementIf,             // if <expression>
+    StatementElse,           // else
     StatementWhile,          // while <expression>
     StatementPass,           // pass
     StatementReturn,         // return <expression>
