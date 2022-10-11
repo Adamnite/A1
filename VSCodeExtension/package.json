@@ -1,0 +1,29 @@
+{
+  "name": "ao",
+  "displayName": "ao",
+  "description": "Adamnite A1",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "A1",
+        "aliases": [ "A1" ],
+        "extensions": [ ".ao" ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "A1",
+        "scopeName": ".ao",
+        "path": "./syntaxes/a1.tmLanguage.json"
+      }
+    ]
+  }
+}
