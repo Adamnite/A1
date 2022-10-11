@@ -165,7 +165,8 @@ namespace
 
             // Statements
             MAP_TOKEN_TO_OPERATOR( KwIf    , StatementIf     );
-            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementIf     );
+            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementElif   );
+            MAP_TOKEN_TO_OPERATOR( KwElse  , StatementElse   );
             MAP_TOKEN_TO_OPERATOR( KwWhile , StatementWhile  );
             MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
             MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
@@ -181,7 +182,6 @@ namespace
             IGNORE_TOKEN( OpSubscriptClose   );
             IGNORE_TOKEN( OpColon            );
             IGNORE_TOKEN( OpComma            );
-            IGNORE_TOKEN( KwElse             );
             IGNORE_TOKEN( KwNumber           );
             IGNORE_TOKEN( KwString           );
 
@@ -303,18 +303,6 @@ namespace
         else
         {
             throw std::runtime_error( "Syntax error - missing newline" );
-        }
-    }
-
-    void skipIndentation( TokenIterator & tokenIt )
-    {
-        if ( tokenIt->is< Indentation >() )
-        {
-            ++tokenIt;
-        }
-        else
-        {
-            throw std::runtime_error( "Syntax error - missing indentation" );
         }
     }
 } // namespace
@@ -451,43 +439,105 @@ Node::Pointer parse
                 operands.push( parse( tokenIt ) );
                 skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
             }
-            else if ( operatorInfo.type == NodeType::StatementIf )
+            else if ( operatorInfo.type == NodeType::StatementIf || operatorInfo.type == NodeType::StatementElif )
             {
                 skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
-
                 operands.push( parse( tokenIt ) ); // parse condition
-
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
-                skipIndentation( tokenIt );
 
-                operands.push( parse( tokenIt ) ); // parse body
+                indentationIdx++;
 
-                skipNewline( tokenIt );
-
-                while ( true )
+                while ( tokenIt->is_not< Eof >() )
                 {
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElif )
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
+                    operatorInfo.operandsCount++;
+
+                    auto prevTokenIt = tokenIt;
+
+                    std::size_t currentIndentationIdx{ 0U };
+                    while ( currentIndentationIdx != indentationIdx )
                     {
-                        ++operatorInfo.operandsCount;
-                        operands.push( parse( tokenIt ) ); // parse branch
+                        if ( tokenIt->is< Indentation >() )
+                        {
+                            ++tokenIt;
+                            currentIndentationIdx++;
+                        }
+                        else if ( tokenIt->is< Newline >() )
+                        {
+                            skipNewline( tokenIt );
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
+
+                    if ( currentIndentationIdx < indentationIdx )
                     {
+                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                        indentationIdx = currentIndentationIdx;
                         break;
                     }
                 }
 
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElse )
+                auto prevTokenIt{ tokenIt };
+                if ( tokenIt->is< Newline >() ) { ++tokenIt; }
+
+                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElif )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
-                    skipIndentation( tokenIt );
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse elif
+                    operatorInfo.operandsCount++;
+                }
+                else if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElse )
+                {
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse else
+                    operatorInfo.operandsCount++;
+                }
+                else
+                {
+                    tokenIt = prevTokenIt;
+                }
+            }
+            else if ( operatorInfo.type == NodeType::StatementElse )
+            {
+                skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElse >( tokenIt );
+                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                skipNewline( tokenIt );
 
-                    ++operatorInfo.operandsCount;
+                indentationIdx++;
 
-                    operands.push( parse( tokenIt ) ); // parse body
+                while ( tokenIt->is_not< Eof >() )
+                {
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
+                    operatorInfo.operandsCount++;
+
+                    auto prevTokenIt = tokenIt;
+
+                    std::size_t currentIndentationIdx{ 0U };
+                    while ( currentIndentationIdx != indentationIdx )
+                    {
+                        if ( tokenIt->is< Indentation >() )
+                        {
+                            ++tokenIt;
+                            currentIndentationIdx++;
+                        }
+                        else if ( tokenIt->is< Newline >() )
+                        {
+                            skipNewline( tokenIt );
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if ( currentIndentationIdx < indentationIdx )
+                    {
+                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                        indentationIdx = currentIndentationIdx;
+                        break;
+                    }
                 }
             }
             else if ( operatorInfo.type == NodeType::StatementWhile )
@@ -501,7 +551,7 @@ Node::Pointer parse
 
                 while ( tokenIt->is_not< Eof >() )
                 {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
+                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
                     operatorInfo.operandsCount++;
 
                     auto prevTokenIt = tokenIt;

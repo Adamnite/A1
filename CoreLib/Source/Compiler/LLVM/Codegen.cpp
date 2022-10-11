@@ -211,8 +211,18 @@ namespace
                         case NodeType::MemberCall: return codegenMemberCallExpression( node->children(), scope );
                         case NodeType::Assign    : return codegenVariableDefinition  ( node->children(), scope );
 
-                        case NodeType::StatementIf    : return codegenControlFlow( node->children(), scope );
-                        case NodeType::StatementWhile : return codegenLoopFlow   ( node->children(), scope );
+                        case NodeType::StatementIf  : return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementElif: return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementElse:
+                        {
+                            llvm::Value * value{ nullptr };
+                            for ( auto const & n : node->children() )
+                            {
+                                value = codegenImpl( n, scope );
+                            }
+                            return value;
+                        }
+                        case NodeType::StatementWhile: return codegenLoopFlow   ( node->children(), scope );
                         case NodeType::StatementReturn:
                         {
                             ASSERT( std::size( node->children() ) == 1U );
@@ -376,7 +386,7 @@ namespace
 
     llvm::Value * codegenLoopFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( nodes ) >= 1U );
+        ASSERTM( std::size( nodes ) >= 2U, "Loop flow consists of a condition and at least one statement in the loop body" );
 
         auto * parent        { builder->GetInsertBlock()->getParent() };
         auto * conditionBlock{ llvm::BasicBlock::Create( *context, "cond", parent ) };
@@ -388,13 +398,12 @@ namespace
         auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
         if ( condition == nullptr ) { return nullptr; }
 
-        // convert condition to boolean by comparing non-equal to 0.0
+        // Convert condition to boolean by comparing it to 0.0
         condition = builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *context ), "booltmp" );
         condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "loopcond" );
 
         auto * afterLoopBlock{ llvm::BasicBlock::Create( *context, "afterloop", parent ) };
         builder->CreateCondBr( condition, loopBlock, afterLoopBlock );
-
         builder->SetInsertPoint( loopBlock );
 
         for ( std::size_t i{ 1U }; i < std::size( nodes ); i++ )
@@ -404,20 +413,18 @@ namespace
         }
 
         builder->CreateBr( conditionBlock );
-
         builder->SetInsertPoint( afterLoopBlock );
-
         return nullptr;
     }
 
     llvm::Value * codegenControlFlow( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERT( std::size( nodes ) >= 2U );
+        ASSERTM( std::size( nodes ) >= 2U, "Control flow consists of a condition and at least one statement in the if body" );
 
         auto * condition{ codegenImpl( nodes[ 0U ], scope ) };
         if ( condition == nullptr ) { return nullptr; }
 
-        // convert condition to boolean by comparing non-equal to 0.0
+        // Convert condition to boolean by comparing it to 0.0
         condition = builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *context ), "booltmp" );
         condition = builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *context, llvm::APFloat( 0.0 ) ), "ifcond" );
 
@@ -425,27 +432,54 @@ namespace
 
         // create conditions and blocks for if/elif/else
 
-        auto * thenBlock { llvm::BasicBlock::Create( *context, "then", parent ) };
-        auto * elseBlock { llvm::BasicBlock::Create( *context, "else"   ) };
-        auto * mergeBlock{ llvm::BasicBlock::Create( *context, "ifcont" ) };
+        auto * thenBlock { llvm::BasicBlock::Create( *context, "if.then", parent ) };
+        auto * elseBlock { llvm::BasicBlock::Create( *context, "if.else" ) };
+        auto * mergeBlock{ llvm::BasicBlock::Create( *context, "if.end"  ) };
 
         builder->CreateCondBr( condition, thenBlock, elseBlock );
         builder->SetInsertPoint( thenBlock );
 
-        auto * then{ codegenImpl( nodes[ 1U ], scope ) };
-        if ( then == nullptr ) { return nullptr; }
+        auto hasElseBlock{ false };
+        std::size_t idx{ 0U };
+
+        // Generate LLVM IR for all statements within if body
+        llvm::Value * then{ nullptr };
+        for ( idx = 1U; idx < std::size( nodes ); idx++ )
+        {
+            auto const & node{ nodes[ idx ] };
+            if
+            (
+                node->is< NodeType >() &&
+                (
+                    node->get< NodeType >() == NodeType::StatementElif ||
+                    node->get< NodeType >() == NodeType::StatementElse
+                )
+            )
+            {
+                hasElseBlock = true;
+                break;
+            }
+
+            then = codegenImpl( node, scope );
+            if ( then == nullptr ) { return nullptr; }
+        }
 
         builder->CreateBr( mergeBlock );
 
         // codegen of 'then' can change the current block, update 'then' block for the PHI
         thenBlock = builder->GetInsertBlock();
 
-        // emit else block
+        // Emit else block
         parent->getBasicBlockList().push_back( elseBlock );
         builder->SetInsertPoint( elseBlock );
 
-        auto * else_{ codegenImpl( nodes[ 2 ], scope ) };
-        if ( else_ == nullptr ) { return nullptr; }
+        // Generate LLVM IR for all statements within else body
+        llvm::Value * else_{ nullptr };
+        for ( ; idx < std::size( nodes ); idx++ )
+        {
+            else_ = codegenImpl( nodes[ idx ], scope );
+            if ( else_ == nullptr ) { return nullptr; }
+        }
 
         builder->CreateBr( mergeBlock );
 
@@ -458,7 +492,8 @@ namespace
         auto * phi{ builder->CreatePHI( llvm::IntegerType::getInt32Ty( *context ), 2, "iftmp" ) };
 
         phi->addIncoming(then, thenBlock);
-        phi->addIncoming(else_, elseBlock);
+        if ( hasElseBlock ) { phi->addIncoming(else_, elseBlock); }
+
         return phi;
     }
 
@@ -492,7 +527,7 @@ namespace
 
     llvm::Function * codegenFunctionDefinition( std::span< Node::Pointer const > const nodes )
     {
-        ASSERTM( std::size( nodes ) >= 2U, "Function definition consists of identifier and at least one statement in the function body" );
+        ASSERTM( std::size( nodes ) >= 2U, "Function definition consists of an identifier and at least one statement in the function body" );
 
         ASSERTM( nodes[ 0U ]->is< Identifier >(), "Function identifier is the first child node in the function definition" );
         auto const & name{ nodes[ 0U ]->get< Identifier >().name };
@@ -514,7 +549,7 @@ namespace
                 if ( nodeType == NodeType::FunctionParameterDefinition )
                 {
                     auto const & parameterNodes{ node->children() };
-                    ASSERTM( std::size( parameterNodes ) == 2U, "Function parameter definition consists of identifier and type annotation" );
+                    ASSERTM( std::size( parameterNodes ) == 2U, "Function parameter definition consists of an identifier and type annotation" );
 
                     ASSERTM( parameterNodes[ 0U ]->is< Identifier >(), "Function parameter identifier is the first child node in the function parameter definition" );
                     parameterNames.push_back( parameterNodes[ 0U ]->get< Identifier >().name );
@@ -592,7 +627,7 @@ namespace
         ScopeIdentifiers                       & scope
     )
     {
-        ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of identifier and value to be assigned" );
+        ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
 
         ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
         auto const & name{ nodes[ 0U ]->get< Identifier >().name };
@@ -606,7 +641,7 @@ namespace
 
     llvm::Value * codegenVariableDefinition( std::span< Node::Pointer const > const nodes, ScopeIdentifiers & scope )
     {
-        ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of identifier and either type annotation or initialization or both" );
+        ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of an identifier and either type annotation or initialization or both" );
 
         ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
         auto const & name{ nodes[ 0U ]->get< Identifier >().name };
@@ -656,6 +691,8 @@ std::unique_ptr< Module > codegen
 
     ScopeIdentifiers moduleScope;
 
+    auto inAnotherBlock{ false };
+
     for ( auto const & n : node->children() )
     {
         if ( n == nullptr ) { continue; }
@@ -669,11 +706,12 @@ std::unique_ptr< Module > codegen
             )
         )
         {
+            inAnotherBlock = true;
             codegenImpl( n, moduleScope );
         }
         else
         {
-            builder->SetInsertPoint( mainBlock );
+            if ( inAnotherBlock ) { builder->SetInsertPoint( mainBlock ); }
             codegenImpl( n, moduleScope );
         }
     }

@@ -31,32 +31,7 @@ if( ENABLE_LLVM )
     add_definitions( ${LLVM_DEFINITIONS} )
 
     target_link_libraries( CoreLib PRIVATE
-        LLVMSupport
-        LLVMCore
-        LLVMIRReader
-        LLVMCodeGen
-        LLVMTarget
-        LLVMAArch64CodeGen
-        LLVMAArch64AsmParser
-        LLVMAArch64Disassembler
-        LLVMAArch64Desc
-        LLVMAArch64Info
-        LLVMAArch64Utils
-        LLVMARMCodeGen
-        LLVMARMAsmParser
-        LLVMARMDisassembler
-        LLVMARMDesc
-        LLVMARMInfo
-        LLVMARMUtils
-        LLVMX86CodeGen
-        LLVMX86AsmParser
-        LLVMX86Disassembler
-        LLVMX86TargetMCA
-        LLVMX86Desc
-        LLVMX86Info
-        LLVMAsmParser
-        LLVMPasses
-        LLVM
+        ${LLVM_AVAILABLE_LIBS}
         clangTooling
     )
 
