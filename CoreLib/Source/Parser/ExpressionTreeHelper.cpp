@@ -94,6 +94,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
          */
         case NodeType::MemberCall:
         case NodeType::StatementIf:
+        case NodeType::StatementElif:
         case NodeType::StatementElse:
         case NodeType::StatementWhile:
         case NodeType::StatementPass:
@@ -219,6 +220,7 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
          * certain to exist is the if condition.
          */
         case NodeType::StatementIf:
+        case NodeType::StatementElif:
             return 1U;
 
         case NodeType::StatementElse:

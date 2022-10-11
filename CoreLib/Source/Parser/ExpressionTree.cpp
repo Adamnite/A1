@@ -165,7 +165,7 @@ namespace
 
             // Statements
             MAP_TOKEN_TO_OPERATOR( KwIf    , StatementIf     );
-            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementIf     );
+            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementElif   );
             MAP_TOKEN_TO_OPERATOR( KwElse  , StatementElse   );
             MAP_TOKEN_TO_OPERATOR( KwWhile , StatementWhile  );
             MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
@@ -439,7 +439,7 @@ Node::Pointer parse
                 operands.push( parse( tokenIt ) );
                 skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
             }
-            else if ( operatorInfo.type == NodeType::StatementIf )
+            else if ( operatorInfo.type == NodeType::StatementIf || operatorInfo.type == NodeType::StatementElif )
             {
                 skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse condition

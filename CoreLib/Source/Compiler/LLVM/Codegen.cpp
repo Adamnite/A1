@@ -211,7 +211,8 @@ namespace
                         case NodeType::MemberCall: return codegenMemberCallExpression( node->children(), scope );
                         case NodeType::Assign    : return codegenVariableDefinition  ( node->children(), scope );
 
-                        case NodeType::StatementIf: return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementIf  : return codegenControlFlow( node->children(), scope );
+                        case NodeType::StatementElif: return codegenControlFlow( node->children(), scope );
                         case NodeType::StatementElse:
                         {
                             llvm::Value * value{ nullptr };
@@ -450,7 +451,7 @@ namespace
             (
                 node->is< NodeType >() &&
                 (
-                    node->get< NodeType >() == NodeType::StatementIf ||
+                    node->get< NodeType >() == NodeType::StatementElif ||
                     node->get< NodeType >() == NodeType::StatementElse
                 )
             )
@@ -710,10 +711,7 @@ std::unique_ptr< Module > codegen
         }
         else
         {
-            if ( inAnotherBlock )
-            {
-                builder->SetInsertPoint( mainBlock );
-            }
+            if ( inAnotherBlock ) { builder->SetInsertPoint( mainBlock ); }
             codegenImpl( n, moduleScope );
         }
     }

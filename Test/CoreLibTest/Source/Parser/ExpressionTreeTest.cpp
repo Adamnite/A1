@@ -543,7 +543,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementIf,
+                                A1::NodeType::StatementElif,
                                 makeChildren
                                 (
                                     std::make_unique< Node >
@@ -575,7 +575,7 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::StatementIf,
+                                        A1::NodeType::StatementElif,
                                         makeChildren
                                         (
                                             std::make_unique< Node >
