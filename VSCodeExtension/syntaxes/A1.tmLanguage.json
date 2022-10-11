@@ -24,6 +24,9 @@
 					"include": "#class-declaration"
 				},
 				{
+					"include": "#contract-declaration"
+				},
+				{
 					"include": "#function-declaration"
 				},
 				{
@@ -240,6 +243,10 @@
 		},
 		"statement-keyword": {
 			"patterns": [
+				{
+					"name": "storage.type.variable.ao",
+					"match": "\\b(?<!\\.)(let)\\b"
+				},
 				{
 					"name": "storage.type.function.ao",
 					"match": "\\b((async\\s+)?\\s*def)\\b"
@@ -1007,6 +1014,33 @@
 				}
 			]
 		},
+		"contract-declaration": {
+			"patterns": [
+				{
+					"name": "meta.contract.ao",
+					"begin": "(?x)\n  \\s*(contract)\\s+\n    (?=\n      [[:alpha:]_]\\w* \\s* (:|\\()\n    )\n",
+					"end": "(:)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.type.contract.ao"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.section.contract.begin.ao"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#class-name"
+						},
+						{
+							"include": "#class-inheritance"
+						}
+					]
+				}
+			]
+		},
 		"class-name": {
 			"patterns": [
 				{
@@ -1697,7 +1731,7 @@
 			"patterns": [
 				{
 					"name": "support.function.builtin.ao",
-					"match": "(?x)\n  (?<!\\.) \\b(\n    __import__ | abs | all | any | ascii | bin | breakpoint | callable\n    | chr | compile | contract | copyright | credits | delattr | dir | divmod\n    | enumerate | eval | exec | exit | filter | format | getattr\n    | globals | hasattr | hash | help | hex | id | input\n    | isinstance | issubclass | iter | len | license | locals | map\n    | max | memoryview | min | next | oct | open | ord | pow | print\n    | quit | range | reload | repr | reversed | round\n    | setattr | sorted | sum | vars | zip\n  )\\b\n"
+					"match": "(?x)\n  (?<!\\.) \\b(\n    __import__ | abs | all | any | ascii | bin | breakpoint | callable\n    | chr | compile | contract | copyright | credits | delattr | dir | divmod\n    | enumerate | eval | exec | exit | filter | format | getattr\n    | globals | hasattr | hash | help | hex | id | input\n    | isinstance | issubclass | iter | len | license | locals | map\n    | array\n     | max | memoryview | min | next | oct | open | ord | pow | print\n    | quit | range | reload | repr | reversed | round\n    | setattr | sorted | sum | vars | zip\n  )\\b\n"
 				},
 				{
 					"name": "variable.legacy.builtin.ao",
