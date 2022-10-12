@@ -79,7 +79,7 @@
 						},
 						{
 							"name": "comment.typehint.type.notation.ao",
-							"match": "(?x)\n  (?<!\\.)\\b(\n    bool | bytes | float | int | object | num | str\n    | List | Dict | Iterable | Sequence | Set\n    | FrozenSet | Callable | Union | Tuple\n    | Any | None\n  )\\b\n"
+							"match": "(?x)\n  (?<!\\.)\\b(\n    bool | bytes | float | int | object | num | address | str\n    | List | Dict | Iterable | Sequence | Set\n    | FrozenSet | Callable | Union | Tuple\n    | Any | None\n  )\\b\n"
 						},
 						{
 							"name": "comment.typehint.punctuation.notation.ao",
@@ -1741,11 +1741,11 @@
 		},
 		"builtin-types": {
 			"name": "support.type.ao",
-			"match": "(?x)\n  (?<!\\.) \\b(\n    bool | bytearray | bytes | classmethod | complex | dict\n    | float | frozenset | num | int | list | object | property\n    | set | slice | staticmethod | str | tuple | type\n\n    (?# Although 'super' is not a type, it's related to types,\n        and is special enough to be highlighted differently from\n        other built-ins)\n    | super\n  )\\b\n"
+			"match": "(?x)\n  (?<!\\.) \\b(\n    bool | bytearray | bytes | classmethod | complex | dict\n    | float | frozenset | num | int | list | object | property\n    | set | slice | staticmethod | str | address | tuple | type\n\n    (?# Although 'super' is not a type, it's related to types,\n        and is special enough to be highlighted differently from\n        other built-ins)\n    | super\n  )\\b\n"
 		},
 		"A1-function-names": {
 			"comment": "these methods have A1 interpretation by ao and are generally called\nindirectly through syntactic constructs\n",
-			"match": "(?x)\n  \\b(\n    __(?:\n      abs | add | aenter | aexit | aiter | and | anext | await\n      | bool | call | ceil | cmp | coerce | complex | contains | contract\n      | copy | deepcopy | del | delattr | delete | delitem\n      | delslice | dir | div | divmod | enter | eq | exit | float\n      | floor | floordiv | format | ge | get | getattr\n      | getattribute | getinitargs | getitem | getnewargs\n      | getslice | getstate | gt | hash | hex | iadd | iand | idiv\n      | ifloordiv | ilshift | imod | imul | index | init\n      | instancecheck | int | invert | ior | ipow | irshift | isub\n      | iter | itruediv | ixor | le | len | long | lshift | lt\n      | missing | mod | mul | ne | neg | new | next | nonzero | oct | or\n      | pos | pow | radd | rand | rdiv | rdivmod | reduce\n      | reduce_ex | repr | reversed | rfloordiv | rlshift | rmod\n      | rmul | ror | round | rpow | rrshift | rshift | rsub\n      | rtruediv | rxor | set | setattr | setitem | setslice\n      | setstate | sizeof | str | sub | subclasscheck | truediv\n      | trunc | unicode | xor | matmul | rmatmul | imatmul\n      | init_subclass | set_name | fspath | bytes | prepare\n    )__\n  )\\b\n",
+			"match": "(?x)\n  \\b(\n    __(?:\n      abs | add | aenter | aexit | aiter | and | anext | await\n      | bool | call | ceil | cmp | coerce | complex | contains | contract\n      | copy | deepcopy | del | delattr | delete | delitem\n      | delslice | dir | div | divmod | enter | eq | exit | float\n      | floor | floordiv | format | ge | get | getattr\n      | getattribute | getinitargs | getitem | getnewargs\n      | getslice | getstate | gt | hash | hex | iadd | iand | idiv\n      | ifloordiv | ilshift | imod | imul | index | init\n      | instancecheck | int | invert | ior | ipow | irshift | isub\n      | iter | itruediv | ixor | le | len | long | lshift | lt\n      | missing | mod | mul | ne | neg | new | next | nonzero | oct | or\n      | pos | pow | radd | rand | rdiv | rdivmod | reduce\n      | reduce_ex | repr | reversed | rfloordiv | rlshift | rmod\n      | rmul | ror | round | rpow | rrshift | rshift | rsub\n      | rtruediv | rxor | set | setattr | setitem | setslice\n      | setstate | sizeof | str | address | sub | subclasscheck | truediv\n      | trunc | unicode | xor | matmul | rmatmul | imatmul\n      | init_subclass | set_name | fspath | bytes | prepare\n    )__\n  )\\b\n",
 			"captures": {
 				"1": {
 					"name": "support.function.A1.ao"
