@@ -16,6 +16,7 @@
 #endif
 
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
 #if defined(__clang__)
@@ -44,11 +45,27 @@ struct Symbols
     /** Stores all user-defined contract types. */
     std::map< std::string, llvm::Type * > contractTypes;
 
+    Symbols() = default;
+
     Symbols( std::map< std::string, llvm::FunctionCallee > stdFunctions )
     : stdFunctions_{ std::move( stdFunctions ) }
     {}
 
-    std::map< std::string, llvm::FunctionCallee > const & stdFunctions() noexcept { return stdFunctions_; }
+    [[ nodiscard ]]
+    std::map< std::string, llvm::FunctionCallee > const & stdFunctions() const noexcept
+    {
+        return stdFunctions_;
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * getVariable( std::string const & name ) const noexcept
+    {
+        if ( auto it{ variables.find( name ) }; it != std::end( variables ) )
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
 
 private:
     std::map< std::string, llvm::FunctionCallee > stdFunctions_;

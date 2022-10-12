@@ -5,7 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Compiler/LLVM/Codegen.hpp>
+#include "Codegen.hpp"
+
 #include <CoreLib/Compiler/LLVM/Compiler.hpp>
 
 #if defined (__clang__)
@@ -88,14 +89,14 @@ bool compile( Compiler::Settings settings, Node::Pointer const & node )
     /**
      * Generate LLVM IR code from the AST.
      */
-    auto module_{ codegen( node, targetMachine->createDataLayout(), targetTriple ) };
+    auto context{ codegen( node, targetMachine->createDataLayout(), targetTriple ) };
 
     if ( settings.outputIR )
     {
         /**
          * Write generated LLVM IR code to standard output.
          */
-        module_->print( llvm::outs(), nullptr );
+        context.module_->print( llvm::outs(), nullptr );
     }
 
     /**
@@ -105,7 +106,7 @@ bool compile( Compiler::Settings settings, Node::Pointer const & node )
     {
         std::error_code errorCode;
         llvm::raw_fd_ostream os{ IROutputFilename, errorCode, llvm::sys::fs::OF_None };
-        os << *module_;
+        os << *context.module_;
         os.flush();
     }
 

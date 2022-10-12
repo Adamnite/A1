@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Context.hpp"
+
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
 #if defined (__clang__)
@@ -31,10 +33,8 @@
 namespace A1::LLVM
 {
 
-using Module = llvm::Module;
-
 [[ nodiscard ]]
-std::unique_ptr< Module > codegen
+Context codegen
 (
     Node::Pointer    const & node,
     llvm::DataLayout const   dataLayout,

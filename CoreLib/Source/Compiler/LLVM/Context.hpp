@@ -34,7 +34,7 @@ namespace A1::LLVM
 
 struct Context
 {
-    std::unique_ptr< llvm::LLVMContext > context;
+    std::unique_ptr< llvm::LLVMContext > internalCtx;
 
     /** Provides an API for creating instructions and inserting them into basic blocks. */
     std::unique_ptr< llvm::IRBuilder<> > builder;
