@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "Symbols.hpp"
+
 #if defined (__clang__)
 #   pragma clang diagnostic push
 #   pragma clang diagnostic ignored "-Wunused-parameter"
@@ -39,6 +41,9 @@ struct Context
 
     /** Stores all the information related to LLVM module. */
     std::unique_ptr< llvm::Module > module_;
+
+    /** Stores all the symbols within the module. */
+    Symbols symbols;
 };
 
 } // namespace A1::LLVM
