@@ -21,6 +21,14 @@ namespace A1
 
 namespace
 {
+    void fill( std::stack< Node::Pointer > & dst, std::vector< Node::Pointer > src )
+    {
+        for ( std::size_t i{ 0U }; i < std::size( src ); i++ )
+        {
+            dst.push( std::move( src[ i ] ) );
+        }
+    }
+
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
         if ( token.is< Eof >() || token.is< Indentation >() || token.is< Newline >() )
@@ -229,9 +237,9 @@ namespace
 
     void popOneOperator
     (
-        std::stack< Node::Pointer >       & operands,
-        std::stack< OperatorInfo  >       & operators,
-        ErrorInfo                           errorInfo
+        std::stack< Node::Pointer > & operands,
+        std::stack< OperatorInfo  > & operators,
+        ErrorInfo                     errorInfo
     )
     {
         auto const & lastOperator{ operators.top() };
@@ -304,6 +312,45 @@ namespace
         {
             throw std::runtime_error( "Syntax error - missing newline" );
         }
+    }
+
+    std::vector< Node::Pointer > parseBody( TokenIterator & tokenIt, std::size_t const indentationLevel )
+    {
+        std::vector< Node::Pointer > operands;
+
+        while ( tokenIt->is_not< Eof >() )
+        {
+            // parse body statement
+            operands.push_back( parse( tokenIt, indentationLevel ) );
+
+            auto prevTokenIt{ tokenIt };
+
+            auto currentIndentationLevel{ 0U };
+            while ( currentIndentationLevel != indentationLevel )
+            {
+                if ( tokenIt->is< Indentation >() )
+                {
+                    ++tokenIt;
+                    currentIndentationLevel++;
+                }
+                else if ( tokenIt->is< Newline >() )
+                {
+                    skipNewline( tokenIt );
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if ( currentIndentationLevel < indentationLevel )
+            {
+                tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                break;
+            }
+        }
+
+        return operands;
     }
 } // namespace
 
@@ -446,52 +493,24 @@ Node::Pointer parse
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                auto bodyOperands{ parseBody( tokenIt, indentationIdx + 1U ) };
+                operatorInfo.operandsCount += std::size( bodyOperands );
+                fill( operands, std::move( bodyOperands ) );
 
                 auto prevTokenIt{ tokenIt };
                 if ( tokenIt->is< Newline >() ) { ++tokenIt; }
 
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElif )
+                if
+                (
+                    tokenIt->is< ReservedToken >() &&
+                    (
+                        tokenIt->get< ReservedToken >() == ReservedToken::KwElif ||
+                        tokenIt->get< ReservedToken >() == ReservedToken::KwElse
+                    )
+                )
                 {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse elif
-                    operatorInfo.operandsCount++;
-                }
-                else if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElse )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse else
+                    // Parse elif / else expression
+                    operands.push( parse( tokenIt, indentationIdx ) );
                     operatorInfo.operandsCount++;
                 }
                 else
@@ -501,44 +520,13 @@ Node::Pointer parse
             }
             else if ( operatorInfo.type == NodeType::StatementElse )
             {
-                skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElse >( tokenIt );
+                skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                auto bodyOperands{ parseBody( tokenIt, indentationIdx + 1U ) };
+                operatorInfo.operandsCount += std::size( bodyOperands );
+                fill( operands, std::move( bodyOperands ) );
             }
             else if ( operatorInfo.type == NodeType::StatementWhile )
             {
@@ -547,40 +535,9 @@ Node::Pointer parse
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                auto bodyOperands{ parseBody( tokenIt, indentationIdx + 1U ) };
+                operatorInfo.operandsCount += std::size( bodyOperands );
+                fill( operands, std::move( bodyOperands ) );
             }
             else if ( operatorInfo.type == NodeType::FunctionDefinition )
             {
@@ -649,40 +606,9 @@ Node::Pointer parse
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                auto bodyOperands{ parseBody( tokenIt, indentationIdx + 1U ) };
+                operatorInfo.operandsCount += std::size( bodyOperands );
+                fill( operands, std::move( bodyOperands ) );
             }
             else if ( operatorInfo.type == NodeType::VariableDefinition )
             {
@@ -694,8 +620,8 @@ Node::Pointer parse
                 {
                     // there is type declaration in this variable definition
                     ++tokenIt;
-                    operatorInfo.operandsCount++;
                     operands.push( parseOperand( tokenIt ) ); // parse type
+                    operatorInfo.operandsCount++;
                     ++tokenIt;
                 }
 
@@ -703,56 +629,20 @@ Node::Pointer parse
                 {
                     // there is initialization in this variable definition
                     ++tokenIt;
-                    operatorInfo.operandsCount++;
-
-                    // TODO: Call parse here instead, in order to be able to parse more complex expressions
                     operands.push( parse( tokenIt ) );
+                    operatorInfo.operandsCount++;
                 }
             }
             else if ( operatorInfo.type == NodeType::ContractDefinition )
             {
                 skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
                 operands.push( parse( tokenIt ) ); // parse contract name
-
                 skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
                 skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse contract body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-                    ++tokenIt;
-
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                auto bodyOperands{ parseBody( tokenIt, indentationIdx + 1U ) };
+                operatorInfo.operandsCount += std::size( bodyOperands );
+                fill( operands, std::move( bodyOperands ) );
             }
 
             if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
@@ -795,7 +685,7 @@ Node::Pointer parse
     {
         while ( tokenIt->is_not< Eof >() )
         {
-            operands.push( parse( tokenIt, 0, true ) );
+            operands.push( parse( tokenIt ) );
             operators.top().operandsCount++;
         }
 
