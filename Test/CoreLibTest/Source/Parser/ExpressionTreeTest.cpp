@@ -81,7 +81,7 @@ TEST_P( ExpressionTreeTestFixture, parsing )
     auto const [ expression, expectedRoot ]{ GetParam() };
 
     auto tokenIt   { A1::tokenize( A1::PushBackStream{ expression } ) };
-    auto actualRoot{ A1::parse( tokenIt, 0U, false ) };
+    auto actualRoot{ A1::parse( tokenIt ) };
 
     match( actualRoot.get(), expectedRoot.get() );
 }
