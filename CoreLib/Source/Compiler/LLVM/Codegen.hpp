@@ -33,8 +33,7 @@
 namespace A1::LLVM
 {
 
-[[ nodiscard ]]
-Context codegen
+[[ nodiscard ]] Context codegen
 (
     Node::Pointer    const & node,
     llvm::DataLayout const   dataLayout,

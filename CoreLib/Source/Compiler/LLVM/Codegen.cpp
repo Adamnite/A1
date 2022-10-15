@@ -65,26 +65,29 @@ Context codegen
     std::string_view const   targetTriple
 )
 {
-    Context ctx;
+    auto ctx
     {
-        auto context{ std::make_unique< llvm::LLVMContext >()                };
-        auto builder{ std::make_unique< llvm::IRBuilder<> >( *context )      };
-        auto module_{ std::make_unique< llvm::Module >( "Module", *context ) };
-
-        // Optimizations benefit from knowing about the target and data layout
-        module_->setDataLayout  ( dataLayout   );
-        module_->setTargetTriple( targetTriple );
-
-        Symbols symbols{ createStdFunctions( module_.get(), context.get() ) };
-
-        ctx = Context
+        [ & ]()
         {
-            .internalCtx = std::move( context ),
-            .builder     = std::move( builder ),
-            .module_     = std::move( module_ ),
-            .symbols     = std::move( symbols )
-        };
-    }
+            auto context{ std::make_unique< llvm::LLVMContext >()                };
+            auto builder{ std::make_unique< llvm::IRBuilder<> >( *context )      };
+            auto module_{ std::make_unique< llvm::Module >( "Module", *context ) };
+
+            // Optimizations benefit from knowing about the target and data layout
+            module_->setDataLayout  ( dataLayout   );
+            module_->setTargetTriple( targetTriple );
+
+            Symbols symbols{ createStdFunctions( module_.get(), context.get() ) };
+
+            return Context
+            {
+                .internalCtx = std::move( context ),
+                .builder     = std::move( builder ),
+                .module_     = std::move( module_ ),
+                .symbols     = std::move( symbols )
+            };
+        }()
+    };
 
     ASSERTM
     (
@@ -98,7 +101,7 @@ Context codegen
     auto * mainBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "entry", mainFunction ) };
     ctx.builder->SetInsertPoint( mainBlock );
 
-    auto inAnotherBlock{ false };
+    auto inMainBlock{ true };
 
     // Generating LLVM IR for all the statements within the module
     for ( auto const & n : node->children() )
@@ -114,15 +117,16 @@ Context codegen
             )
         )
         {
-            inAnotherBlock = true;
+            inMainBlock = false;
             codegen( ctx, n );
         }
         else
         {
-            if ( inAnotherBlock )
+            if ( !inMainBlock )
             {
                 // Getting back to main block
                 ctx.builder->SetInsertPoint( mainBlock );
+                inMainBlock = true;
             }
             codegen( ctx, n );
         }

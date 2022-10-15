@@ -73,11 +73,12 @@ namespace
     }
 
     [[ nodiscard ]]
-    llvm::Constant * getStringFormat( Context & ctx, llvm::Type const * type )
+    llvm::Value * getPrintFormat( Context & ctx, llvm::Type const * type )
     {
         if ( type->isDoubleTy() )
         {
-            return ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0, ctx.module_.get() );
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0, ctx.module_.get() ) };
+            return format;
         }
         else if
         (
@@ -89,7 +90,8 @@ namespace
             )
         )
         {
-            return ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0, ctx.module_.get() );
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0, ctx.module_.get() ) };
+            return format;
         }
         return nullptr;
     }
@@ -318,7 +320,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
             // Standard print function currently supports one argument only
             if ( std::size( arguments ) > 1U ) { return nullptr; }
 
-            arguments.insert( std::begin( arguments ), getStringFormat( ctx, arguments[ 0U ]->getType() ) );
+            arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
             return ctx.builder->CreateCall( ctx.symbols.stdFunctions().at( name ), arguments, "" );
         }
@@ -336,12 +338,12 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const >
     auto const & member{ nodes[ 1U ] };
     if ( member->is< Identifier >() )
     {
-        // TODO: Access contract's data member
+        // TODO: Access data member
         return nullptr;
     }
     else if ( member->is< NodeType >() && member->get< NodeType >() == NodeType::Call )
     {
-        // Access contract's function member
+        // Access function member
         return codegen( ctx, member );
     }
 
@@ -365,6 +367,7 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
         {
             if ( node->get< NodeType >() == NodeType::VariableDefinition )
             {
+                // TODO: Support other member types
                 dataTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
             }
             else if ( node->get< NodeType >() == NodeType::FunctionDefinition )
