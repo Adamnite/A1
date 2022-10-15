@@ -288,6 +288,25 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.get())",
             .expectedOutput =
                 "Hello, world!"
+        },
+        TestParameter
+        {
+            .input =
+                "contract Addition:\n"
+                "    let sum: num = 0\n"
+                "\n"
+                "    def add(x: num, y: num) -> num:\n"
+                "        sum =  x + y\n"
+                "        return sum\n"
+                "\n"
+                "let var = Addition()\n"
+                "print(var.sum)\n"
+                "print(var.add(1, 2))\n"
+                "print(var.sum)",
+            .expectedOutput =
+                "0.000000\n"
+                "3.000000\n"
+                "3.000000"
         }
     )
 );
