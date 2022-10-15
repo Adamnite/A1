@@ -55,7 +55,7 @@ namespace
             }
             else if ( typeID == Registry::getStringLiteralHandle() )
             {
-                return ctx.builder->CreateGlobalStringPtr( "", "", 0, ctx.module_.get() );
+                return ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() );
             }
             else
             {
@@ -77,7 +77,7 @@ namespace
     {
         if ( type->isDoubleTy() )
         {
-            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0, ctx.module_.get() ) };
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0U, ctx.module_.get() ) };
             return format;
         }
         else if
@@ -90,7 +90,7 @@ namespace
             )
         )
         {
-            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0, ctx.module_.get() ) };
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0U, ctx.module_.get() ) };
             return format;
         }
         return nullptr;
@@ -220,7 +220,7 @@ llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
             },
             [ &ctx ]( String const & str ) -> llvm::Value *
             {
-                return ctx.builder->CreateGlobalStringPtr( str, "", 0, ctx.module_.get() );
+                return ctx.builder->CreateGlobalStringPtr( str, "", 0U, ctx.module_.get() );
             },
             []( TypeID const ) -> llvm::Value *
             {
@@ -297,7 +297,14 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
     if ( auto const & type{ ctx.symbols.contractTypes.find( name ) }; type != std::end( ctx.symbols.contractTypes ) )
     {
         // Create a new contract instance
-        return new llvm::GlobalVariable( *ctx.module_, type->second, true, llvm::GlobalVariable::ExternalLinkage, llvm::Constant::getNullValue( type->second ) );
+        return new llvm::GlobalVariable
+        (
+            *ctx.module_,
+            type->second,
+            true, /* isConstant */
+            llvm::GlobalVariable::ExternalLinkage,
+            llvm::Constant::getNullValue( type->second )
+        );
     }
     else
     {
@@ -322,7 +329,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
 
             arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
-            return ctx.builder->CreateCall( ctx.symbols.stdFunctions().at( name ), arguments, "" );
+            return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
         }
 
         return arguments.empty()

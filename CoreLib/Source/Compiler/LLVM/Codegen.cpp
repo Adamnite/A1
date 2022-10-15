@@ -39,7 +39,68 @@ namespace A1::LLVM
 namespace
 {
     [[ nodiscard ]]
-    std::map< std::string, llvm::FunctionCallee > createStdFunctions( llvm::Module * module_, llvm::LLVMContext * context )
+    llvm::Value * createAddress( llvm::Module * module_, llvm::IRBuilder<> * builder, std::string_view const name )
+    {
+        // TODO: Make an ADVM API call to get the actual address
+        return builder->CreateGlobalStringPtr( "", name, 0U, module_ );
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * createBlock( llvm::Module * module_, llvm::LLVMContext * ctx, std::string_view const name )
+    {
+        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt64Ty( *ctx ) }, "Block" ) };
+        auto * block
+        {
+            new llvm::GlobalVariable
+            (
+                *module_,
+                blockType,
+                true, /* isConstant */
+                llvm::GlobalVariable::ExternalLinkage,
+                llvm::ConstantStruct::get
+                (
+                    blockType,
+                    // Initial data members
+                    {
+                        // TODO: Make an ADVM API call to get the actual initial timestamp
+                        llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx ), 0U, false /* isSigned */ )
+                    }
+                ),
+                name
+            )
+        };
+        return block;
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * createMessage( llvm::Module * module_, llvm::IRBuilder<> * builder, llvm::LLVMContext * ctx, std::string_view const name )
+    {
+        auto * messageType{ llvm::StructType::create( *ctx, { llvm::Type::getInt8PtrTy( *ctx ) }, "Message" ) };
+        auto * message
+        {
+            new llvm::GlobalVariable
+            (
+                *module_,
+                messageType,
+                true, /* isConstant */
+                llvm::GlobalVariable::ExternalLinkage,
+                llvm::ConstantStruct::get
+                (
+                    messageType,
+                    // Initial data members
+                    {
+                        // TODO: Make an ADVM API call to get the actual sender
+                        builder->CreateGlobalStringPtr( "", "msg.sender", 0U, module_ )
+                    }
+                ),
+                name
+            )
+        };
+        return message;
+    }
+
+    [[ nodiscard ]]
+    std::map< std::string, llvm::FunctionCallee > createBuiltInFunctions( llvm::Module * module_, llvm::LLVMContext * ctx )
     {
         std::map< std::string, llvm::FunctionCallee > functions;
 
@@ -48,8 +109,8 @@ namespace
             "printf",
             llvm::FunctionType::get
             (
-                llvm::IntegerType::getInt32Ty( *context ),
-                llvm::PointerType::get( llvm::Type::getInt8Ty( *context ), 0 ),
+                llvm::IntegerType::getInt32Ty( *ctx ),
+                llvm::PointerType::get( llvm::Type::getInt8Ty( *ctx ), 0 ),
                 true
             )
         );
@@ -60,7 +121,7 @@ namespace
 
 Context codegen
 (
-    Node::Pointer    const & node,
+    Node::Pointer    const & moduleNode,
     llvm::DataLayout const   dataLayout,
     std::string_view const   targetTriple
 )
@@ -77,7 +138,16 @@ Context codegen
             module_->setDataLayout  ( dataLayout   );
             module_->setTargetTriple( targetTriple );
 
-            Symbols symbols{ createStdFunctions( module_.get(), context.get() ) };
+            Symbols symbols
+            {
+                // Built-in global variables
+                {
+                    { "address", createAddress( module_.get(), builder.get(), "address" ) },
+                    { "block"  , createBlock  ( module_.get(), context.get(), "block"   ) },
+                    { "msg"    , createMessage( module_.get(), builder.get(), context.get(), "msg" ) }
+                },
+                createBuiltInFunctions( module_.get(), context.get() )
+            };
 
             return Context
             {
@@ -91,7 +161,7 @@ Context codegen
 
     ASSERTM
     (
-        node->is< NodeType >() && node->get< NodeType >() == NodeType::ModuleDefinition,
+        moduleNode->is< NodeType >() && moduleNode->get< NodeType >() == NodeType::ModuleDefinition,
         "Module definition is the root node of the AST"
     );
 
@@ -104,21 +174,21 @@ Context codegen
     auto inMainBlock{ true };
 
     // Generating LLVM IR for all the statements within the module
-    for ( auto const & n : node->children() )
+    for ( auto const & node : moduleNode->children() )
     {
-        if ( n == nullptr ) { continue; }
+        if ( node == nullptr ) { continue; }
 
         if
         (
-            n->is< NodeType >() &&
+            node->is< NodeType >() &&
             (
-                n->get< NodeType >() == NodeType::ContractDefinition ||
-                n->get< NodeType >() == NodeType::FunctionDefinition
+                node->get< NodeType >() == NodeType::ContractDefinition ||
+                node->get< NodeType >() == NodeType::FunctionDefinition
             )
         )
         {
             inMainBlock = false;
-            codegen( ctx, n );
+            codegen( ctx, node );
         }
         else
         {
@@ -128,7 +198,7 @@ Context codegen
                 ctx.builder->SetInsertPoint( mainBlock );
                 inMainBlock = true;
             }
-            codegen( ctx, n );
+            codegen( ctx, node );
         }
     }
 

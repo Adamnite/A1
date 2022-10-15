@@ -35,7 +35,7 @@ namespace A1::LLVM
 
 [[ nodiscard ]] Context codegen
 (
-    Node::Pointer    const & node,
+    Node::Pointer    const & moduleNode,
     llvm::DataLayout const   dataLayout,
     std::string_view const   targetTriple
 );

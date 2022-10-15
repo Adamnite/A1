@@ -47,15 +47,17 @@ struct Symbols
 
     Symbols() = default;
 
-    Symbols( std::map< std::string, llvm::FunctionCallee > stdFunctions )
-    : stdFunctions_{ std::move( stdFunctions ) }
+    Symbols
+    (
+        std::map< std::string, llvm::Value *        > builtInGlobalVariables,
+        std::map< std::string, llvm::FunctionCallee > builtInFunctions
+    )
+    : builtInGlobalVariables_{ std::move( builtInGlobalVariables ) }
+    , builtInFunctions_      { std::move( builtInFunctions ) }
     {}
 
-    [[ nodiscard ]]
-    std::map< std::string, llvm::FunctionCallee > const & stdFunctions() const noexcept
-    {
-        return stdFunctions_;
-    }
+    [[ nodiscard ]] std::map< std::string, llvm::Value *        > const & builtInGlobalVariables() const noexcept { return builtInGlobalVariables_; }
+    [[ nodiscard ]] std::map< std::string, llvm::FunctionCallee > const & builtInFunctions      () const noexcept { return builtInFunctions_;       }
 
     [[ nodiscard ]]
     llvm::Value * getVariable( std::string const & name ) const noexcept
@@ -68,7 +70,8 @@ struct Symbols
     }
 
 private:
-    std::map< std::string, llvm::FunctionCallee > stdFunctions_;
+    std::map< std::string, llvm::Value *        > builtInGlobalVariables_;
+    std::map< std::string, llvm::FunctionCallee > builtInFunctions_;
 };
 
 } // namespace A1::LLVM
