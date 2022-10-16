@@ -55,7 +55,7 @@ namespace
             }
             else if ( typeID == Registry::getStringLiteralHandle() )
             {
-                return ctx.builder->CreateGlobalStringPtr( "", "", 0, ctx.module_.get() );
+                return ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() );
             }
             else
             {
@@ -73,11 +73,12 @@ namespace
     }
 
     [[ nodiscard ]]
-    llvm::Constant * getStringFormat( Context & ctx, llvm::Type const * type )
+    llvm::Value * getPrintFormat( Context & ctx, llvm::Type const * type )
     {
         if ( type->isDoubleTy() )
         {
-            return ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0, ctx.module_.get() );
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0U, ctx.module_.get() ) };
+            return format;
         }
         else if
         (
@@ -89,7 +90,8 @@ namespace
             )
         )
         {
-            return ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0, ctx.module_.get() );
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%s\n", "strFormat", 0U, ctx.module_.get() ) };
+            return format;
         }
         return nullptr;
     }
@@ -218,7 +220,7 @@ llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
             },
             [ &ctx ]( String const & str ) -> llvm::Value *
             {
-                return ctx.builder->CreateGlobalStringPtr( str, "", 0, ctx.module_.get() );
+                return ctx.builder->CreateGlobalStringPtr( str, "", 0U, ctx.module_.get() );
             },
             []( TypeID const ) -> llvm::Value *
             {
@@ -295,7 +297,14 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
     if ( auto const & type{ ctx.symbols.contractTypes.find( name ) }; type != std::end( ctx.symbols.contractTypes ) )
     {
         // Create a new contract instance
-        return new llvm::GlobalVariable( *ctx.module_, type->second, true, llvm::GlobalVariable::ExternalLinkage, llvm::Constant::getNullValue( type->second ) );
+        return new llvm::GlobalVariable
+        (
+            *ctx.module_,
+            type->second,
+            true, /* isConstant */
+            llvm::GlobalVariable::ExternalLinkage,
+            llvm::Constant::getNullValue( type->second )
+        );
     }
     else
     {
@@ -318,9 +327,9 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
             // Standard print function currently supports one argument only
             if ( std::size( arguments ) > 1U ) { return nullptr; }
 
-            arguments.insert( std::begin( arguments ), getStringFormat( ctx, arguments[ 0U ]->getType() ) );
+            arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
-            return ctx.builder->CreateCall( ctx.symbols.stdFunctions().at( name ), arguments, "" );
+            return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
         }
 
         return arguments.empty()
@@ -336,12 +345,12 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const >
     auto const & member{ nodes[ 1U ] };
     if ( member->is< Identifier >() )
     {
-        // TODO: Access contract's data member
+        // TODO: Access data member
         return nullptr;
     }
     else if ( member->is< NodeType >() && member->get< NodeType >() == NodeType::Call )
     {
-        // Access contract's function member
+        // Access function member
         return codegen( ctx, member );
     }
 
@@ -365,6 +374,7 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
         {
             if ( node->get< NodeType >() == NodeType::VariableDefinition )
             {
+                // TODO: Support other member types
                 dataTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
             }
             else if ( node->get< NodeType >() == NodeType::FunctionDefinition )

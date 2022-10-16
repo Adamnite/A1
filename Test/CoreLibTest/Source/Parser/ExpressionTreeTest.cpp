@@ -59,7 +59,6 @@ namespace
 
     struct TestParameter
     {
-        std::string_view title;
         std::string_view expression;
 
         /**
@@ -74,26 +73,15 @@ namespace
         }
     };
 
-    struct ExpressionTreeTestFixture : ::testing::TestWithParam< TestParameter >
-    {
-        struct PrintTitle
-        {
-            template< typename ParamType >
-            std::string operator()( testing::TestParamInfo< ParamType > const & info ) const
-            {
-                auto parameter{ static_cast< TestParameter >( info.param ) };
-                return std::string{ parameter.title };
-            }
-        };
-    };
+    struct ExpressionTreeTestFixture : ::testing::TestWithParam< TestParameter > {};
 } // namespace
 
 TEST_P( ExpressionTreeTestFixture, parsing )
 {
-    auto const [ _, expression, expectedRoot ]{ GetParam() };
+    auto const [ expression, expectedRoot ]{ GetParam() };
 
     auto tokenIt   { A1::tokenize( A1::PushBackStream{ expression } ) };
-    auto actualRoot{ A1::parse( tokenIt, 0U, false ) };
+    auto actualRoot{ A1::parse( tokenIt ) };
 
     match( actualRoot.get(), expectedRoot.get() );
 }
@@ -106,21 +94,18 @@ INSTANTIATE_TEST_SUITE_P
     (
         TestParameter
         {
-            .title        = "Empty",
             .expression   = "",
             .expectedRoot = std::make_shared< Node >( A1::NodeType::ModuleDefinition )
         },
         TestParameter
         {
-            .title        = "CommentsOnly",
-            .expression   =
+            .expression =
                 "# First comment line\n"
                 "# Second comment line\n",
             .expectedRoot = std::make_shared< Node >( A1::NodeType::ModuleDefinition )
         },
         TestParameter
         {
-            .title        = "VariableAssignment",
             .expression   = "var = 5",
             .expectedRoot = std::make_shared< Node >
             (
@@ -141,7 +126,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "VariableAssignmentFromFunctionCall",
             .expression   = "var = get()",
             .expectedRoot = std::make_shared< Node >
             (
@@ -169,7 +153,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "FunctionCall",
             .expression   = "func(1.4, \"This is random string\", 5)",
             .expectedRoot = std::make_shared< Node >
             (
@@ -192,7 +175,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "MemberCall",
             .expression   = "var.member",
             .expectedRoot = std::make_shared< Node >
             (
@@ -213,7 +195,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "NestedFunctionCalls",
             .expression   = "print(func(1.4, \"This is random string\", 5))",
             .expectedRoot = std::make_shared< Node >
             (
@@ -244,7 +225,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "ArrayIndex",
             .expression   = "arr[1]",
             .expectedRoot = std::make_shared< Node >
             (
@@ -265,7 +245,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "ReturnValue",
             .expression   = "return 1",
             .expectedRoot = std::make_shared< Node >
             (
@@ -285,7 +264,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "ReturnCondition",
             .expression   = "return a < b",
             .expectedRoot = std::make_shared< Node >
             (
@@ -313,7 +291,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title        = "Pass",
             .expression   = "pass",
             .expectedRoot = std::make_shared< Node >
             (
@@ -326,7 +303,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "IfCondition",
             .expression =
                 "if var == 5:\n"
                 "    new_var = 1\n"
@@ -413,7 +389,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "IfElseCondition",
             .expression =
                 "if var == 5:\n"
                 "    new_var = 1\n"
@@ -490,7 +465,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "IfElifElseCondition",
             .expression =
                 "if var == 5:\n"
                 "    new_var = 1\n"
@@ -641,7 +615,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "WhileLoop",
             .expression =
                 "while i < 5:\n"
                 "    i = i + 1",
@@ -688,7 +661,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "WhileLoopMultilineBody",
             .expression =
                 "while i < 5:\n"
                 "    print(i)\n"
@@ -745,7 +717,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinitionWithoutParameters",
             .expression =
                 "def func() -> num:\n"
                 "    return 5",
@@ -776,7 +747,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinitionWithoutReturn",
             .expression =
                 "def func(param1: num, param2: num):\n"
                 "    var = param1 + param2",
@@ -833,7 +803,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinition",
             .expression =
                 "# Simple function definition\n"
                 "\n"
@@ -892,7 +861,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinitionMultilineBody",
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    let sum: num\n"
@@ -989,8 +957,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionWithoutInitialization",
-            .expression = "let var: num",
+            .expression   = "let var: num",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -1010,8 +977,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionWithoutType",
-            .expression = "let var = 5",
+            .expression   = "let var = 5",
             .expectedRoot = std::make_shared< Node >
             (
                 A1::NodeType::ModuleDefinition,
@@ -1031,7 +997,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionWithFunctionCallInitialization",
             .expression = "let var = get()",
             .expectedRoot = std::make_shared< Node >
             (
@@ -1059,7 +1024,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinition",
             .expression = "let var: num = 5",
             .expectedRoot = std::make_shared< Node >
             (
@@ -1081,7 +1045,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "VariableDefinitionAndReassignment",
             .expression =
                 "let var: num = 5\n"
                 "var = 10",
@@ -1114,7 +1077,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "EmptyContract",
             .expression =
                 "contract Example:\n"
                 "    pass\n"
@@ -1151,7 +1113,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "Contract",
             .expression =
                 "contract Example:\n"
                 "    let foo: num = 101\n"
@@ -1289,6 +1250,5 @@ INSTANTIATE_TEST_SUITE_P
                 )
             )
         }
-    ),
-    ExpressionTreeTestFixture::PrintTitle()
+    )
 );

@@ -21,9 +21,17 @@ namespace A1
 
 namespace
 {
+    void fill( std::stack< Node::Pointer > & dst, std::vector< Node::Pointer > src )
+    {
+        for ( std::size_t i{ 0U }; i < std::size( src ); i++ )
+        {
+            dst.push( std::move( src[ i ] ) );
+        }
+    }
+
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
-        if ( token.is< Eof >() || token.is< Indentation >() || token.is< Newline >() )
+        if ( token.is< Indentation >() || token.is< Newline >() || token.is< Eof >() )
         {
             return true;
         }
@@ -46,14 +54,14 @@ namespace
         return false;
     }
 
-    struct OperatorInfo
+    struct NodeInfo
     {
-        NodeType     type;
-        ErrorInfo    errorInfo;
-        std::size_t  operandsCount;
+        NodeType     type{ NodeType::Unknown };
+        ErrorInfo    errorInfo{};
+        std::size_t  operandsCount{ 0U };
     };
 
-    [[ nodiscard ]] OperatorInfo getOperatorInfo
+    [[ nodiscard ]] NodeInfo getNodeInfo
     (
         ReservedToken const token,
         ErrorInfo           errorInfo,
@@ -61,29 +69,27 @@ namespace
     )
     {
 
-#define MAP_TOKEN_TO_OPERATOR( token, operator )                    \
+#define MAP_TOKEN_TO_NODE( token, nodeType )                        \
     case ReservedToken::token:                                      \
         return                                                      \
         {                                                           \
-            .type          = NodeType::operator,                    \
+            .type          = NodeType::nodeType,                    \
             .errorInfo     = std::move( errorInfo ),                \
-            .operandsCount = getOperandsCount( NodeType::operator ) \
+            .operandsCount = getOperandsCount( NodeType::nodeType ) \
         }
-
-#define IGNORE_TOKEN( token ) case ReservedToken::token: break;
 
         switch ( token )
         {
-            MAP_TOKEN_TO_OPERATOR( OpParenthesisOpen, Call       );
-            MAP_TOKEN_TO_OPERATOR( OpSubscriptOpen  , Index      );
-            MAP_TOKEN_TO_OPERATOR( OpDot            , MemberCall );
+            MAP_TOKEN_TO_NODE( OpParenthesisOpen, Call       );
+            MAP_TOKEN_TO_NODE( OpSubscriptOpen  , Index      );
+            MAP_TOKEN_TO_NODE( OpDot            , MemberCall );
 
             // Arithmetic operators
-            MAP_TOKEN_TO_OPERATOR( OpDiv     , Division       );
-            MAP_TOKEN_TO_OPERATOR( OpExp     , Exponent       );
-            MAP_TOKEN_TO_OPERATOR( OpFloorDiv, FloorDivision  );
-            MAP_TOKEN_TO_OPERATOR( OpMod     , Modulus        );
-            MAP_TOKEN_TO_OPERATOR( OpMul     , Multiplication );
+            MAP_TOKEN_TO_NODE( OpDiv     , Division       );
+            MAP_TOKEN_TO_NODE( OpExp     , Exponent       );
+            MAP_TOKEN_TO_NODE( OpFloorDiv, FloorDivision  );
+            MAP_TOKEN_TO_NODE( OpMod     , Modulus        );
+            MAP_TOKEN_TO_NODE( OpMul     , Multiplication );
 
             /**
              * Reserved tokens '+' and '-' can be used for two operations.
@@ -126,55 +132,57 @@ namespace
                 };
 
             // Bitwise operators
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseAnd       , BitwiseAnd        );
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseLeftShift , BitwiseLeftShift  );
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseNot       , BitwiseNot        );
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseOr        , BitwiseOr         );
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseRightShift, BitwiseRightShift );
-            MAP_TOKEN_TO_OPERATOR( OpBitwiseXor       , BitwiseXor        );
+            MAP_TOKEN_TO_NODE( OpBitwiseAnd       , BitwiseAnd        );
+            MAP_TOKEN_TO_NODE( OpBitwiseLeftShift , BitwiseLeftShift  );
+            MAP_TOKEN_TO_NODE( OpBitwiseNot       , BitwiseNot        );
+            MAP_TOKEN_TO_NODE( OpBitwiseOr        , BitwiseOr         );
+            MAP_TOKEN_TO_NODE( OpBitwiseRightShift, BitwiseRightShift );
+            MAP_TOKEN_TO_NODE( OpBitwiseXor       , BitwiseXor        );
 
             // Logical operators
-            MAP_TOKEN_TO_OPERATOR( OpLogicalAnd, LogicalAnd );
-            MAP_TOKEN_TO_OPERATOR( OpLogicalNot, LogicalNot );
-            MAP_TOKEN_TO_OPERATOR( OpLogicalOr , LogicalOr  );
+            MAP_TOKEN_TO_NODE( OpLogicalAnd, LogicalAnd );
+            MAP_TOKEN_TO_NODE( OpLogicalNot, LogicalNot );
+            MAP_TOKEN_TO_NODE( OpLogicalOr , LogicalOr  );
 
             // Assignment operators
-            MAP_TOKEN_TO_OPERATOR( OpAssign        , Assign               );
-            MAP_TOKEN_TO_OPERATOR( OpAssignAdd     , AssignAddition       );
-            MAP_TOKEN_TO_OPERATOR( OpAssignDiv     , AssignDivision       );
-            MAP_TOKEN_TO_OPERATOR( OpAssignExp     , AssignExponent       );
-            MAP_TOKEN_TO_OPERATOR( OpAssignFloorDiv, AssignFloorDivision  );
-            MAP_TOKEN_TO_OPERATOR( OpAssignMod     , AssignModulus        );
-            MAP_TOKEN_TO_OPERATOR( OpAssignMul     , AssignMultiplication );
-            MAP_TOKEN_TO_OPERATOR( OpAssignSub     , AssignSubtraction    );
+            MAP_TOKEN_TO_NODE( OpAssign        , Assign               );
+            MAP_TOKEN_TO_NODE( OpAssignAdd     , AssignAddition       );
+            MAP_TOKEN_TO_NODE( OpAssignDiv     , AssignDivision       );
+            MAP_TOKEN_TO_NODE( OpAssignExp     , AssignExponent       );
+            MAP_TOKEN_TO_NODE( OpAssignFloorDiv, AssignFloorDivision  );
+            MAP_TOKEN_TO_NODE( OpAssignMod     , AssignModulus        );
+            MAP_TOKEN_TO_NODE( OpAssignMul     , AssignMultiplication );
+            MAP_TOKEN_TO_NODE( OpAssignSub     , AssignSubtraction    );
 
             // Bitwise assignment operators
-            MAP_TOKEN_TO_OPERATOR( OpAssignBitwiseAnd       , AssignBitwiseAnd        );
-            MAP_TOKEN_TO_OPERATOR( OpAssignBitwiseLeftShift , AssignBitwiseLeftShift  );
-            MAP_TOKEN_TO_OPERATOR( OpAssignBitwiseOr        , AssignBitwiseOr         );
-            MAP_TOKEN_TO_OPERATOR( OpAssignBitwiseRightShift, AssignBitwiseRightShift );
-            MAP_TOKEN_TO_OPERATOR( OpAssignBitwiseXor       , AssignBitwiseXor        );
+            MAP_TOKEN_TO_NODE( OpAssignBitwiseAnd       , AssignBitwiseAnd        );
+            MAP_TOKEN_TO_NODE( OpAssignBitwiseLeftShift , AssignBitwiseLeftShift  );
+            MAP_TOKEN_TO_NODE( OpAssignBitwiseOr        , AssignBitwiseOr         );
+            MAP_TOKEN_TO_NODE( OpAssignBitwiseRightShift, AssignBitwiseRightShift );
+            MAP_TOKEN_TO_NODE( OpAssignBitwiseXor       , AssignBitwiseXor        );
 
             // Comparison operators
-            MAP_TOKEN_TO_OPERATOR( OpEqual           , Equality         );
-            MAP_TOKEN_TO_OPERATOR( OpGreaterThan     , GreaterThan      );
-            MAP_TOKEN_TO_OPERATOR( OpGreaterThanEqual, GreaterThanEqual );
-            MAP_TOKEN_TO_OPERATOR( OpLessThan        , LessThan         );
-            MAP_TOKEN_TO_OPERATOR( OpLessThanEqual   , LessThanEqual    );
-            MAP_TOKEN_TO_OPERATOR( OpNotEqual        , Inequality       );
+            MAP_TOKEN_TO_NODE( OpEqual           , Equality         );
+            MAP_TOKEN_TO_NODE( OpGreaterThan     , GreaterThan      );
+            MAP_TOKEN_TO_NODE( OpGreaterThanEqual, GreaterThanEqual );
+            MAP_TOKEN_TO_NODE( OpLessThan        , LessThan         );
+            MAP_TOKEN_TO_NODE( OpLessThanEqual   , LessThanEqual    );
+            MAP_TOKEN_TO_NODE( OpNotEqual        , Inequality       );
 
             // Statements
-            MAP_TOKEN_TO_OPERATOR( KwIf    , StatementIf     );
-            MAP_TOKEN_TO_OPERATOR( KwElif  , StatementElif   );
-            MAP_TOKEN_TO_OPERATOR( KwElse  , StatementElse   );
-            MAP_TOKEN_TO_OPERATOR( KwWhile , StatementWhile  );
-            MAP_TOKEN_TO_OPERATOR( KwPass  , StatementPass   );
-            MAP_TOKEN_TO_OPERATOR( KwReturn, StatementReturn );
+            MAP_TOKEN_TO_NODE( KwIf    , StatementIf     );
+            MAP_TOKEN_TO_NODE( KwElif  , StatementElif   );
+            MAP_TOKEN_TO_NODE( KwElse  , StatementElse   );
+            MAP_TOKEN_TO_NODE( KwWhile , StatementWhile  );
+            MAP_TOKEN_TO_NODE( KwPass  , StatementPass   );
+            MAP_TOKEN_TO_NODE( KwReturn, StatementReturn );
 
             // Definitions
-            MAP_TOKEN_TO_OPERATOR( KwDef     , FunctionDefinition );
-            MAP_TOKEN_TO_OPERATOR( KwLet     , VariableDefinition );
-            MAP_TOKEN_TO_OPERATOR( KwContract, ContractDefinition );
+            MAP_TOKEN_TO_NODE( KwDef     , FunctionDefinition );
+            MAP_TOKEN_TO_NODE( KwLet     , VariableDefinition );
+            MAP_TOKEN_TO_NODE( KwContract, ContractDefinition );
+
+#define IGNORE_TOKEN( token ) case ReservedToken::token: break;
 
             // Ignored tokens
             IGNORE_TOKEN( Unknown            );
@@ -185,18 +193,18 @@ namespace
             IGNORE_TOKEN( KwNumber           );
             IGNORE_TOKEN( KwString           );
 
+#undef IGNORE_TOKEN
+
             default:
                 throw std::runtime_error( fmt::format( "Unknown token: {}", toStringView( token ) ) );
         }
 
         return {};
 
-#undef IGNORE_TOKEN
-
-#undef MAP_TOKEN_TO_OPERATOR
-
+#undef MAP_TOKEN_TO_NODE
     }
 
+    [[ nodiscard ]]
     Node::Pointer parseOperand( TokenIterator const & tokenIt )
     {
         if ( tokenIt->is< Number >() )
@@ -227,11 +235,11 @@ namespace
         throw std::runtime_error( "Syntax error - unexpected operand" );
     }
 
-    void popOneOperator
+    void popOperator
     (
-        std::stack< Node::Pointer >       & operands,
-        std::stack< OperatorInfo  >       & operators,
-        ErrorInfo                           errorInfo
+        std::stack< Node::Pointer > & operands,
+        std::stack< NodeInfo      > & operators,
+        ErrorInfo                     errorInfo
     )
     {
         auto const & lastOperator{ operators.top() };
@@ -305,318 +313,158 @@ namespace
             throw std::runtime_error( "Syntax error - missing newline" );
         }
     }
-} // namespace
 
-Node::Pointer parse
-(
-    TokenIterator       & tokenIt,
-    std::size_t   const   indentationLevelCount,
-    bool          const   alreadyInModule
-)
-{
-    std::stack< Node::Pointer > operands;
-    std::stack< OperatorInfo  > operators;
+    Node::Pointer parseImpl
+    (
+        TokenIterator       & tokenIt,
+        std::size_t   const   indentationLevel = 0U,
+        bool          const   alreadyInModule  = true
+    );
 
-    auto expectingOperand{ true };
-
-    std::size_t indentationIdx{ 0U };
-    while ( indentationIdx != indentationLevelCount )
+    [[ nodiscard ]]
+    std::vector< Node::Pointer > parseBody( TokenIterator & tokenIt, std::size_t const indentationLevel )
     {
-        if ( tokenIt->is< Indentation >() )
-        {
-            ++tokenIt;
-            indentationIdx++;
-        }
-        else
-        {
-            indentationIdx = indentationLevelCount;
-            break;
-        }
-    }
+        std::vector< Node::Pointer > operands;
 
-    if ( indentationLevelCount == 0U && !alreadyInModule )
-    {
-        operators.push
-        (
-            OperatorInfo
+        while ( tokenIt->is_not< Eof >() )
+        {
+            // parse body statement
+            operands.push_back( parseImpl( tokenIt, indentationLevel ) );
+
+            auto prevTokenIt{ tokenIt };
+
+            auto currentIndentationLevel{ 0U };
+            while ( currentIndentationLevel != indentationLevel )
             {
-                .type = NodeType::ModuleDefinition,
-                .errorInfo = tokenIt->errorInfo(),
-                .operandsCount = 0U
-            }
-        );
-    }
-
-    while ( tokenIt->is< Newline >() || tokenIt->is< Eof >() )
-    {
-        // skip empty lines or comment lines
-        ++tokenIt;
-        if ( tokenIt->is< Eof >() )
-        {
-            expectingOperand = false;
-            break;
-        }
-    }
-
-    for ( ; !isEndOfExpression( *tokenIt ); ++tokenIt )
-    {
-        if ( tokenIt->is< ReservedToken >() )
-        {
-            auto const isTokenPrefix{ expectingOperand };
-            auto       operatorInfo
-            {
-                getOperatorInfo
-                (
-                    tokenIt->get< ReservedToken >(),
-                    tokenIt->errorInfo(),
-                    isTokenPrefix
-                )
-            };
-
-            if ( operatorInfo.type == NodeType::Unknown )
-            {
-                if
-                (
-                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
-                    reservedToken == ReservedToken::KwNumber ||
-                    reservedToken == ReservedToken::KwString
-                )
+                if ( tokenIt->is< Indentation >() )
                 {
-                    if ( !expectingOperand )
-                    {
-                        throw std::runtime_error( "Syntax error" );
-                    }
-
-                    operands.push( parseOperand( tokenIt ) );
-                    expectingOperand = false;
-
                     ++tokenIt;
-                    break;
+                    currentIndentationLevel++;
                 }
-
-                continue;
-            }
-
-            if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, operatorInfo.type ) )
-            {
-                popOneOperator( operands, operators, tokenIt->errorInfo() );
-            }
-
-            if ( operatorInfo.type == NodeType::Call )
-            {
-                skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
-
-                if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                else if ( tokenIt->is< Newline >() )
                 {
-                    while ( true )
-                    {
-                        operands.push( parse( tokenIt ) );
-
-                        ++operatorInfo.operandsCount;
-
-                        if ( tokenIt->is< ReservedToken >() )
-                        {
-                            auto const reservedToken{ tokenIt->get< ReservedToken >() };
-                            if ( reservedToken == ReservedToken::OpParenthesisClose )
-                            {
-                                break;
-                            }
-                            else if ( reservedToken == ReservedToken::OpComma )
-                            {
-                                ++tokenIt;
-                            }
-                            else
-                            {
-                                throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
-                            }
-                        }
-                    }
-                }
-            }
-            else if ( operatorInfo.type == NodeType::Index )
-            {
-                skipOneOfReservedTokens< ReservedToken::OpSubscriptOpen >( tokenIt );
-                operands.push( parse( tokenIt ) );
-                skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
-            }
-            else if ( operatorInfo.type == NodeType::StatementIf || operatorInfo.type == NodeType::StatementElif )
-            {
-                skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse condition
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                skipNewline( tokenIt );
-
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
-
-                auto prevTokenIt{ tokenIt };
-                if ( tokenIt->is< Newline >() ) { ++tokenIt; }
-
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElif )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse elif
-                    operatorInfo.operandsCount++;
-                }
-                else if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::KwElse )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse else
-                    operatorInfo.operandsCount++;
+                    skipNewline( tokenIt );
                 }
                 else
                 {
-                    tokenIt = prevTokenIt;
+                    break;
                 }
             }
-            else if ( operatorInfo.type == NodeType::StatementElse )
+
+            if ( currentIndentationLevel < indentationLevel )
             {
-                skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElse >( tokenIt );
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                skipNewline( tokenIt );
+                tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                break;
+            }
+        }
 
-                indentationIdx++;
+        return operands;
+    }
 
-                while ( tokenIt->is_not< Eof >() )
+    Node::Pointer parseImpl
+    (
+        TokenIterator       & tokenIt,
+        std::size_t   const   indentationLevel,
+        bool          const   alreadyInModule
+    )
+    {
+        std::stack< Node::Pointer > operands;
+        std::stack< NodeInfo      > operators;
+
+        auto expectingOperand{ true };
+
+        std::size_t currentIndentationLevel{ 0U };
+        while ( currentIndentationLevel != indentationLevel )
+        {
+            if ( tokenIt->is< Indentation >() )
+            {
+                ++tokenIt;
+                currentIndentationLevel++;
+            }
+            else
+            {
+                currentIndentationLevel = indentationLevel;
+                break;
+            }
+        }
+
+        if ( !alreadyInModule )
+        {
+            operators.push
+            (
+                NodeInfo
                 {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
+                    .type      = NodeType::ModuleDefinition,
+                    .errorInfo = tokenIt->errorInfo()
+                }
+            );
+        }
 
-                    auto prevTokenIt = tokenIt;
+        while ( tokenIt->is< Newline >() || tokenIt->is< Eof >() )
+        {
+            // skip empty lines or comment lines
+            ++tokenIt;
+            if ( tokenIt->is< Eof >() )
+            {
+                expectingOperand = false;
+                break;
+            }
+        }
 
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
+        for ( ; !isEndOfExpression( *tokenIt ); ++tokenIt )
+        {
+            if ( tokenIt->is< ReservedToken >() )
+            {
+                auto nodeInfo
+                {
+                    getNodeInfo
+                    (
+                        tokenIt->get< ReservedToken >(),
+                        tokenIt->errorInfo(),
+                        expectingOperand
+                    )
+                };
+
+                if ( nodeInfo.type == NodeType::Unknown )
+                {
+                    if
+                    (
+                        auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                        reservedToken == ReservedToken::KwNumber ||
+                        reservedToken == ReservedToken::KwString
+                    )
                     {
-                        if ( tokenIt->is< Indentation >() )
+                        if ( !expectingOperand )
                         {
-                            ++tokenIt;
-                            currentIndentationIdx++;
+                            throw std::runtime_error( "Syntax error" );
                         }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
 
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
+                        operands.push( parseOperand( tokenIt ) );
+                        expectingOperand = false;
+
+                        ++tokenIt;
                         break;
                     }
+
+                    continue;
                 }
-            }
-            else if ( operatorInfo.type == NodeType::StatementWhile )
-            {
-                skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse condition
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                skipNewline( tokenIt );
 
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
+                if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, nodeInfo.type ) )
                 {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
+                    popOperator( operands, operators, tokenIt->errorInfo() );
                 }
-            }
-            else if ( operatorInfo.type == NodeType::FunctionDefinition )
-            {
-                skipOneOfReservedTokens< ReservedToken::KwDef >( tokenIt );
 
-                operands.push( parseOperand( tokenIt ) ); // parse function name
-                tokenIt++;
-
+                if ( nodeInfo.type == NodeType::Call )
                 {
-                    // we are parsing function parameters
-
                     skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
 
                     if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
                         while ( true )
                         {
-                            OperatorInfo const parameterDefinition
-                            {
-                                .type          = NodeType::FunctionParameterDefinition,
-                                .errorInfo     = tokenIt->errorInfo(),
-                                .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
-                            };
+                            operands.push( parseImpl( tokenIt ) );
 
-                            operands.push( parse( tokenIt ) ); // parse parameter name
-                            skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                            operands.push( parse( tokenIt ) ); // parse parameter type
-
-                            operators.push( parameterDefinition );
-
-                            while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
-                            {
-                                popOneOperator( operands, operators, tokenIt->errorInfo());
-                            }
-
-                            operatorInfo.operandsCount++;
+                            ++nodeInfo.operandsCount;
 
                             if ( tokenIt->is< ReservedToken >() )
                             {
@@ -636,176 +484,229 @@ Node::Pointer parse
                             }
                         }
                     }
-                    skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
                 }
-
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpArrow )
+                else if ( nodeInfo.type == NodeType::Index )
                 {
+                    skipOneOfReservedTokens< ReservedToken::OpSubscriptOpen >( tokenIt );
+                    operands.push( parseImpl( tokenIt ) );
+                    skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
+                }
+                else if ( nodeInfo.type == NodeType::StatementIf || nodeInfo.type == NodeType::StatementElif )
+                {
+                    skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
+                    operands.push( parseImpl( tokenIt ) ); // parse condition
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipNewline( tokenIt );
+
+                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    fill( operands, std::move( bodyOperands ) );
+
+                    auto prevTokenIt{ tokenIt };
+                    if ( tokenIt->is< Newline >() ) { ++tokenIt; }
+
+                    if
+                    (
+                        tokenIt->is< ReservedToken >() &&
+                        (
+                            tokenIt->get< ReservedToken >() == ReservedToken::KwElif ||
+                            tokenIt->get< ReservedToken >() == ReservedToken::KwElse
+                        )
+                    )
+                    {
+                        // Parse elif / else expression
+                        operands.push( parseImpl( tokenIt, currentIndentationLevel ) );
+                        nodeInfo.operandsCount++;
+                    }
+                    else
+                    {
+                        tokenIt = prevTokenIt;
+                    }
+                }
+                else if ( nodeInfo.type == NodeType::StatementElse )
+                {
+                    skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipNewline( tokenIt );
+
+                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    fill( operands, std::move( bodyOperands ) );
+                }
+                else if ( nodeInfo.type == NodeType::StatementWhile )
+                {
+                    skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
+                    operands.push( parseImpl( tokenIt ) ); // parse condition
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipNewline( tokenIt );
+
+                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    fill( operands, std::move( bodyOperands ) );
+                }
+                else if ( nodeInfo.type == NodeType::FunctionDefinition )
+                {
+                    skipOneOfReservedTokens< ReservedToken::KwDef >( tokenIt );
+
+                    operands.push( parseOperand( tokenIt ) ); // parse function name
+                    tokenIt++;
+
+                    {
+                        // we are parsing function parameters
+
+                        skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
+
+                        if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                        {
+                            while ( true )
+                            {
+                                NodeInfo const parameterDefinition
+                                {
+                                    .type          = NodeType::FunctionParameterDefinition,
+                                    .errorInfo     = tokenIt->errorInfo(),
+                                    .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
+                                };
+
+                                operands.push( parseImpl( tokenIt ) ); // parse parameter name
+                                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                                operands.push( parseImpl( tokenIt ) ); // parse parameter type
+
+                                operators.push( parameterDefinition );
+
+                                while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
+                                {
+                                    popOperator( operands, operators, tokenIt->errorInfo());
+                                }
+
+                                nodeInfo.operandsCount++;
+
+                                if ( tokenIt->is< ReservedToken >() )
+                                {
+                                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                    if ( reservedToken == ReservedToken::OpParenthesisClose )
+                                    {
+                                        break;
+                                    }
+                                    else if ( reservedToken == ReservedToken::OpComma )
+                                    {
+                                        ++tokenIt;
+                                    }
+                                    else
+                                    {
+                                        throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                    }
+                                }
+                            }
+                        }
+                        skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
+                    }
+
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpArrow )
+                    {
+                        ++tokenIt;
+                        operands.push( parseImpl( tokenIt ) ); // parse type
+                        nodeInfo.operandsCount++;
+                    }
+
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipNewline( tokenIt );
+
+                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    fill( operands, std::move( bodyOperands ) );
+                }
+                else if ( nodeInfo.type == NodeType::VariableDefinition )
+                {
+                    skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
+                    operands.push( parseOperand( tokenIt ) ); // parse variable name
                     ++tokenIt;
-                    operands.push( parse( tokenIt ) ); // parse type
-                    operatorInfo.operandsCount++;
+
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpColon )
+                    {
+                        // there is type declaration in this variable definition
+                        ++tokenIt;
+                        operands.push( parseOperand( tokenIt ) ); // parse type
+                        nodeInfo.operandsCount++;
+                        ++tokenIt;
+                    }
+
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpAssign )
+                    {
+                        // there is initialization in this variable definition
+                        ++tokenIt;
+                        operands.push( parseImpl( tokenIt ) );
+                        nodeInfo.operandsCount++;
+                    }
                 }
-
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                skipNewline( tokenIt );
-
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
+                else if ( nodeInfo.type == NodeType::ContractDefinition )
                 {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse function body
-                    operatorInfo.operandsCount++;
+                    skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
+                    operands.push( parseImpl( tokenIt ) ); // parse contract name
+                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipNewline( tokenIt );
 
-                    auto prevTokenIt = tokenIt;
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
+                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    fill( operands, std::move( bodyOperands ) );
                 }
+
+                if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+                {
+                    operators.top().operandsCount++;
+                }
+
+                operators.push( nodeInfo );
+
+                expectingOperand = nodeInfo.operandsCount != 0;
             }
-            else if ( operatorInfo.type == NodeType::VariableDefinition )
+            else
             {
-                skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
-                operands.push( parseOperand( tokenIt ) ); // parse variable name
-                ++tokenIt;
-
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpColon )
+                if ( !expectingOperand )
                 {
-                    // there is type declaration in this variable definition
-                    ++tokenIt;
-                    operatorInfo.operandsCount++;
-                    operands.push( parseOperand( tokenIt ) ); // parse type
-                    ++tokenIt;
+                    throw std::runtime_error( "Syntax error" );
                 }
 
-                if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpAssign )
-                {
-                    // there is initialization in this variable definition
-                    ++tokenIt;
-                    operatorInfo.operandsCount++;
-
-                    // TODO: Call parse here instead, in order to be able to parse more complex expressions
-                    operands.push( parse( tokenIt ) );
-                }
-            }
-            else if ( operatorInfo.type == NodeType::ContractDefinition )
-            {
-                skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
-                operands.push( parse( tokenIt ) ); // parse contract name
-
-                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
-                skipNewline( tokenIt );
-
-                indentationIdx++;
-
-                while ( tokenIt->is_not< Eof >() )
-                {
-                    operands.push( parse( tokenIt, indentationIdx ) ); // parse contract body
-                    operatorInfo.operandsCount++;
-
-                    auto prevTokenIt = tokenIt;
-                    ++tokenIt;
-
-
-                    std::size_t currentIndentationIdx{ 0U };
-                    while ( currentIndentationIdx != indentationIdx )
-                    {
-                        if ( tokenIt->is< Indentation >() )
-                        {
-                            ++tokenIt;
-                            currentIndentationIdx++;
-                        }
-                        else if ( tokenIt->is< Newline >() )
-                        {
-                            skipNewline( tokenIt );
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if ( currentIndentationIdx < indentationIdx )
-                    {
-                        tokenIt = prevTokenIt; // TODO: Implement this a bit better
-                        indentationIdx = currentIndentationIdx;
-                        break;
-                    }
-                }
+                operands.push( parseOperand( tokenIt ) );
+                expectingOperand = false;
             }
 
-            if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+            if ( tokenIt->is< Newline >() )
             {
+                break;
+            }
+        }
+
+        if ( expectingOperand && operands.empty() )
+        {
+            throw std::runtime_error( "Syntax error - expecting an operand" );
+        }
+
+        while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
+        {
+            popOperator( operands, operators, tokenIt->errorInfo());
+        }
+
+        if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+        {
+            while ( tokenIt->is_not< Eof >() )
+            {
+                operands.push( parseImpl( tokenIt ) );
                 operators.top().operandsCount++;
             }
 
-            operators.push( operatorInfo );
-
-            expectingOperand = operatorInfo.operandsCount != 0;
-        }
-        else
-        {
-            if ( !expectingOperand )
+            while ( !operators.empty() )
             {
-                throw std::runtime_error( "Syntax error" );
+                popOperator( operands, operators, tokenIt->errorInfo());
             }
-
-            operands.push( parseOperand( tokenIt ) );
-            expectingOperand = false;
         }
 
-        if ( tokenIt->is< Newline >() )
-        {
-            break;
-        }
+        return operands.empty() ? nullptr : std::move( operands.top() );
     }
+} // namespace
 
-    if ( expectingOperand && operands.empty() )
-    {
-        throw std::runtime_error( "Syntax error - expecting an operand" );
-    }
-
-    while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
-    {
-        popOneOperator( operands, operators, tokenIt->errorInfo());
-    }
-
-    if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
-    {
-        while ( tokenIt->is_not< Eof >() )
-        {
-            operands.push( parse( tokenIt, 0, true ) );
-            operators.top().operandsCount++;
-        }
-
-        while ( !operators.empty() )
-        {
-            popOneOperator( operands, operators, tokenIt->errorInfo());
-        }
-    }
-
-    return operands.empty() ? nullptr : std::move( operands.top() );
+Node::Pointer parse( TokenIterator & tokenIt )
+{
+    return parseImpl( tokenIt, 0U, false );
 }
 
 } // namespace A1

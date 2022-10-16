@@ -13,11 +13,6 @@
 namespace A1
 {
 
-[[ nodiscard ]] Node::Pointer parse
-(
-    TokenIterator       & tokenIt,
-    std::size_t   const   indentationLevelCount = 0U,
-    bool          const   alreadyInModule       = true
-);
+[[ nodiscard ]] Node::Pointer parse( TokenIterator & tokenIt );
 
 } // namespace A1

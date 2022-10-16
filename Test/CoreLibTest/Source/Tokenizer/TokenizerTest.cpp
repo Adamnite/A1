@@ -13,7 +13,6 @@ namespace
 {
     struct TestParameter
     {
-        std::string_view title;
         std::string_view expression;
 
         std::vector< A1::Token::ValueType > expectedTokens;
@@ -24,23 +23,12 @@ namespace
         }
     };
 
-    struct TokenizerTestFixture : ::testing::TestWithParam< TestParameter >
-    {
-        struct PrintTitle
-        {
-            template< typename ParamType >
-            std::string operator()( testing::TestParamInfo< ParamType > const & info ) const
-            {
-                auto parameter{ static_cast< TestParameter >( info.param ) };
-                return std::string{ parameter.title };
-            }
-        };
-    };
+    struct TokenizerTestFixture : ::testing::TestWithParam< TestParameter > {};
 } // namespace
 
 TEST_P( TokenizerTestFixture, tokenization )
 {
-    auto const [ _, expression, expectedTokens ]{ GetParam() };
+    auto const [ expression, expectedTokens ]{ GetParam() };
 
     std::size_t tokenIndex{ 0U };
 
@@ -63,7 +51,6 @@ INSTANTIATE_TEST_SUITE_P
     (
         TestParameter
         {
-            .title          = "VariableAssignment",
             .expression     = "var = 5",
             .expectedTokens =
             {
@@ -75,7 +62,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "IfCondition",
             .expression     = "if var == \"foo\":",
             .expectedTokens =
             {
@@ -89,7 +75,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "ReturnConditionWithComment",
             .expression     = "return 5 < 2 # comment",
             .expectedTokens =
             {
@@ -103,7 +88,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "FunctionCall",
             .expression     = "fun(1, 2, 3)",
             .expectedTokens =
             {
@@ -121,7 +105,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "WhileCondition",
             .expression     = "while var1 >= var2 && var3 == \"foo\":",
             .expectedTokens =
             {
@@ -139,7 +122,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "ForLoop",
             .expression =
                 "for key, value in items:\n"
                 "    if key in foo_dict:\n"
@@ -193,7 +175,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "ControlFlowSpacesIndentation",
             .expression =
                 "if var == 5:\n"
                 "    pass\n"
@@ -229,7 +210,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "ControlFlowTabsIndentation",
             .expression =
                 "if var == 5:\n"
                 "\tpass\n"
@@ -265,7 +245,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "VariableDefinition",
             .expression     = "let var: num = 0",
             .expectedTokens =
             {
@@ -280,7 +259,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "VariableDefinitionWithoutInitialization",
             .expression     = "let var: str",
             .expectedTokens =
             {
@@ -293,7 +271,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title          = "VariableDefinitionWithoutType",
             .expression     = "let var = 0",
             .expectedTokens =
             {
@@ -306,7 +283,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "FunctionDefinition",
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
@@ -340,7 +316,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title      = "ContractDefinition",
             .expression =
                 "contract HelloWorld:\n"
                 "    def get() -> str:\n"
@@ -398,6 +373,5 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Eof{}
             }
         }
-    ),
-    TokenizerTestFixture::PrintTitle()
+    )
 );

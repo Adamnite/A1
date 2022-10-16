@@ -49,16 +49,10 @@ namespace
 
     struct TestParameter
     {
-        std::string_view title;
-
-        /**
-         * A1 programming language source code.
-         */
+        /** A1 programming language source code. */
         std::string_view input;
 
-        /**
-         * Output of the compiled executable file.
-         */
+        /** Output of the compiled executable file. */
         std::string_view expectedOutput;
 
         friend std::ostream & operator<<( std::ostream & os, TestParameter const & param )
@@ -67,18 +61,7 @@ namespace
         }
     };
 
-    struct LLVMCompilerTestFixture : ::testing::TestWithParam< TestParameter >
-    {
-        struct PrintTitle
-        {
-            template< typename ParamType >
-            std::string operator()( testing::TestParamInfo< ParamType > const & info ) const
-            {
-                auto parameter{ static_cast< TestParameter >( info.param ) };
-                return std::string{ parameter.title };
-            }
-        };
-    };
+    struct LLVMCompilerTestFixture : ::testing::TestWithParam< TestParameter > {};
 } // namespace
 
 TEST_P( LLVMCompilerTestFixture, compilation )
@@ -86,10 +69,10 @@ TEST_P( LLVMCompilerTestFixture, compilation )
     using namespace std::chrono_literals;
     static constexpr auto timeout{ 2s };
 
-    auto const [ _, input, expectedOutput ]{ GetParam() };
+    auto const [ input, expectedOutput ]{ GetParam() };
 
-    auto tokenIt{ A1::tokenize( A1::PushBackStream{ input } ) };
-    auto rootNode{ A1::parse( tokenIt, 0, false ) };
+    auto tokenIt { A1::tokenize( A1::PushBackStream{ input } ) };
+    auto rootNode{ A1::parse( tokenIt ) };
 
     static constexpr auto executableFilename{ "llvm_compiler_test" };
     A1::Compiler::Settings settings{ .executableFilename = executableFilename };
@@ -129,13 +112,11 @@ INSTANTIATE_TEST_SUITE_P
     (
         TestParameter
         {
-            .title = "Empty",
             .input = "",
             .expectedOutput = ""
         },
         TestParameter
         {
-            .title = "CommentsOnly",
             .input =
                 "# First comment line\n"
                 "# Second comment line\n",
@@ -143,7 +124,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "Print",
             .input =
                 "print(45)\n"
                 "print(\"Hello, world!\")",
@@ -153,7 +133,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "IfCondition",
             .input =
                 "let i: num = 0\n"
                 "if i == 0:\n"
@@ -169,7 +148,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "IfElseCondition",
             .input =
                 "let i: num = 0\n"
                 "let j: num = 4\n"
@@ -185,7 +163,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "IfElifElseCondition",
             .input =
                 "let i: num = 0\n"
                 "let j: num = 4\n"
@@ -210,7 +187,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "WhileLoop",
             .input =
                 "let i: num = 0\n"
                 "while i < 4:\n"
@@ -224,7 +200,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "VariableDefinitionWithoutInitialization",
             .input =
                 "let s: str\n"
                 "let n: num\n"
@@ -236,7 +211,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "VariableDefinitionWithoutType",
             .input =
                 "let s = \"Hello, world!\"\n"
                 "let n = 45\n"
@@ -248,7 +222,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "VariableDefinition",
             .input =
                 "let s: str = \"Hello, world!\"\n"
                 "let n: num = 45\n"
@@ -260,7 +233,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "VariableAssignment",
             .input =
                 "let s: str = \"Hello, world!\"\n"
                 "let n: num = 45\n"
@@ -274,7 +246,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "FunctionWithoutReturnStatement",
             .input =
                 "def func():\n"
                 "    print(\"Hello, from inside!\")\n"
@@ -285,7 +256,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "FunctionWithoutParameters",
             .input =
                 "def func() -> num:\n"
                 "    return 45\n"
@@ -296,7 +266,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "Function",
             .input =
                 "def sum(a: num, b: num) -> num:\n"
                 "    print(\"Summing...\")\n"
@@ -310,7 +279,6 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .title = "Contract",
             .input =
                 "contract HelloWorld:\n"
                 "    def get() -> str:\n"
@@ -320,7 +288,25 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.get())",
             .expectedOutput =
                 "Hello, world!"
+        },
+        TestParameter
+        {
+            .input =
+                "contract Addition:\n"
+                "    let sum: num = 0\n"
+                "\n"
+                "    def add(x: num, y: num) -> num:\n"
+                "        sum =  x + y\n"
+                "        return sum\n"
+                "\n"
+                "let var = Addition()\n"
+                "print(var.sum)\n"
+                "print(var.add(1, 2))\n"
+                "print(var.sum)",
+            .expectedOutput =
+                "0.000000\n"
+                "3.000000\n"
+                "3.000000"
         }
-    ),
-    LLVMCompilerTestFixture::PrintTitle()
+    )
 );

@@ -126,18 +126,14 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
 {
     switch ( type )
     {
-        /**
-         * The number of arguments in a function call is variable. Thus,
-         * it is detected by the parser itself. The only operand that is
-         * certain to exist is the function name identifier.
-         */
-        case NodeType::Call:
-            return 1U;
+        case NodeType::StatementPass:
+            return 0U;
 
         case NodeType::UnaryPlus:
         case NodeType::UnaryMinus:
         case NodeType::BitwiseNot:
         case NodeType::LogicalNot:
+        case NodeType::StatementReturn:
             return 1U;
 
         case NodeType::Index:
@@ -178,70 +174,32 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::AssignBitwiseAnd:
         case NodeType::AssignBitwiseOr:
         case NodeType::AssignBitwiseXor:
-            return 2U;
-
-        /**
-         * Since the number of statements in a module is variable,
-         * it is detected by the parser itself.
-         */
-        case NodeType::ModuleDefinition:
-            return 0U;
-
-        /**
-         * Since the number of statements in a smart contract body is variable,
-         * it is detected by the parser itself. The only operand that is
-         * certain to exist is the smart contract name identifier.
-         */
-        case NodeType::ContractDefinition:
-            return 1U;
-
-        /**
-         * Variable definition consists of a name identifier and, at least, either
-         * one of the following two: type declaration and initialization
-         */
-        case NodeType::VariableDefinition:
-            return 1U;
-
-        /**
-         * Since the number of parameters and statements in a function body is variable,
-         * it is detected by the parser itself. Also, specifying return type is required
-         * only if function returns a value. Therefore, the only operand that is
-         * certain to exist is the function name identifier.
-         */
-        case NodeType::FunctionDefinition:
-            return 1U;
-
+        case NodeType::MemberCall:
         case NodeType::FunctionParameterDefinition:
             return 2U;
 
         /**
-         * Since the number of statements in an if body is variable,
-         * it is detected by the parser itself. Therefore, the only operand that is
-         * certain to exist is the if condition.
+         * Since the number of statements in a body of the following
+         * constructs is variable, it is detected by the parser itself.
          */
-        case NodeType::StatementIf:
-        case NodeType::StatementElif:
-            return 1U;
-
         case NodeType::StatementElse:
+        case NodeType::ModuleDefinition:
             return 0U;
 
         /**
-         * Since the number of statements in a while body is variable,
-         * it is detected by the parser itself. Therefore, the only operand that is
-         * certain to exist is the while loop condition.
+         * Since the number of operands of the following constructs is
+         * variable, it is detected by the parser itself. Only one operand is
+         * required to exist, e.g. branch condition and function, smart contract
+         * or variable name identifier.
          */
+        case NodeType::Call:
+        case NodeType::StatementIf:
+        case NodeType::StatementElif:
         case NodeType::StatementWhile:
+        case NodeType::ContractDefinition:
+        case NodeType::FunctionDefinition:
+        case NodeType::VariableDefinition:
             return 1U;
-
-        case NodeType::StatementPass:
-            return 0U;
-
-        case NodeType::StatementReturn:
-            return 1U;
-
-        case NodeType::MemberCall:
-            return 2U;
 
         case NodeType::Unknown:
         case NodeType::Count:
