@@ -13,12 +13,11 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <future>
 #include <string>
 
 namespace
 {
-    std::string run( std::string_view const cmd )
+    [[ nodiscard ]] std::string run( std::string_view const cmd )
     {
         std::array< char, 1048576U > buffer;
         std::string result;
@@ -66,9 +65,6 @@ namespace
 
 TEST_P( LLVMCompilerTestFixture, compilation )
 {
-    using namespace std::chrono_literals;
-    static constexpr auto timeout{ 2s };
-
     auto const [ input, expectedOutput ]{ GetParam() };
 
     auto tokenIt { A1::tokenize( A1::PushBackStream{ input } ) };
@@ -80,27 +76,16 @@ TEST_P( LLVMCompilerTestFixture, compilation )
     ASSERT_TRUE( A1::LLVM::compile( std::move( settings ), rootNode ) )
         << "Compilation should have succeded";
 
-    static auto const runCommand{ fmt::format( "./{}", executableFilename ) };
-    auto result{ std::async ( std::launch::async, run, runCommand ) };
-    auto const status{ result.wait_for( timeout ) };
+    static auto const cmd{ fmt::format( "./{}", executableFilename ) };
 
-    if ( status == std::future_status::timeout )
+    auto actualOutput{ run( cmd ) };
+    if ( actualOutput.ends_with( '\n' ) )
     {
-        std::remove( executableFilename );
-        ASSERT_FALSE( true ) << "Timeout has exceeded";
-    }
-    else if ( status == std::future_status::ready )
-    {
-        auto actualOutput{ result.get() };
-        if ( actualOutput.ends_with( '\n' ) )
-        {
-            // trim last '\n' character
-            actualOutput.pop_back();
-        }
-
-        EXPECT_EQ( actualOutput, expectedOutput );
+        // trim last '\n' character
+        actualOutput.pop_back();
     }
 
+    EXPECT_EQ( actualOutput, expectedOutput );
     std::remove( executableFilename );
 }
 
