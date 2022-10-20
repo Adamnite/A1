@@ -5,7 +5,10 @@
  * This code is open-sourced under the MIT license.
  */
 
+#include "AST/ASTPrinter.hpp"
+
 #include <CoreLib/AST/AST.hpp>
+#include <CoreLib/Module.hpp>
 #include <CoreLib/Compiler/Compiler.hpp>
 #include <CoreLib/Module.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
@@ -48,6 +51,14 @@ bool load( Compiler::Settings settings, std::filesystem::path const inputFile )
     {
         auto tokenIt { tokenize( PushBackStream{ f.get() } ) };
         auto rootNode{ AST::parse( tokenIt ) };
+
+        if ( settings.outputAST )
+        {
+            std::printf( "\nAST:\n" );
+            AST::print( rootNode );
+            std::printf( "\n" );
+        }
+
         return compile( std::move( settings ), rootNode );
     }
     else
