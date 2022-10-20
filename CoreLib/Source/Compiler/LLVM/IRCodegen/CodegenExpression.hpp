@@ -7,9 +7,11 @@
 
 #pragma once
 
-#include "Context.hpp"
+#include "../Context.hpp"
+#include "CodegenVisitor.hpp"
 
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/Utils/Macros.hpp>
 
 #if defined (__clang__)
 #   pragma clang diagnostic push
@@ -32,10 +34,8 @@
 #include <string_view>
 #include <span>
 
-namespace A1::LLVM
+namespace A1::LLVM::IR
 {
-
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node );
 
 template< typename ... T >
 using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
@@ -48,7 +48,15 @@ llvm::Value * codegenUnary
     IRBuilderUnaryClbk< T ... >      const   clbk,
     std::span< Node::Pointer const > const   nodes,
     std::string_view                 const   opName
-);
+)
+{
+    ASSERT( std::size( nodes ) == 1U );
+    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
+
+    if ( lhs == nullptr ) { return nullptr; }
+
+    return ( *( ctx.builder ).*clbk )( lhs, opName, T{} ... );
+}
 
 template< typename ... T >
 using IRBuilderBinaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Value *, llvm::Twine const &, T ... );
@@ -61,7 +69,16 @@ llvm::Value * codegenBinary
     IRBuilderBinaryClbk< T ... >     const   clbk,
     std::span< Node::Pointer const > const   nodes,
     std::string_view                 const   opName
-);
+)
+{
+    ASSERT( std::size( nodes ) == 2U );
+    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
+    auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
+
+    if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
+
+    return ( *( ctx.builder ).*clbk )( lhs, rhs, opName, T{} ... );
+}
 
 template< typename ... T >
 [[ nodiscard ]]
@@ -71,7 +88,19 @@ llvm::Value * codegenAssign
     IRBuilderBinaryClbk< T ... >     const   clbk,
     std::span< Node::Pointer const > const   nodes,
     std::string_view                 const   opName
-);
+)
+{
+    ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
+
+    ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
+    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+
+    auto * value{ ctx.symbols.getVariable( name ) };
+    if ( value == nullptr ) { return nullptr; }
+
+    ctx.builder->CreateStore( codegenBinary( ctx, clbk, nodes, opName ), value );
+    return value;
+}
 
 [[ nodiscard ]] llvm::Value    * codegenCall              ( Context & ctx, std::span< Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenMemberCall        ( Context & ctx, std::span< Node::Pointer const > const nodes );
@@ -81,4 +110,4 @@ llvm::Value * codegenAssign
 [[ nodiscard ]] llvm::Value    * codegenControlFlow       ( Context & ctx, std::span< Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenLoopFlow          ( Context & ctx, std::span< Node::Pointer const > const nodes );
 
-} // namespace A1::LLVM
+} // namespace A1::LLVM::IR

@@ -5,10 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "ExpressionCodegen.hpp"
-#include "Utils/Utils.hpp"
+#include "CodegenExpression.hpp"
 
-#include <CoreLib/Utils/Macros.hpp>
 #include <CoreLib/Types.hpp>
 
 #if defined (__clang__)
@@ -27,7 +25,9 @@
 #   pragma GCC diagnostic pop
 #endif
 
-namespace A1::LLVM
+#include <fmt/format.h>
+
+namespace A1::LLVM::IR
 {
 
 namespace
@@ -35,7 +35,7 @@ namespace
     [[ nodiscard ]]
     llvm::Value * allocate( llvm::IRBuilder<> & builder, llvm::Type * type, std::string_view const name, llvm::Value * initialValue )
     {
-        auto * value{ builder.CreateAlloca( type, 0, name.data() ) };
+        auto * value{ builder.CreateAlloca( type, 0U, name.data() ) };
         if ( initialValue != nullptr )
         {
             builder.CreateStore( initialValue, value );
@@ -85,8 +85,8 @@ namespace
             type->isPointerTy() &&
             type->getNumContainedTypes() > 0 &&
             (
-                type->getContainedType( 0 )->isArrayTy  () ||
-                type->getContainedType( 0 )->isIntegerTy()
+                type->getContainedType( 0U )->isArrayTy  () ||
+                type->getContainedType( 0U )->isIntegerTy()
             )
         )
         {
@@ -114,179 +114,6 @@ namespace
     }
 } // namespace
 
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
-{
-    if ( node == nullptr ) { return nullptr; }
-
-    return std::visit
-    (
-        Overload
-        {
-            [ &ctx, &node ]( NodeType const type ) -> llvm::Value *
-            {
-                switch ( type )
-                {
-#define CODEGEN( type, codegenFunc, builderFunc, opName ) \
-    case NodeType::type: return codegenFunc( ctx, &llvm::IRBuilder<>::builderFunc, node->children(), opName )
-
-                    CODEGEN( UnaryMinus       , codegenUnary , CreateFNeg      , "nottemp" );
-                    CODEGEN( LogicalNot       , codegenUnary , CreateNot       , "lnottmp" );
-                    CODEGEN( LogicalAnd       , codegenBinary, CreateLogicalAnd, "landtmp" );
-                    CODEGEN( LogicalOr        , codegenBinary, CreateLogicalOr , "lortmp"  );
-                    CODEGEN( Multiplication   , codegenBinary, CreateFMul      , "multmp"  );
-                    CODEGEN( Division         , codegenBinary, CreateFDiv      , "divtmp"  );
-                    CODEGEN( FloorDivision    , codegenBinary, CreateSDiv      , "fdivtmp" );
-                    CODEGEN( Modulus          , codegenBinary, CreateFRem      , "modtmp"  );
-                    CODEGEN( Addition         , codegenBinary, CreateFAdd      , "addtmp"  );
-                    CODEGEN( Subtraction      , codegenBinary, CreateFSub      , "subtmp"  );
-                    CODEGEN( BitwiseLeftShift , codegenBinary, CreateShl       , "lshtmp"  );
-                    CODEGEN( BitwiseRightShift, codegenBinary, CreateAShr      , "rshtmp"  );
-                    CODEGEN( BitwiseAnd       , codegenBinary, CreateAnd       , "andtmp"  );
-                    CODEGEN( BitwiseOr        , codegenBinary, CreateOr        , "ortmp "  );
-                    CODEGEN( BitwiseXor       , codegenBinary, CreateXor       , "xortmp"  );
-                    CODEGEN( BitwiseNot       , codegenUnary , CreateNot       , "nottmp"  );
-                    CODEGEN( Equality         , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( Inequality       , codegenBinary, CreateFCmpONE   , "netmp"   );
-                    CODEGEN( GreaterThan      , codegenBinary, CreateFCmpOGT   , "gttmp"   );
-                    CODEGEN( GreaterThanEqual , codegenBinary, CreateFCmpOGE   , "getmp"   );
-                    CODEGEN( LessThan         , codegenBinary, CreateFCmpOLT   , "ltmp"    );
-                    CODEGEN( LessThanEqual    , codegenBinary, CreateFCmpOLE   , "letmp"   );
-                    CODEGEN( IsIdentical      , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( IsNotIdentical   , codegenBinary, CreateFCmpONE   , "netmp"   );
-
-                    CODEGEN( AssignAddition         , codegenAssign, CreateFAdd, "addtmp"  );
-                    CODEGEN( AssignSubtraction      , codegenAssign, CreateFSub, "subtmp"  );
-                    CODEGEN( AssignMultiplication   , codegenAssign, CreateFMul, "multmp"  );
-                    CODEGEN( AssignDivision         , codegenAssign, CreateFDiv, "divtmp"  );
-                    CODEGEN( AssignFloorDivision    , codegenAssign, CreateSDiv, "fdivtmp" );
-                    CODEGEN( AssignModulus          , codegenAssign, CreateFRem, "modtmp"  );
-                    CODEGEN( AssignBitwiseLeftShift , codegenAssign, CreateShl , "shltmp"  );
-                    CODEGEN( AssignBitwiseRightShift, codegenAssign, CreateAShr, "shrtmp"  );
-                    CODEGEN( AssignBitwiseAnd       , codegenAssign, CreateAnd , "andtmp"  );
-                    CODEGEN( AssignBitwiseOr        , codegenAssign, CreateOr  , "ortmp"   );
-                    CODEGEN( AssignBitwiseXor       , codegenAssign, CreateXor , "xortmp"  );
-
-#undef CODEGEN
-                    case NodeType::Assign    : return codegenVariableDefinition( ctx, node->children() );
-                    case NodeType::Call      : return codegenCall              ( ctx, node->children() );
-                    case NodeType::MemberCall: return codegenMemberCall        ( ctx, node->children() );
-
-                    case NodeType::StatementIf:
-                    case NodeType::StatementElif:
-                        return codegenControlFlow( ctx, node->children() );
-
-                    case NodeType::StatementElse:
-                    {
-                        // Generate LLVM IR for all the statements in else body
-                        llvm::Value * value{ nullptr };
-                        for ( auto const & n : node->children() )
-                        {
-                            value = codegen( ctx, n );
-                        }
-                        return value;
-                    }
-
-                    case NodeType::StatementWhile:
-                        return codegenLoopFlow( ctx, node->children() );
-
-                    case NodeType::StatementReturn:
-                    {
-                        ASSERT( std::size( node->children() ) == 1U );
-                        return codegen( ctx, node->children()[ 0U ] );
-                    }
-
-                    case NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
-                    case NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
-                    case NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );
-
-                    default:
-                        return nullptr;
-                }
-            },
-            [ &ctx ]( Identifier const & identifier ) -> llvm::Value *
-            {
-                auto * value{ ctx.symbols.getVariable( identifier.name ) };
-                if ( value == nullptr ) { return nullptr; }
-
-                if ( value->getType()->getNumContainedTypes() > 0 && value->getType()->getContainedType( 0 )->isDoubleTy() )
-                {
-                    return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), value );
-                }
-                return value;
-            },
-            [ &ctx ]( Number const number ) -> llvm::Value *
-            {
-                return llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( number ) );
-            },
-            [ &ctx ]( String const & str ) -> llvm::Value *
-            {
-                return ctx.builder->CreateGlobalStringPtr( str, "", 0U, ctx.module_.get() );
-            },
-            []( TypeID const ) -> llvm::Value *
-            {
-                return nullptr;
-            }
-        },
-        node->value()
-    );
-}
-
-template< typename ... T >
-llvm::Value * codegenUnary
-(
-    Context                                & ctx,
-    IRBuilderUnaryClbk< T ... >      const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERT( std::size( nodes ) == 1U );
-    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
-
-    if ( lhs == nullptr ) { return nullptr; }
-
-    return ( *( ctx.builder ).*clbk )( lhs, opName, T{} ... );
-}
-
-template< typename ... T >
-llvm::Value * codegenBinary
-(
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERT( std::size( nodes ) == 2U );
-    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
-    auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
-
-    if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
-
-    return ( *( ctx.builder ).*clbk )( lhs, rhs, opName, T{} ... );
-}
-
-template< typename ... T >
-llvm::Value * codegenAssign
-(
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
-
-    ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-    auto * value{ ctx.symbols.getVariable( name ) };
-    if ( value == nullptr ) { return nullptr; }
-
-    ctx.builder->CreateStore( codegenBinary( ctx, clbk, nodes, opName ), value );
-    return value;
-}
-
 llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 1U, "Call expression consists of identifier and parameters, if any" );
@@ -296,15 +123,20 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
 
     if ( auto const & type{ ctx.symbols.contractTypes.find( name ) }; type != std::end( ctx.symbols.contractTypes ) )
     {
-        // Create a new contract instance
-        return new llvm::GlobalVariable
-        (
-            *ctx.module_,
-            type->second,
-            true, /* isConstant */
-            llvm::GlobalVariable::ExternalLinkage,
-            llvm::Constant::getNullValue( type->second )
-        );
+        auto * globalContract
+        {
+            new llvm::GlobalVariable
+            (
+                *ctx.module_,
+                type->second,
+                false, /* isConstant */
+                llvm::GlobalVariable::ExternalLinkage,
+                llvm::Constant::getNullValue( type->second )
+            )
+        };
+        auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}_DefaultCTOR", name ) ], llvm::None, "" ) };
+        ctx.builder->CreateStore( initialContract, globalContract );
+        return globalContract;
     }
     else
     {
@@ -342,11 +174,18 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
 
 llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const > const nodes )
 {
+    ASSERTM( std::size( nodes ) == 2U, "Member call expression consists of two identifiers: variable and either data member or function member identifier" );
+
+    ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the member call expression" );
+    auto const & variableName{ nodes[ 0U ]->get< Identifier >().name };
+
     auto const & member{ nodes[ 1U ] };
     if ( member->is< Identifier >() )
     {
-        // TODO: Access data member
-        return nullptr;
+        // Access data member
+        auto * variable { ctx.symbols.variables[ variableName ] };
+        auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
+        return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), memberPtr );
     }
     else if ( member->is< NodeType >() && member->get< NodeType >() == NodeType::Call )
     {
@@ -366,7 +205,9 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
 
     auto * contractType{ llvm::StructType::create( *ctx.internalCtx, contractName ) };
 
-    std::vector< llvm::Type * > dataTypes;
+    std::vector< llvm::Constant * > dataMemberInitialValues;
+    std::vector< llvm::Type     * > dataMemberTypes;
+
     for ( auto i{ 1U }; i < std::size( nodes ); i++ )
     {
         auto const & node{ nodes[ i ] };
@@ -375,18 +216,34 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
             if ( node->get< NodeType >() == NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
-                dataTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
+                dataMemberTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
+                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getDoubleTy( *ctx.internalCtx ), 3U, false /* isSigned */ ) );
             }
             else if ( node->get< NodeType >() == NodeType::FunctionDefinition )
             {
-                auto * function{ codegen( ctx, node ) };
-                dataTypes.push_back( function->getType() );
+                // TODO: Call a function with contract type name prefix
+                codegen( ctx, node );
             }
         }
     }
 
-    contractType->setBody( dataTypes );
+    contractType->setBody( dataMemberTypes );
     ctx.symbols.contractTypes[ contractName ] = contractType;
+
+    {
+        // Create default constructor
+        auto   ctorName{ fmt::format( "{}_DefaultCTOR", contractName ) };
+        auto * ctorType{ llvm::FunctionType::get( contractType, false ) };
+        auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::InternalLinkage, ctorName, ctx.module_.get() ) };
+        auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "entry", ctor ) };
+        ctx.builder->SetInsertPoint( block );
+
+        auto * alloca{ ctx.builder->CreateAlloca( contractType, 0U ) };
+        ctx.builder->CreateStore( llvm::ConstantStruct::get( contractType, dataMemberInitialValues ), alloca );
+        ctx.builder->CreateRet( ctx.builder->CreateLoad( contractType, alloca ) );
+        ctx.symbols.functions[ ctorName ] = ctor;
+    }
+
     return nullptr;
 }
 
@@ -430,7 +287,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Poin
     }
 
     auto * functionType{ llvm::FunctionType::get( returnType, parameters, false ) };
-    auto * function    { llvm::Function::Create( functionType, llvm::Function::ExternalLinkage, name, ctx.module_.get() ) };
+    auto * function    { llvm::Function::Create( functionType, llvm::Function::InternalLinkage, name, ctx.module_.get() ) };
 
     // Set names for all the arguments
     auto idx{ 0U };
@@ -630,4 +487,4 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< Node::Pointer const > c
     return nullptr;
 }
 
-} // namespace A1::LLVM
+} // namespace A1::LLVM::IR

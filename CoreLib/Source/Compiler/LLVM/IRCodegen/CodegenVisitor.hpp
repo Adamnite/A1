@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Context.hpp"
+#include "../Context.hpp"
 
 #include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
@@ -19,8 +19,7 @@
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include <llvm/IR/DataLayout.h>
-#include <llvm/IR/Module.h>
+#include <llvm/IR/Value.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
@@ -28,16 +27,9 @@
 #   pragma GCC diagnostic pop
 #endif
 
-#include <memory>
-
-namespace A1::LLVM
+namespace A1::LLVM::IR
 {
 
-[[ nodiscard ]] Context codegen
-(
-    Node::Pointer    const & moduleNode,
-    llvm::DataLayout const   dataLayout,
-    std::string_view const   targetTriple
-);
+llvm::Value * codegen( Context & ctx, Node::Pointer const & node );
 
-} // namespace A1::LLVM
+} // namespace A1::LLVM::IR

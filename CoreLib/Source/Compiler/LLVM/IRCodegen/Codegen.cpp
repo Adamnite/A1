@@ -6,8 +6,7 @@
  */
 
 #include "Codegen.hpp"
-#include "ExpressionCodegen.hpp"
-#include "Utils/Utils.hpp"
+#include "CodegenVisitor.hpp"
 
 #include <CoreLib/Utils/Macros.hpp>
 
@@ -22,6 +21,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Value.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
@@ -33,7 +33,7 @@
 #include <memory>
 #include <map>
 
-namespace A1::LLVM
+namespace A1::LLVM::IR
 {
 
 namespace
@@ -177,7 +177,6 @@ Context codegen
     for ( auto const & node : moduleNode->children() )
     {
         if ( node == nullptr ) { continue; }
-
         if
         (
             node->is< NodeType >() &&
@@ -206,4 +205,4 @@ Context codegen
     return ctx;
 }
 
-} // namespace A1::LLVM
+} // namespace A1::LLVM::IR

@@ -5,7 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "Codegen.hpp"
+#include "Backend/ADTargetVirtualMachine.hpp"
+#include "IRCodegen/Codegen.hpp"
 
 #include <CoreLib/Compiler/LLVM/Compiler.hpp>
 
@@ -89,7 +90,7 @@ bool compile( Compiler::Settings settings, Node::Pointer const & node )
     /**
      * Generate LLVM IR code from the AST.
      */
-    auto context{ codegen( node, targetMachine->createDataLayout(), targetTriple ) };
+    auto context{ IR::codegen( node, targetMachine->createDataLayout(), targetTriple ) };
 
     if ( settings.outputIR )
     {

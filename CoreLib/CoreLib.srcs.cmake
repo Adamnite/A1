@@ -17,8 +17,10 @@ set( SOURCES
 
 if( ENABLE_LLVM )
     list( APPEND SOURCES
-        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/Codegen.cpp
         ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/Compiler.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/ExpressionCodegen.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/Backend/ADTargetVirtualMachine.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/IRCodegen/Codegen.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/IRCodegen/CodegenExpression.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/LLVM/IRCodegen/CodegenVisitor.cpp
     )
 endif()
