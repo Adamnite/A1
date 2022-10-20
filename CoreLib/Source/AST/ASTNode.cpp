@@ -10,7 +10,7 @@
 
 #include "Utils/Utils.hpp"
 
-namespace A1
+namespace A1::AST
 {
 
 Node::Node( ValueType value, ErrorInfo errorInfo )
@@ -24,4 +24,4 @@ Node::Node ( ValueType value, std::vector< Pointer > children, ErrorInfo errorIn
 , errorInfo_{ std::move( errorInfo ) }
 {}
 
-} // namespace A1
+} // namespace A1::AST

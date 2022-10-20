@@ -44,10 +44,10 @@ template< typename ... T >
 [[ nodiscard ]]
 llvm::Value * codegenUnary
 (
-    Context                                & ctx,
-    IRBuilderUnaryClbk< T ... >      const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
+    Context                                     & ctx,
+    IRBuilderUnaryClbk< T ... >           const   clbk,
+    std::span< AST::Node::Pointer const > const   nodes,
+    std::string_view                      const   opName
 )
 {
     ASSERT( std::size( nodes ) == 1U );
@@ -65,10 +65,10 @@ template< typename ... T >
 [[ nodiscard ]]
 llvm::Value * codegenBinary
 (
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
+    Context                                     & ctx,
+    IRBuilderBinaryClbk< T ... >          const   clbk,
+    std::span< AST::Node::Pointer const > const   nodes,
+    std::string_view                      const   opName
 )
 {
     ASSERT( std::size( nodes ) == 2U );
@@ -84,10 +84,10 @@ template< typename ... T >
 [[ nodiscard ]]
 llvm::Value * codegenAssign
 (
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
+    Context                                     & ctx,
+    IRBuilderBinaryClbk< T ... >          const   clbk,
+    std::span< AST::Node::Pointer const > const   nodes,
+    std::string_view                      const   opName
 )
 {
     ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
@@ -102,12 +102,12 @@ llvm::Value * codegenAssign
     return value;
 }
 
-[[ nodiscard ]] llvm::Value    * codegenCall              ( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Value    * codegenMemberCall        ( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Value    * codegenContractDefinition( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Value    * codegenVariableDefinition( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Value    * codegenControlFlow       ( Context & ctx, std::span< Node::Pointer const > const nodes );
-[[ nodiscard ]] llvm::Value    * codegenLoopFlow          ( Context & ctx, std::span< Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenCall              ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenMemberCall        ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenContractDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenControlFlow       ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenLoopFlow          ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 
 } // namespace A1::LLVM::IR

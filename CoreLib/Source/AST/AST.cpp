@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include <cstdint>
 
-namespace A1
+namespace A1::AST
 {
 
 namespace
@@ -709,4 +709,4 @@ Node::Pointer parse( TokenIterator & tokenIt )
     return parseImpl( tokenIt, 0U, false );
 }
 
-} // namespace A1
+} // namespace A1::AST

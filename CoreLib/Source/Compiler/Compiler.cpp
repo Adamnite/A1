@@ -14,7 +14,7 @@
 namespace A1
 {
 
-bool compile( Compiler::Settings settings, Node::Pointer const & node )
+bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 {
 #ifdef LLVM_ENABLED
     return LLVM::compile( std::move( settings ), node );

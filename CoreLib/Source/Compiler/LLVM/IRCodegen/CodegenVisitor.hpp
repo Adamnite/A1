@@ -30,6 +30,6 @@
 namespace A1::LLVM::IR
 {
 
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node );
+llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node );
 
 } // namespace A1::LLVM::IR

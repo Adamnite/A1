@@ -34,9 +34,9 @@ namespace A1::LLVM::IR
 [[ nodiscard ]]
 Context codegen
 (
-    Node::Pointer    const & moduleNode,
-    llvm::DataLayout const   dataLayout,
-    std::string_view const   targetTriple
+    AST::Node::Pointer const & moduleNode,
+    llvm::DataLayout   const   dataLayout,
+    std::string_view   const   targetTriple
 );
 
 } // namespace A1::LLVM::IR

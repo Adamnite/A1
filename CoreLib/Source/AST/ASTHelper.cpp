@@ -9,7 +9,7 @@
 
 #include <CoreLib/Utils/Macros.hpp>
 
-namespace A1
+namespace A1::AST
 {
 
 NodePrecedence getPrecedence( NodeType const type ) noexcept
@@ -217,4 +217,4 @@ bool hasHigherPrecedence( NodeType const lhs, NodeType const rhs ) noexcept
         : getPrecedence( lhs ) >  getPrecedence( rhs );
 }
 
-} // namespace A1
+} // namespace A1::AST

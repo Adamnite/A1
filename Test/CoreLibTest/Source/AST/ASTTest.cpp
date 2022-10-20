@@ -12,8 +12,9 @@
 
 namespace
 {
-    using Node    = A1::Node;
-    using NodePtr = A1::Node const *;
+    using Node     = A1::AST::Node;
+    using NodeType = A1::AST::NodeType;
+    using NodePtr  = A1::AST::Node const *;
 
     void match( NodePtr const actual, NodePtr const expected )
     {
@@ -81,7 +82,7 @@ TEST_P( ASTTestFixture, parsing )
     auto const [ expression, expectedRoot ]{ GetParam() };
 
     auto tokenIt   { A1::tokenize( A1::PushBackStream{ expression } ) };
-    auto actualRoot{ A1::parse( tokenIt ) };
+    auto actualRoot{ A1::AST::parse( tokenIt ) };
 
     match( actualRoot.get(), expectedRoot.get() );
 }
@@ -95,26 +96,26 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .expression   = "",
-            .expectedRoot = std::make_shared< Node >( A1::NodeType::ModuleDefinition )
+            .expectedRoot = std::make_shared< Node >( NodeType::ModuleDefinition )
         },
         TestParameter
         {
             .expression =
                 "# First comment line\n"
                 "# Second comment line\n",
-            .expectedRoot = std::make_shared< Node >( A1::NodeType::ModuleDefinition )
+            .expectedRoot = std::make_shared< Node >( NodeType::ModuleDefinition )
         },
         TestParameter
         {
             .expression   = "var = 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Assign,
+                        NodeType::Assign,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -129,18 +130,18 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "var = get()",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Assign,
+                        NodeType::Assign,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "get" } )
@@ -156,12 +157,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "func(1.4, \"This is random string\", 5)",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Call,
+                        NodeType::Call,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
@@ -178,12 +179,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "var.member",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::MemberCall,
+                        NodeType::MemberCall,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var"    } ),
@@ -198,18 +199,18 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "print(func(1.4, \"This is random string\", 5))",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Call,
+                        NodeType::Call,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
@@ -228,12 +229,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "arr[1]",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Index,
+                        NodeType::Index,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "arr" } ),
@@ -248,12 +249,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "return 1",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementReturn,
+                        NodeType::StatementReturn,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Number{ 1 } )
@@ -267,17 +268,17 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "return a < b",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementReturn,
+                        NodeType::StatementReturn,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::LessThan,
+                                NodeType::LessThan,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "a" } ),
@@ -294,10 +295,10 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "pass",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
-                    std::make_unique< Node >( A1::NodeType::StatementPass )
+                    std::make_unique< Node >( NodeType::StatementPass )
                 )
             )
         },
@@ -313,17 +314,17 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(\"new_var is 2\")",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementIf,
+                        NodeType::StatementIf,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Equality,
+                                NodeType::Equality,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -332,7 +333,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -341,7 +342,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -352,12 +353,12 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementIf,
+                        NodeType::StatementIf,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Equality,
+                                NodeType::Equality,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -366,7 +367,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -375,7 +376,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -398,17 +399,17 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(\"new_var is 2\")",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementIf,
+                        NodeType::StatementIf,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Equality,
+                                NodeType::Equality,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -417,7 +418,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -426,7 +427,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -435,12 +436,12 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementElse,
+                                NodeType::StatementElse,
                                 makeChildren
                                 (
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Assign,
+                                        NodeType::Assign,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -449,7 +450,7 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Call,
+                                        NodeType::Call,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -480,17 +481,17 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(\"new_var is 4\")",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementIf,
+                        NodeType::StatementIf,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Equality,
+                                NodeType::Equality,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -499,7 +500,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -508,7 +509,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -517,12 +518,12 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementElif,
+                                NodeType::StatementElif,
                                 makeChildren
                                 (
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Equality,
+                                        NodeType::Equality,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -531,7 +532,7 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Assign,
+                                        NodeType::Assign,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -540,7 +541,7 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Call,
+                                        NodeType::Call,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -549,12 +550,12 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::StatementElif,
+                                        NodeType::StatementElif,
                                         makeChildren
                                         (
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::Equality,
+                                                NodeType::Equality,
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -563,7 +564,7 @@ INSTANTIATE_TEST_SUITE_P
                                             ),
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::Assign,
+                                                NodeType::Assign,
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -572,7 +573,7 @@ INSTANTIATE_TEST_SUITE_P
                                             ),
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::Call,
+                                                NodeType::Call,
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -581,12 +582,12 @@ INSTANTIATE_TEST_SUITE_P
                                             ),
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::StatementElse,
+                                                NodeType::StatementElse,
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >
                                                     (
-                                                        A1::NodeType::Assign,
+                                                        NodeType::Assign,
                                                         makeChildren
                                                         (
                                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
@@ -595,7 +596,7 @@ INSTANTIATE_TEST_SUITE_P
                                                     ),
                                                     std::make_unique< Node >
                                                     (
-                                                        A1::NodeType::Call,
+                                                        NodeType::Call,
                                                         makeChildren
                                                         (
                                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -620,17 +621,17 @@ INSTANTIATE_TEST_SUITE_P
                 "    i = i + 1",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementWhile,
+                        NodeType::StatementWhile,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::LessThan,
+                                NodeType::LessThan,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
@@ -639,13 +640,13 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Addition,
+                                        NodeType::Addition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
@@ -667,17 +668,17 @@ INSTANTIATE_TEST_SUITE_P
                 "    i = i + 1",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::StatementWhile,
+                        NodeType::StatementWhile,
                         makeChildren
                         (
                             std::make_unique< Node >
                             (
-                                A1::NodeType::LessThan,
+                                NodeType::LessThan,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
@@ -686,7 +687,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
@@ -695,13 +696,13 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Addition,
+                                        NodeType::Addition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
@@ -722,19 +723,19 @@ INSTANTIATE_TEST_SUITE_P
                 "    return 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::FunctionDefinition,
+                        NodeType::FunctionDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
                             std::make_unique< Node >( A1::Registry::getNumberHandle() ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementReturn,
+                                NodeType::StatementReturn,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Number{ 5 } )
@@ -752,18 +753,18 @@ INSTANTIATE_TEST_SUITE_P
                 "    var = param1 + param2",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::FunctionDefinition,
+                        NodeType::FunctionDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -772,7 +773,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
@@ -781,13 +782,13 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Addition,
+                                        NodeType::Addition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -810,18 +811,18 @@ INSTANTIATE_TEST_SUITE_P
                 "    return param1 + param2",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::FunctionDefinition,
+                        NodeType::FunctionDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -830,7 +831,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
@@ -840,12 +841,12 @@ INSTANTIATE_TEST_SUITE_P
                             std::make_unique< Node >( A1::Registry::getNumberHandle() ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementReturn,
+                                NodeType::StatementReturn,
                                 makeChildren
                                 (
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Addition,
+                                        NodeType::Addition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -870,18 +871,18 @@ INSTANTIATE_TEST_SUITE_P
                 "let var = func(5, 5)",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::FunctionDefinition,
+                        NodeType::FunctionDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -890,7 +891,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionParameterDefinition,
+                                NodeType::FunctionParameterDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
@@ -900,7 +901,7 @@ INSTANTIATE_TEST_SUITE_P
                             std::make_unique< Node >( A1::Registry::getNumberHandle() ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::VariableDefinition,
+                                NodeType::VariableDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "sum" } ),
@@ -909,13 +910,13 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Assign,
+                                NodeType::Assign,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "sum" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Addition,
+                                        NodeType::Addition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -926,7 +927,7 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementReturn,
+                                NodeType::StatementReturn,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "sum" } )
@@ -936,13 +937,13 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
@@ -960,12 +961,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "let var: num",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -980,12 +981,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression   = "let var = 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1000,18 +1001,18 @@ INSTANTIATE_TEST_SUITE_P
             .expression = "let var = get()",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "get" } )
@@ -1027,12 +1028,12 @@ INSTANTIATE_TEST_SUITE_P
             .expression = "let var: num = 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1050,12 +1051,12 @@ INSTANTIATE_TEST_SUITE_P
                 "var = 10",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1065,7 +1066,7 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Assign,
+                        NodeType::Assign,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1083,24 +1084,24 @@ INSTANTIATE_TEST_SUITE_P
                 "let var: num = 5",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::ContractDefinition,
+                        NodeType::ContractDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "Example" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::StatementPass
+                                NodeType::StatementPass
                             )
                         )
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1124,18 +1125,18 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.func(3, 4))",
             .expectedRoot = std::make_shared< Node >
             (
-                A1::NodeType::ModuleDefinition,
+                NodeType::ModuleDefinition,
                 makeChildren
                 (
                     std::make_unique< Node >
                     (
-                        A1::NodeType::ContractDefinition,
+                        NodeType::ContractDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "Example" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::VariableDefinition,
+                                NodeType::VariableDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "foo" } ),
@@ -1145,13 +1146,13 @@ INSTANTIATE_TEST_SUITE_P
                             ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::FunctionDefinition,
+                                NodeType::FunctionDefinition,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::FunctionParameterDefinition,
+                                        NodeType::FunctionParameterDefinition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -1160,7 +1161,7 @@ INSTANTIATE_TEST_SUITE_P
                                     ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::FunctionParameterDefinition,
+                                        NodeType::FunctionParameterDefinition,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param2" } ),
@@ -1170,12 +1171,12 @@ INSTANTIATE_TEST_SUITE_P
                                     std::make_unique< Node >( A1::Registry::getNumberHandle() ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::StatementReturn,
+                                        NodeType::StatementReturn,
                                         makeChildren
                                         (
                                             std::make_unique< Node >
                                             (
-                                                A1::NodeType::Addition,
+                                                NodeType::Addition,
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
@@ -1190,13 +1191,13 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::VariableDefinition,
+                        NodeType::VariableDefinition,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::Call,
+                                NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "Example" } )
@@ -1206,13 +1207,13 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Call,
+                        NodeType::Call,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::MemberCall,
+                                NodeType::MemberCall,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
@@ -1223,19 +1224,19 @@ INSTANTIATE_TEST_SUITE_P
                     ),
                     std::make_unique< Node >
                     (
-                        A1::NodeType::Call,
+                        NodeType::Call,
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
                             std::make_unique< Node >
                             (
-                                A1::NodeType::MemberCall,
+                                NodeType::MemberCall,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                                     std::make_unique< Node >
                                     (
-                                        A1::NodeType::Call,
+                                        NodeType::Call,
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),

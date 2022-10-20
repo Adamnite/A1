@@ -44,7 +44,7 @@
 namespace A1::LLVM
 {
 
-bool compile( Compiler::Settings settings, Node::Pointer const & node )
+bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 {
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.

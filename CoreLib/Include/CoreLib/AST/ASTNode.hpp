@@ -17,7 +17,7 @@
 #include <memory>
 #include <vector>
 
-namespace A1
+namespace A1::AST
 {
 
 enum class NodeType : std::uint8_t
@@ -146,4 +146,4 @@ private:
     ErrorInfo errorInfo_;
 };
 
-} // namespace A1
+} // namespace A1::AST
