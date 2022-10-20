@@ -5,9 +5,9 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Module.hpp>
+#include <CoreLib/AST/AST.hpp>
 #include <CoreLib/Compiler/Compiler.hpp>
-#include <CoreLib/Parser/ExpressionTree.hpp>
+#include <CoreLib/Module.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 #include <CoreLib/Utils/PushBackStream.hpp>
 

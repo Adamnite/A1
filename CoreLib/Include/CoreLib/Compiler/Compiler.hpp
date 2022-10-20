@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Compiler/Settings.hpp>
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
 namespace A1
 {

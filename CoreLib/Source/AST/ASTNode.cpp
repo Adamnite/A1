@@ -5,7 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Parser/ExpressionTree.hpp>
+#include <CoreLib/AST/AST.hpp>
 #include <CoreLib/Types.hpp>
 
 #include "Utils/Utils.hpp"

@@ -9,7 +9,7 @@
 
 #include "../Context.hpp"
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 
 #if defined (__clang__)
 #   pragma clang diagnostic push

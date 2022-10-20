@@ -10,7 +10,7 @@
 #include "../Context.hpp"
 #include "CodegenVisitor.hpp"
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
 #if defined (__clang__)

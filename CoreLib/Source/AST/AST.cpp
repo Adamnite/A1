@@ -5,11 +5,11 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Parser/ExpressionTree.hpp>
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/AST.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
-#include "ExpressionTreeHelper.hpp"
+#include "ASTHelper.hpp"
 
 #include <fmt/format.h>
 

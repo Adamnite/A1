@@ -5,7 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Parser/ExpressionTree.hpp>
+#include <CoreLib/AST/AST.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
 #include <gtest/gtest.h>
@@ -73,10 +73,10 @@ namespace
         }
     };
 
-    struct ExpressionTreeTestFixture : ::testing::TestWithParam< TestParameter > {};
+    struct ASTTestFixture : ::testing::TestWithParam< TestParameter > {};
 } // namespace
 
-TEST_P( ExpressionTreeTestFixture, parsing )
+TEST_P( ASTTestFixture, parsing )
 {
     auto const [ expression, expectedRoot ]{ GetParam() };
 
@@ -88,8 +88,8 @@ TEST_P( ExpressionTreeTestFixture, parsing )
 
 INSTANTIATE_TEST_SUITE_P
 (
-    ExpressionTreeTest,
-    ExpressionTreeTestFixture,
+    ASTTest,
+    ASTTestFixture,
     ::testing::Values
     (
         TestParameter

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 
 #include <cstdint>
 
