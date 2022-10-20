@@ -5,10 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "ExpressionCodegen.hpp"
-#include "Utils/Utils.hpp"
+#include "CodegenExpression.hpp"
 
-#include <CoreLib/Utils/Macros.hpp>
 #include <CoreLib/Types.hpp>
 
 #if defined (__clang__)
@@ -29,7 +27,7 @@
 
 #include <fmt/format.h>
 
-namespace A1::LLVM
+namespace A1::LLVM::IR
 {
 
 namespace
@@ -115,179 +113,6 @@ namespace
         }
     }
 } // namespace
-
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
-{
-    if ( node == nullptr ) { return nullptr; }
-
-    return std::visit
-    (
-        Overload
-        {
-            [ &ctx, &node ]( NodeType const type ) -> llvm::Value *
-            {
-                switch ( type )
-                {
-#define CODEGEN( type, codegenFunc, builderFunc, opName ) \
-    case NodeType::type: return codegenFunc( ctx, &llvm::IRBuilder<>::builderFunc, node->children(), opName )
-
-                    CODEGEN( UnaryMinus       , codegenUnary , CreateFNeg      , "nottemp" );
-                    CODEGEN( LogicalNot       , codegenUnary , CreateNot       , "lnottmp" );
-                    CODEGEN( LogicalAnd       , codegenBinary, CreateLogicalAnd, "landtmp" );
-                    CODEGEN( LogicalOr        , codegenBinary, CreateLogicalOr , "lortmp"  );
-                    CODEGEN( Multiplication   , codegenBinary, CreateFMul      , "multmp"  );
-                    CODEGEN( Division         , codegenBinary, CreateFDiv      , "divtmp"  );
-                    CODEGEN( FloorDivision    , codegenBinary, CreateSDiv      , "fdivtmp" );
-                    CODEGEN( Modulus          , codegenBinary, CreateFRem      , "modtmp"  );
-                    CODEGEN( Addition         , codegenBinary, CreateFAdd      , "addtmp"  );
-                    CODEGEN( Subtraction      , codegenBinary, CreateFSub      , "subtmp"  );
-                    CODEGEN( BitwiseLeftShift , codegenBinary, CreateShl       , "lshtmp"  );
-                    CODEGEN( BitwiseRightShift, codegenBinary, CreateAShr      , "rshtmp"  );
-                    CODEGEN( BitwiseAnd       , codegenBinary, CreateAnd       , "andtmp"  );
-                    CODEGEN( BitwiseOr        , codegenBinary, CreateOr        , "ortmp "  );
-                    CODEGEN( BitwiseXor       , codegenBinary, CreateXor       , "xortmp"  );
-                    CODEGEN( BitwiseNot       , codegenUnary , CreateNot       , "nottmp"  );
-                    CODEGEN( Equality         , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( Inequality       , codegenBinary, CreateFCmpONE   , "netmp"   );
-                    CODEGEN( GreaterThan      , codegenBinary, CreateFCmpOGT   , "gttmp"   );
-                    CODEGEN( GreaterThanEqual , codegenBinary, CreateFCmpOGE   , "getmp"   );
-                    CODEGEN( LessThan         , codegenBinary, CreateFCmpOLT   , "ltmp"    );
-                    CODEGEN( LessThanEqual    , codegenBinary, CreateFCmpOLE   , "letmp"   );
-                    CODEGEN( IsIdentical      , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( IsNotIdentical   , codegenBinary, CreateFCmpONE   , "netmp"   );
-
-                    CODEGEN( AssignAddition         , codegenAssign, CreateFAdd, "addtmp"  );
-                    CODEGEN( AssignSubtraction      , codegenAssign, CreateFSub, "subtmp"  );
-                    CODEGEN( AssignMultiplication   , codegenAssign, CreateFMul, "multmp"  );
-                    CODEGEN( AssignDivision         , codegenAssign, CreateFDiv, "divtmp"  );
-                    CODEGEN( AssignFloorDivision    , codegenAssign, CreateSDiv, "fdivtmp" );
-                    CODEGEN( AssignModulus          , codegenAssign, CreateFRem, "modtmp"  );
-                    CODEGEN( AssignBitwiseLeftShift , codegenAssign, CreateShl , "shltmp"  );
-                    CODEGEN( AssignBitwiseRightShift, codegenAssign, CreateAShr, "shrtmp"  );
-                    CODEGEN( AssignBitwiseAnd       , codegenAssign, CreateAnd , "andtmp"  );
-                    CODEGEN( AssignBitwiseOr        , codegenAssign, CreateOr  , "ortmp"   );
-                    CODEGEN( AssignBitwiseXor       , codegenAssign, CreateXor , "xortmp"  );
-
-#undef CODEGEN
-                    case NodeType::Assign    : return codegenVariableDefinition( ctx, node->children() );
-                    case NodeType::Call      : return codegenCall              ( ctx, node->children() );
-                    case NodeType::MemberCall: return codegenMemberCall        ( ctx, node->children() );
-
-                    case NodeType::StatementIf:
-                    case NodeType::StatementElif:
-                        return codegenControlFlow( ctx, node->children() );
-
-                    case NodeType::StatementElse:
-                    {
-                        // Generate LLVM IR for all the statements in else body
-                        llvm::Value * value{ nullptr };
-                        for ( auto const & n : node->children() )
-                        {
-                            value = codegen( ctx, n );
-                        }
-                        return value;
-                    }
-
-                    case NodeType::StatementWhile:
-                        return codegenLoopFlow( ctx, node->children() );
-
-                    case NodeType::StatementReturn:
-                    {
-                        ASSERT( std::size( node->children() ) == 1U );
-                        return codegen( ctx, node->children()[ 0U ] );
-                    }
-
-                    case NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
-                    case NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
-                    case NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );
-
-                    default:
-                        return nullptr;
-                }
-            },
-            [ &ctx ]( Identifier const & identifier ) -> llvm::Value *
-            {
-                auto * value{ ctx.symbols.getVariable( identifier.name ) };
-                if ( value == nullptr ) { return nullptr; }
-
-                if ( value->getType()->getNumContainedTypes() > 0 && value->getType()->getContainedType( 0U )->isDoubleTy() )
-                {
-                    return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), value );
-                }
-                return value;
-            },
-            [ &ctx ]( Number const number ) -> llvm::Value *
-            {
-                return llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( number ) );
-            },
-            [ &ctx ]( String const & str ) -> llvm::Value *
-            {
-                return ctx.builder->CreateGlobalStringPtr( str, "", 0U, ctx.module_.get() );
-            },
-            []( TypeID const ) -> llvm::Value *
-            {
-                return nullptr;
-            }
-        },
-        node->value()
-    );
-}
-
-template< typename ... T >
-llvm::Value * codegenUnary
-(
-    Context                                & ctx,
-    IRBuilderUnaryClbk< T ... >      const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERT( std::size( nodes ) == 1U );
-    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
-
-    if ( lhs == nullptr ) { return nullptr; }
-
-    return ( *( ctx.builder ).*clbk )( lhs, opName, T{} ... );
-}
-
-template< typename ... T >
-llvm::Value * codegenBinary
-(
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERT( std::size( nodes ) == 2U );
-    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
-    auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
-
-    if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
-
-    return ( *( ctx.builder ).*clbk )( lhs, rhs, opName, T{} ... );
-}
-
-template< typename ... T >
-llvm::Value * codegenAssign
-(
-    Context                                & ctx,
-    IRBuilderBinaryClbk< T ... >     const   clbk,
-    std::span< Node::Pointer const > const   nodes,
-    std::string_view                 const   opName
-)
-{
-    ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
-
-    ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-    auto * value{ ctx.symbols.getVariable( name ) };
-    if ( value == nullptr ) { return nullptr; }
-
-    ctx.builder->CreateStore( codegenBinary( ctx, clbk, nodes, opName ), value );
-    return value;
-}
 
 llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const nodes )
 {
@@ -662,4 +487,4 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< Node::Pointer const > c
     return nullptr;
 }
 
-} // namespace A1::LLVM
+} // namespace A1::LLVM::IR
