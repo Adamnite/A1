@@ -1,9 +1,10 @@
 set( SOURCES
-    ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/Compiler.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/AST/AST.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/AST/ASTHelper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/AST/ASTNode.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/AST/ASTPrinter.cpp
 
-    ${CMAKE_CURRENT_LIST_DIR}/Source/Parser/ExpressionTree.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/Source/Parser/ExpressionTreeHelper.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/Source/Parser/ExpressionTreeNode.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/Compiler/Compiler.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/ReservedToken.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Token.cpp

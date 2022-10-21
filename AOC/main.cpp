@@ -36,6 +36,19 @@ int main( int argc, char * argv[] )
         }
     );
 
+    std::optional< std::string > outputAST;
+    app.addOption
+    (
+        {
+            .short_       = "",
+            .long_        = "--ast",
+            .name         = "ast",
+            .description  = "Write Abstract Syntax Tree (AST) to standard output",
+            .valueOmitted = true,
+            .output       = outputAST
+        }
+    );
+
     std::optional< std::string > outputIR;
     app.addOption
     (
@@ -76,6 +89,7 @@ int main( int argc, char * argv[] )
             A1::Compiler::Settings settings
             {
                 .executableFilename = outputFile.value_or( "main" ),
+                .outputAST          = outputAST.has_value(),
                 .outputIR           = outputIR.has_value()
             };
 

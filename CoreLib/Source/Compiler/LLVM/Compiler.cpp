@@ -44,7 +44,7 @@
 namespace A1::LLVM
 {
 
-bool compile( Compiler::Settings settings, Node::Pointer const & node )
+bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 {
     /**
      * Initialize the target registry, ASM parser, ASM printers, etc.
@@ -97,7 +97,9 @@ bool compile( Compiler::Settings settings, Node::Pointer const & node )
         /**
          * Write generated LLVM IR code to standard output.
          */
+        std::printf( "\nLLVM IR:\n" );
         context.module_->print( llvm::outs(), nullptr );
+        std::printf( "\n" );
     }
 
     /**

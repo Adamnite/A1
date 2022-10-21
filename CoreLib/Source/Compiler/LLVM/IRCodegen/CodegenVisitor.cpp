@@ -28,7 +28,7 @@
 namespace A1::LLVM::IR
 {
 
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
+llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
 {
     if ( node == nullptr ) { return nullptr; }
 
@@ -36,12 +36,12 @@ llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
     (
         Overload
         {
-            [ &ctx, &node ]( NodeType const type ) -> llvm::Value *
+            [ &ctx, &node ]( AST::NodeType const type ) -> llvm::Value *
             {
                 switch ( type )
                 {
 #define CODEGEN( type, codegenFunc, builderFunc, opName ) \
-    case NodeType::type: return codegenFunc( ctx, &llvm::IRBuilder<>::builderFunc, node->children(), opName )
+    case AST::NodeType::type: return codegenFunc( ctx, &llvm::IRBuilder<>::builderFunc, node->children(), opName )
 
                     CODEGEN( UnaryMinus       , codegenUnary , CreateFNeg      , "nottemp" );
                     CODEGEN( LogicalNot       , codegenUnary , CreateNot       , "lnottmp" );
@@ -81,15 +81,15 @@ llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
                     CODEGEN( AssignBitwiseXor       , codegenAssign, CreateXor , "xortmp"  );
 
 #undef CODEGEN
-                    case NodeType::Assign    : return codegenVariableDefinition( ctx, node->children() );
-                    case NodeType::Call      : return codegenCall              ( ctx, node->children() );
-                    case NodeType::MemberCall: return codegenMemberCall        ( ctx, node->children() );
+                    case AST::NodeType::Assign    : return codegenVariableDefinition( ctx, node->children() );
+                    case AST::NodeType::Call      : return codegenCall              ( ctx, node->children() );
+                    case AST::NodeType::MemberCall: return codegenMemberCall        ( ctx, node->children() );
 
-                    case NodeType::StatementIf:
-                    case NodeType::StatementElif:
+                    case AST::NodeType::StatementIf:
+                    case AST::NodeType::StatementElif:
                         return codegenControlFlow( ctx, node->children() );
 
-                    case NodeType::StatementElse:
+                    case AST::NodeType::StatementElse:
                     {
                         // Generate LLVM IR for all the statements in else body
                         llvm::Value * value{ nullptr };
@@ -100,18 +100,18 @@ llvm::Value * codegen( Context & ctx, Node::Pointer const & node )
                         return value;
                     }
 
-                    case NodeType::StatementWhile:
+                    case AST::NodeType::StatementWhile:
                         return codegenLoopFlow( ctx, node->children() );
 
-                    case NodeType::StatementReturn:
+                    case AST::NodeType::StatementReturn:
                     {
                         ASSERT( std::size( node->children() ) == 1U );
                         return codegen( ctx, node->children()[ 0U ] );
                     }
 
-                    case NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
-                    case NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
-                    case NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );
+                    case AST::NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
+                    case AST::NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
+                    case AST::NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );
 
                     default:
                         return nullptr;

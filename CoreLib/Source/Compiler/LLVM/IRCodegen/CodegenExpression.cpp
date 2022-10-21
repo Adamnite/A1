@@ -44,7 +44,7 @@ namespace
     }
 
     [[ nodiscard ]]
-    llvm::Value * createVariable( Context & ctx, llvm::IRBuilder<> & scopeBuilder, Node::Pointer const & node, std::string_view const name )
+    llvm::Value * createVariable( Context & ctx, llvm::IRBuilder<> & scopeBuilder, AST::Node::Pointer const & node, std::string_view const name )
     {
         if ( node->is< TypeID >() )
         {
@@ -114,7 +114,7 @@ namespace
     }
 } // namespace
 
-llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 1U, "Call expression consists of identifier and parameters, if any" );
 
@@ -172,7 +172,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< Node::Pointer const > const
     return nullptr;
 }
 
-llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) == 2U, "Member call expression consists of two identifiers: variable and either data member or function member identifier" );
 
@@ -187,7 +187,7 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const >
         auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
         return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), memberPtr );
     }
-    else if ( member->is< NodeType >() && member->get< NodeType >() == NodeType::Call )
+    else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
         // Access function member
         return codegen( ctx, member );
@@ -196,7 +196,7 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< Node::Pointer const >
     return nullptr;
 }
 
-llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 2U, "Contract definition consists of an identifier and one or more statements in the contract's body" );
 
@@ -211,15 +211,15 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
     for ( auto i{ 1U }; i < std::size( nodes ); i++ )
     {
         auto const & node{ nodes[ i ] };
-        if ( node->is< NodeType >() )
+        if ( node->is< AST::NodeType >() )
         {
-            if ( node->get< NodeType >() == NodeType::VariableDefinition )
+            if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
                 dataMemberTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
                 dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getDoubleTy( *ctx.internalCtx ), 3U, false /* isSigned */ ) );
             }
-            else if ( node->get< NodeType >() == NodeType::FunctionDefinition )
+            else if ( node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition )
             {
                 // TODO: Call a function with contract type name prefix
                 codegen( ctx, node );
@@ -247,7 +247,7 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< Node::Pointer
     return nullptr;
 }
 
-llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 2U, "Function definition consists of an identifier and at least one statement in the function body" );
 
@@ -265,10 +265,9 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Poin
     for ( std::size_t i{ 0U }; i < std::size( nodes ); i++ )
     {
         auto const & node{ nodes[ i ] };
-        if ( node->is< NodeType >() )
+        if ( node->is< AST::NodeType >() )
         {
-            auto const nodeType{ node->get< NodeType >() };
-            if ( nodeType == NodeType::FunctionParameterDefinition )
+            if ( node->get< AST::NodeType >() == AST::NodeType::FunctionParameterDefinition )
             {
                 auto const & parameterNodes{ node->children() };
                 ASSERTM( std::size( parameterNodes ) == 2U, "Function parameter definition consists of an identifier and type annotation" );
@@ -314,10 +313,9 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Poin
     for ( std::size_t i{ 0U }; i < std::size( nodes ); i++ )
     {
         auto const & node{ nodes[ i ] };
-        if ( node->is< NodeType >() )
+        if ( node->is< AST::NodeType >() )
         {
-            auto const nodeType{ node->get< NodeType >() };
-            if ( nodeType == NodeType::StatementReturn )
+            if ( node->get< AST::NodeType >() == AST::NodeType::StatementReturn )
             {
                 if ( auto * return_{ codegen( ctx, node ) } )
                 {
@@ -344,7 +342,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< Node::Poin
     return function;
 }
 
-llvm::Value * codegenVariableDefinition( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of an identifier and either type annotation or initialization or both" );
 
@@ -369,7 +367,7 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< Node::Pointer
     return value;
 }
 
-llvm::Value * codegenControlFlow( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 2U, "Control flow consists of a condition and at least one statement in the if body" );
 
@@ -401,10 +399,10 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< Node::Pointer const 
             auto const & node{ nodes[ nodeIdx ] };
             if
             (
-                node->is< NodeType >() &&
+                node->is< AST::NodeType >() &&
                 (
-                    node->get< NodeType >() == NodeType::StatementElif ||
-                    node->get< NodeType >() == NodeType::StatementElse
+                    node->get< AST::NodeType >() == AST::NodeType::StatementElif ||
+                    node->get< AST::NodeType >() == AST::NodeType::StatementElse
                 )
             )
             {
@@ -454,7 +452,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< Node::Pointer const 
     return phi;
 }
 
-llvm::Value * codegenLoopFlow( Context & ctx, std::span< Node::Pointer const > const nodes )
+llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 2U, "Loop flow consists of a condition and at least one statement in the loop body" );
 

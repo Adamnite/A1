@@ -5,18 +5,18 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Parser/ExpressionTree.hpp>
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/AST.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
-#include "ExpressionTreeHelper.hpp"
+#include "ASTHelper.hpp"
 
 #include <fmt/format.h>
 
 #include <stdexcept>
 #include <cstdint>
 
-namespace A1
+namespace A1::AST
 {
 
 namespace
@@ -709,4 +709,4 @@ Node::Pointer parse( TokenIterator & tokenIt )
     return parseImpl( tokenIt, 0U, false );
 }
 
-} // namespace A1
+} // namespace A1::AST

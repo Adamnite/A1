@@ -121,9 +121,9 @@ namespace
 
 Context codegen
 (
-    Node::Pointer    const & moduleNode,
-    llvm::DataLayout const   dataLayout,
-    std::string_view const   targetTriple
+    AST::Node::Pointer const & moduleNode,
+    llvm::DataLayout   const   dataLayout,
+    std::string_view   const   targetTriple
 )
 {
     auto ctx
@@ -161,7 +161,7 @@ Context codegen
 
     ASSERTM
     (
-        moduleNode->is< NodeType >() && moduleNode->get< NodeType >() == NodeType::ModuleDefinition,
+        moduleNode->is< AST::NodeType >() && moduleNode->get< AST::NodeType >() == AST::NodeType::ModuleDefinition,
         "Module definition is the root node of the AST"
     );
 
@@ -179,10 +179,10 @@ Context codegen
         if ( node == nullptr ) { continue; }
         if
         (
-            node->is< NodeType >() &&
+            node->is< AST::NodeType >() &&
             (
-                node->get< NodeType >() == NodeType::ContractDefinition ||
-                node->get< NodeType >() == NodeType::FunctionDefinition
+                node->get< AST::NodeType >() == AST::NodeType::ContractDefinition ||
+                node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition
             )
         )
         {

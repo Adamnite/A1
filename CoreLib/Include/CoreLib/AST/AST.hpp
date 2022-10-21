@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
-namespace A1
+namespace A1::AST
 {
 
 [[ nodiscard ]] Node::Pointer parse( TokenIterator & tokenIt );
 
-} // namespace A1
+} // namespace A1::AST

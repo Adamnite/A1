@@ -5,12 +5,12 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Parser/ExpressionTree.hpp>
+#include <CoreLib/AST/AST.hpp>
 #include <CoreLib/Types.hpp>
 
 #include "Utils/Utils.hpp"
 
-namespace A1
+namespace A1::AST
 {
 
 Node::Node( ValueType value, ErrorInfo errorInfo )
@@ -24,4 +24,4 @@ Node::Node ( ValueType value, std::vector< Pointer > children, ErrorInfo errorIn
 , errorInfo_{ std::move( errorInfo ) }
 {}
 
-} // namespace A1
+} // namespace A1::AST

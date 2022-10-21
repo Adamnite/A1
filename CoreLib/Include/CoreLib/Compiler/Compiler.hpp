@@ -7,12 +7,12 @@
 
 #pragma once
 
+#include <CoreLib/AST/ASTNode.hpp>
 #include <CoreLib/Compiler/Settings.hpp>
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
 
 namespace A1
 {
 
-[[ nodiscard ]] bool compile( Compiler::Settings settings, Node::Pointer const & node );
+[[ nodiscard ]] bool compile( Compiler::Settings settings, AST::Node::Pointer const & node );
 
 } // namespace A1

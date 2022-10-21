@@ -17,6 +17,9 @@ struct Settings
     /** Name of the compiled executable file. */
     std::string executableFilename;
 
+    /** Write AST to standard output. */
+    bool outputAST{ false };
+
     /** Write generated LLVM IR code to standard output. */
     bool outputIR{ false };
 };

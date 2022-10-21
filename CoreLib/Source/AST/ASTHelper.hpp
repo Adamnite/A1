@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 
 #include <cstdint>
 
-namespace A1
+namespace A1::AST
 {
 
 /**
@@ -75,4 +75,4 @@ enum class NodeAssociativity : std::uint8_t
 
 [[ nodiscard ]] bool hasHigherPrecedence( NodeType const lhs, NodeType const rhs ) noexcept;
 
-} // namespace A1
+} // namespace A1::AST

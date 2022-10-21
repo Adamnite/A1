@@ -9,7 +9,7 @@
 
 #include "../Context.hpp"
 
-#include <CoreLib/Parser/ExpressionTreeNode.hpp>
+#include <CoreLib/AST/ASTNode.hpp>
 
 #if defined (__clang__)
 #   pragma clang diagnostic push
@@ -30,6 +30,6 @@
 namespace A1::LLVM::IR
 {
 
-llvm::Value * codegen( Context & ctx, Node::Pointer const & node );
+llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node );
 
 } // namespace A1::LLVM::IR
