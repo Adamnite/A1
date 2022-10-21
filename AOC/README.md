@@ -16,6 +16,7 @@ OPTIONS:
         -h, --help <help> Print help
         -v, --version <version> Print version
         -o, --output <file> Write output to specific file
+        --ast <ast> Write Abstract Syntax Tree (AST) to standard output
         --llvm-ir <llvm-ir> Write generated LLVM IR code to standard output
 
 ARGS:
