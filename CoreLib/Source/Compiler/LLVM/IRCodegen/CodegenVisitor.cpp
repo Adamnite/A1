@@ -43,37 +43,37 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
 #define CODEGEN( type, codegenFunc, builderFunc, opName ) \
     case AST::NodeType::type: return codegenFunc( ctx, &llvm::IRBuilder<>::builderFunc, node->children(), opName )
 
-                    CODEGEN( UnaryMinus       , codegenUnary , CreateFNeg      , "nottemp" );
+                    CODEGEN( UnaryMinus       , codegenUnary , CreateNeg       , "nottemp" );
                     CODEGEN( LogicalNot       , codegenUnary , CreateNot       , "lnottmp" );
                     CODEGEN( LogicalAnd       , codegenBinary, CreateLogicalAnd, "landtmp" );
                     CODEGEN( LogicalOr        , codegenBinary, CreateLogicalOr , "lortmp"  );
-                    CODEGEN( Multiplication   , codegenBinary, CreateFMul      , "multmp"  );
-                    CODEGEN( Division         , codegenBinary, CreateFDiv      , "divtmp"  );
+                    CODEGEN( Multiplication   , codegenBinary, CreateMul       , "multmp"  );
+                    CODEGEN( Division         , codegenBinary, CreateSDiv      , "divtmp"  );
                     CODEGEN( FloorDivision    , codegenBinary, CreateSDiv      , "fdivtmp" );
-                    CODEGEN( Modulus          , codegenBinary, CreateFRem      , "modtmp"  );
-                    CODEGEN( Addition         , codegenBinary, CreateFAdd      , "addtmp"  );
-                    CODEGEN( Subtraction      , codegenBinary, CreateFSub      , "subtmp"  );
+                    CODEGEN( Modulus          , codegenBinary, CreateSRem      , "modtmp"  );
+                    CODEGEN( Addition         , codegenBinary, CreateAdd       , "addtmp"  );
+                    CODEGEN( Subtraction      , codegenBinary, CreateSub       , "subtmp"  );
                     CODEGEN( BitwiseLeftShift , codegenBinary, CreateShl       , "lshtmp"  );
                     CODEGEN( BitwiseRightShift, codegenBinary, CreateAShr      , "rshtmp"  );
                     CODEGEN( BitwiseAnd       , codegenBinary, CreateAnd       , "andtmp"  );
                     CODEGEN( BitwiseOr        , codegenBinary, CreateOr        , "ortmp "  );
                     CODEGEN( BitwiseXor       , codegenBinary, CreateXor       , "xortmp"  );
                     CODEGEN( BitwiseNot       , codegenUnary , CreateNot       , "nottmp"  );
-                    CODEGEN( Equality         , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( Inequality       , codegenBinary, CreateFCmpONE   , "netmp"   );
-                    CODEGEN( GreaterThan      , codegenBinary, CreateFCmpOGT   , "gttmp"   );
-                    CODEGEN( GreaterThanEqual , codegenBinary, CreateFCmpOGE   , "getmp"   );
-                    CODEGEN( LessThan         , codegenBinary, CreateFCmpOLT   , "ltmp"    );
-                    CODEGEN( LessThanEqual    , codegenBinary, CreateFCmpOLE   , "letmp"   );
-                    CODEGEN( IsIdentical      , codegenBinary, CreateFCmpOEQ   , "eqtmp"   );
-                    CODEGEN( IsNotIdentical   , codegenBinary, CreateFCmpONE   , "netmp"   );
+                    CODEGEN( Equality         , codegenBinary, CreateICmpEQ    , "eqtmp"   );
+                    CODEGEN( Inequality       , codegenBinary, CreateICmpNE    , "netmp"   );
+                    CODEGEN( GreaterThan      , codegenBinary, CreateICmpUGT   , "gttmp"   );
+                    CODEGEN( GreaterThanEqual , codegenBinary, CreateICmpUGE   , "getmp"   );
+                    CODEGEN( LessThan         , codegenBinary, CreateICmpULT   , "ltmp"    );
+                    CODEGEN( LessThanEqual    , codegenBinary, CreateICmpULE   , "letmp"   );
+                    CODEGEN( IsIdentical      , codegenBinary, CreateICmpEQ    , "eqtmp"   );
+                    CODEGEN( IsNotIdentical   , codegenBinary, CreateICmpNE    , "netmp"   );
 
-                    CODEGEN( AssignAddition         , codegenAssign, CreateFAdd, "addtmp"  );
-                    CODEGEN( AssignSubtraction      , codegenAssign, CreateFSub, "subtmp"  );
-                    CODEGEN( AssignMultiplication   , codegenAssign, CreateFMul, "multmp"  );
-                    CODEGEN( AssignDivision         , codegenAssign, CreateFDiv, "divtmp"  );
-                    CODEGEN( AssignFloorDivision    , codegenAssign, CreateSDiv, "fdivtmp" );
-                    CODEGEN( AssignModulus          , codegenAssign, CreateFRem, "modtmp"  );
+                    CODEGEN( AssignAddition         , codegenAssign, CreateAdd , "addtmp"  );
+                    CODEGEN( AssignSubtraction      , codegenAssign, CreateSub , "subtmp"  );
+                    CODEGEN( AssignMultiplication   , codegenAssign, CreateMul , "multmp"  );
+                    CODEGEN( AssignDivision         , codegenAssign, CreateUDiv, "divtmp"  );
+                    CODEGEN( AssignFloorDivision    , codegenAssign, CreateUDiv, "fdivtmp" );
+                    CODEGEN( AssignModulus          , codegenAssign, CreateURem, "modtmp"  );
                     CODEGEN( AssignBitwiseLeftShift , codegenAssign, CreateShl , "shltmp"  );
                     CODEGEN( AssignBitwiseRightShift, codegenAssign, CreateAShr, "shrtmp"  );
                     CODEGEN( AssignBitwiseAnd       , codegenAssign, CreateAnd , "andtmp"  );
@@ -122,15 +122,15 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                 auto * value{ ctx.symbols.getVariable( identifier.name ) };
                 if ( value == nullptr ) { return nullptr; }
 
-                if ( value->getType()->getNumContainedTypes() > 0 && value->getType()->getContainedType( 0U )->isDoubleTy() )
+                if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( 64U ) )
                 {
-                    return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), value );
+                    return ctx.builder->CreateLoad( llvm::Type::getInt64Ty( *ctx.internalCtx ), value );
                 }
                 return value;
             },
             [ &ctx ]( Number const number ) -> llvm::Value *
             {
-                return llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( number ) );
+                return llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, number, false /* isSigned */ ) );
             },
             [ &ctx ]( String const & str ) -> llvm::Value *
             {

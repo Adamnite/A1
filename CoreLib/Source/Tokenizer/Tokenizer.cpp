@@ -7,6 +7,7 @@
 
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
+#include <charconv>
 #include <cstdlib>
 
 namespace A1
@@ -83,10 +84,12 @@ namespace
         {
             if ( std::isdigit( result.front() ) )
             {
-                char * endPtr{ nullptr };
-                Number number{ std::strtod( result.data(), &endPtr ) };
-
-                if ( endPtr == result.data() )
+                Number number{ 0U };
+                if
+                (
+                    auto const [ ptr, ec ]{ std::from_chars( result.data(), result.data() + result.size(), number ) };
+                    ec != std::errc{}
+                )
                 {
                     return {};
                     // TODO: Throw an unexpected error instead here

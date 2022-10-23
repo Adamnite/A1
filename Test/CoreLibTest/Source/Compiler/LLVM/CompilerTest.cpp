@@ -113,7 +113,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(45)\n"
                 "print(\"Hello, world!\")",
             .expectedOutput =
-                "45.000000\n"
+                "45\n"
                 "Hello, world!"
         },
         TestParameter
@@ -144,7 +144,7 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(j)",
             .expectedOutput =
                 "Inside else\n"
-                "4.000000"
+                "4"
         },
         TestParameter
         {
@@ -178,10 +178,10 @@ INSTANTIATE_TEST_SUITE_P
                 "    print(i)\n"
                 "    i += 1",
             .expectedOutput =
-                "0.000000\n"
-                "1.000000\n"
-                "2.000000\n"
-                "3.000000"
+                "0\n"
+                "1\n"
+                "2\n"
+                "3"
         },
         TestParameter
         {
@@ -192,7 +192,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(n)\n",
             .expectedOutput =
                 "\n"
-                "0.000000"
+                "0"
         },
         TestParameter
         {
@@ -203,7 +203,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(n)",
             .expectedOutput =
                 "Hello, world!\n"
-                "45.000000"
+                "45"
         },
         TestParameter
         {
@@ -214,7 +214,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(n)",
             .expectedOutput =
                 "Hello, world!\n"
-                "45.000000"
+                "45"
         },
         TestParameter
         {
@@ -227,7 +227,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(n)",
             .expectedOutput =
                 "Hello, folks!\n"
-                "450.000000"
+                "450"
         },
         TestParameter
         {
@@ -247,7 +247,7 @@ INSTANTIATE_TEST_SUITE_P
                 "\n"
                 "print(func())",
             .expectedOutput =
-                "45.000000"
+                "45"
         },
         TestParameter
         {
@@ -260,7 +260,7 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var)",
             .expectedOutput =
                 "Summing...\n"
-                "9.000000"
+                "9"
         },
         TestParameter
         {
@@ -289,9 +289,9 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.add(1, 2))\n"
                 "print(var.sum)",
             .expectedOutput =
-                "0.000000\n"
-                "3.000000\n"
-                "3.000000"
+                "0\n"
+                "3\n"
+                "3"
         }
     )
 );
