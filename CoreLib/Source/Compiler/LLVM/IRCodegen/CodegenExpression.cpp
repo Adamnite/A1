@@ -33,51 +33,11 @@ namespace A1::LLVM::IR
 namespace
 {
     [[ nodiscard ]]
-    llvm::Value * allocate( llvm::IRBuilder<> & builder, llvm::Type * type, std::string_view const name, llvm::Value * initialValue )
-    {
-        auto * value{ builder.CreateAlloca( type, 0U, name.data() ) };
-        if ( initialValue != nullptr )
-        {
-            builder.CreateStore( initialValue, value );
-        }
-        return value;
-    }
-
-    [[ nodiscard ]]
-    llvm::Value * createVariable( Context & ctx, llvm::IRBuilder<> & scopeBuilder, AST::Node::Pointer const & node, std::string_view const name )
-    {
-        if ( node->is< TypeID >() )
-        {
-            auto const typeID{ node->get< TypeID >() };
-            if ( typeID == Registry::getNumberHandle() )
-            {
-                return allocate( scopeBuilder, llvm::Type::getDoubleTy( *ctx.internalCtx ), name, llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( 0.0 ) ) );
-            }
-            else if ( typeID == Registry::getStringLiteralHandle() )
-            {
-                return ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() );
-            }
-            else
-            {
-                return nullptr;
-            }
-        }
-        else if ( node->is< Number >() )
-        {
-            return allocate( scopeBuilder, llvm::Type::getDoubleTy( *ctx.internalCtx ), name, codegen( ctx, node ) );
-        }
-        else
-        {
-            return codegen( ctx, node );
-        }
-    }
-
-    [[ nodiscard ]]
     llvm::Value * getPrintFormat( Context & ctx, llvm::Type const * type )
     {
-        if ( type->isDoubleTy() )
+        if ( type->isIntegerTy( 64U ) )
         {
-            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%f\n", "numFormat", 0U, ctx.module_.get() ) };
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%llu\n", "numFormat", 0U, ctx.module_.get() ) };
             return format;
         }
         else if
@@ -101,7 +61,7 @@ namespace
     {
         if ( typeID == Registry::getNumberHandle() )
         {
-            return llvm::Type::getDoubleTy( *ctx.internalCtx );
+            return llvm::Type::getInt64Ty( *ctx.internalCtx );
         }
         else if ( typeID == Registry::getStringLiteralHandle() )
         {
@@ -185,7 +145,7 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
         // Access data member
         auto * variable { ctx.symbols.variables[ variableName ] };
         auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
-        return ctx.builder->CreateLoad( llvm::Type::getDoubleTy( *ctx.internalCtx ), memberPtr );
+        return ctx.builder->CreateLoad( llvm::Type::getInt64Ty( *ctx.internalCtx ), memberPtr );
     }
     else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
@@ -216,8 +176,8 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
             if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
-                dataMemberTypes.push_back( llvm::Type::getDoubleTy( *ctx.internalCtx ) );
-                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getDoubleTy( *ctx.internalCtx ), 3U, false /* isSigned */ ) );
+                dataMemberTypes.push_back( llvm::Type::getInt64Ty( *ctx.internalCtx ) );
+                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
             }
             else if ( node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition )
             {
@@ -362,7 +322,30 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
      */
     auto const & node{ std::size( nodes ) <= 2U ? nodes[ 1U ] : nodes[ 2U ] };
 
-    auto * value{ createVariable( ctx, inScopeBuilder, node, name ) };
+    llvm::Value * value{ nullptr };
+
+    if ( node->is< TypeID >() )
+    {
+        auto const typeID{ node->get< TypeID >() };
+        if ( typeID == Registry::getNumberHandle() )
+        {
+            value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
+            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
+        }
+        else if ( typeID == Registry::getStringLiteralHandle() )
+        {
+            value = ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() );
+        }
+    }
+    else if ( node->is< Number >() )
+    {
+        value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
+        inScopeBuilder.CreateStore( codegen( ctx, node ), value );
+    }
+    else
+    {
+        value = codegen( ctx, node );
+    }
     ctx.symbols.variables[ name ] = value;
     return value;
 }
@@ -374,9 +357,14 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     auto * condition{ codegen( ctx, nodes[ 0U ] ) };
     if ( condition == nullptr ) { return nullptr; }
 
-    // Convert condition to boolean by comparing it to 0.0
-    condition = ctx.builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *ctx.internalCtx ), "booltmp" );
-    condition = ctx.builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( 0.0 ) ), "ifcond" );
+    // Convert condition to boolean by comparing it to 0
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateICmpNE
+    (
+        condition,
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        "cond"
+    );
 
     auto * parent{ ctx.builder->GetInsertBlock()->getParent() };
 
@@ -466,9 +454,14 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     auto * condition{ codegen( ctx, nodes[ 0U ] ) };
     if ( condition == nullptr ) { return nullptr; }
 
-    // Convert condition to boolean by comparing it to 0.0
-    condition = ctx.builder->CreateUIToFP( condition, llvm::Type::getDoubleTy( *ctx.internalCtx ), "booltmp" );
-    condition = ctx.builder->CreateFCmpONE( condition, llvm::ConstantFP::get( *ctx.internalCtx, llvm::APFloat( 0.0 ) ), "whilecond" );
+    // Convert condition to boolean by comparing it to 0
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateICmpNE
+    (
+        condition,
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        "cond"
+    );
 
     auto * afterLoopBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "while.after", parent ) };
     ctx.builder->CreateCondBr( condition, loopBlock, afterLoopBlock );
