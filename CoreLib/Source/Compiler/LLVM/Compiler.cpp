@@ -23,6 +23,8 @@
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/MC/TargetRegistry.h>
+#include <llvm/Passes/OptimizationLevel.h>
+#include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/raw_ostream.h>
@@ -91,6 +93,27 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
      * Generate LLVM IR code from the AST.
      */
     auto context{ IR::codegen( node, targetMachine->createDataLayout(), targetTriple ) };
+
+    /**
+     * Optimize LLVM IR.
+     */
+    {
+        llvm::LoopAnalysisManager     loopAnalysisManager;
+        llvm::FunctionAnalysisManager functionAnalysisManager;
+        llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
+        llvm::ModuleAnalysisManager   moduleAnalysisManager;
+
+        llvm::PassBuilder passBuilder{ targetMachine };
+        passBuilder.registerModuleAnalyses  ( moduleAnalysisManager   );
+        passBuilder.registerCGSCCAnalyses   ( cGSCCAnalysisManager    );
+        passBuilder.registerFunctionAnalyses( functionAnalysisManager );
+        passBuilder.registerLoopAnalyses    ( loopAnalysisManager     );
+
+        passBuilder.crossRegisterProxies( loopAnalysisManager, functionAnalysisManager, cGSCCAnalysisManager, moduleAnalysisManager );
+
+        auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
+        modulePassManager.run( *context.module_, moduleAnalysisManager );
+    }
 
     if ( settings.outputIR )
     {

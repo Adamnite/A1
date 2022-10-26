@@ -160,7 +160,7 @@ INSTANTIATE_TEST_SUITE_P
                 "elif j == 4:\n"
                 "    print(\"Inside 2nd elif\")\n"
                 "    if i == 0:\n"
-                "         print(\"i is 0\")"
+                "         print(\"i is 0\")\n"
                 "    print(\"j is 4\")\n"
                 "else:\n"
                 "    print(\"Inside else\")\n"
