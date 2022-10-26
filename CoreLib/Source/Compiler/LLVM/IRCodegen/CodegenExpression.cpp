@@ -430,14 +430,14 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     parent->getBasicBlockList().push_back( endBlock );
     ctx.builder->SetInsertPoint( endBlock );
 
-    auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt32Ty( *ctx.internalCtx ), 2, "iftmp" ) };
-    phi->addIncoming( then, thenBlock );
     if ( hasElifElseBlock )
     {
+        auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt32Ty( *ctx.internalCtx ), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
+        phi->addIncoming( then, thenBlock );
         phi->addIncoming( elifOrElse_, elseBlock );
+        return phi;
     }
-
-    return phi;
+    return then;
 }
 
 llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
