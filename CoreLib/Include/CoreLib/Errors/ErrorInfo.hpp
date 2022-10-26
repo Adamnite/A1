@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <string>
+#include <cstddef>
 
 namespace A1
 {
@@ -17,8 +17,8 @@ struct ErrorInfo
     /** Line number where the error has happened. */
     std::size_t lineNumber{ 0U };
 
-    /** Character index in the specific line pointing to the beginning of the error. */
-    std::size_t charIndex{ 0U };
+    /** Column number pointing to the beginning of the error. */
+    std::size_t columnNumber{ 0U };
 };
 
 } // namespace A1::Compiler
