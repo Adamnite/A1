@@ -5,6 +5,7 @@
  * This code is open-sourced under the MIT license.
  */
 
+#include <CoreLib/Errors/ParsingError.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
 #include <gtest/gtest.h>
@@ -372,6 +373,68 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::OpParenthesisClose,
                 A1::Eof{}
             }
+        }
+    )
+);
+
+namespace
+{
+    struct ErrorTestParameter
+    {
+        std::string_view expression;
+        std::string_view expectedErrorMessage;
+
+        friend std::ostream & operator<<( std::ostream & os, ErrorTestParameter const & param )
+        {
+            return os << param.expression;
+        }
+    };
+
+    struct TokenizerErrorTestFixture : ::testing::TestWithParam< ErrorTestParameter > {};
+} // namespace
+
+TEST_P( TokenizerErrorTestFixture, tokenizationError )
+{
+    auto const [ expression, expectedErrorMessage ]{ GetParam() };
+
+    EXPECT_THROW
+    (
+        {
+            try
+            {
+                auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
+                while ( tokenIt->is_not< A1::Eof >() ) { ++tokenIt; }
+            }
+            catch ( A1::ParsingError const & ex )
+            {
+                EXPECT_STREQ( expectedErrorMessage.data(), ex.what() );
+                throw;
+            }
+        },
+        A1::ParsingError
+    );
+}
+
+INSTANTIATE_TEST_SUITE_P
+(
+    TokenizerErrorTest,
+    TokenizerErrorTestFixture,
+    ::testing::Values
+    (
+        ErrorTestParameter
+        {
+            .expression           = "var _ 5",
+            .expectedErrorMessage = "0:4: error: Unknown token"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "var = 5a",
+            .expectedErrorMessage = "0:8: error: An identifier cannot start with a number"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "var = \"foo",
+            .expectedErrorMessage = "0:10: error: Missing closing quote"
         }
     )
 );

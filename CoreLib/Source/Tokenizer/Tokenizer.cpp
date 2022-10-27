@@ -51,13 +51,14 @@ namespace
     {
         std::string result;
 
-        std::optional< int > lastChar;
+        std::optional< int > lastChar{ stream.pop() };
 
+        auto isFirstCharacterDigit{ lastChar && std::isdigit( *lastChar ) };
         auto isNumber{ true };
 
         for
         (
-            lastChar = stream.pop();
+            ;
             lastChar && ( getCharType( *lastChar ) == CharType::Alphanumeric || *lastChar == '.' || *lastChar == '_' );
             lastChar = stream.pop()
         )
@@ -72,6 +73,11 @@ namespace
                 break;
             }
             result.push_back( static_cast< char >( *lastChar ) );
+        }
+
+        if ( isFirstCharacterDigit && !isNumber )
+        {
+            throw ParsingError{ stream.errorInfo(), "An identifier cannot start with a number" };
         }
 
         // return last character back to the stream
