@@ -6,6 +6,7 @@
  */
 
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
+#include <CoreLib/Errors/ParsingError.hpp>
 
 #include <charconv>
 #include <cstdlib>
@@ -50,13 +51,14 @@ namespace
     {
         std::string result;
 
-        std::optional< int > lastChar;
+        std::optional< int > lastChar{ stream.pop() };
 
+        auto isFirstCharacterDigit{ lastChar && std::isdigit( *lastChar ) };
         auto isNumber{ true };
 
         for
         (
-            lastChar = stream.pop();
+            ;
             lastChar && ( getCharType( *lastChar ) == CharType::Alphanumeric || *lastChar == '.' || *lastChar == '_' );
             lastChar = stream.pop()
         )
@@ -71,6 +73,11 @@ namespace
                 break;
             }
             result.push_back( static_cast< char >( *lastChar ) );
+        }
+
+        if ( isFirstCharacterDigit && !isNumber )
+        {
+            throw ParsingError{ stream.errorInfo(), "An identifier cannot start with a number" };
         }
 
         // return last character back to the stream
@@ -91,8 +98,7 @@ namespace
                     ec != std::errc{}
                 )
                 {
-                    return {};
-                    // TODO: Throw an unexpected error instead here
+                    throw ParsingError{ stream.errorInfo(), "Invalid number" };
                 }
 
                 return Token{ number, stream.errorInfo() };
@@ -108,9 +114,9 @@ namespace
 
         auto escaped{ false };
 
-        while ( auto const c{ stream.pop().value_or( -1 ) } )
+        while ( auto const c{ stream.pop() } )
         {
-            if ( c == '\\' )
+            if ( *c == '\\' )
             {
                 escaped = true;
                 continue;
@@ -118,29 +124,28 @@ namespace
 
             if ( escaped )
             {
-                switch( c )
+                switch ( *c )
                 {
                     case 't': result.push_back( '\t' ); break;
                     case 'n': result.push_back( '\n' ); break;
                     case 'r': result.push_back( '\r' ); break;
                     case '0': result.push_back( '\0' ); break;
-                    default : result.push_back( c    ); break;
+                    default : result.push_back( *c   ); break;
                 }
                 escaped = false;
             }
-            else if ( c == '"' )
+            else if ( *c == '"' )
             {
                 // we have read the closing quote, thus we have read the word
                 return Token{ std::move( result ), stream.errorInfo() };
             }
             else
             {
-                result.push_back(c);
+                result.push_back( *c );
             }
         }
 
-        // TODO: Throw a parsing error
-        return {};
+        throw ParsingError{ stream.errorInfo(), "Missing closing quote" };
     }
 
     [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )
@@ -196,8 +201,7 @@ namespace
                     auto const op{ getOperator( stream ) };
                     if ( op == ReservedToken::Unknown )
                     {
-                        // TODO: Throw parsing error
-                        return {};
+                        throw ParsingError{ stream.errorInfo(), "Unknown token" };
                     }
                     return { op, stream.errorInfo() };
                 }

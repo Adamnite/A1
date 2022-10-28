@@ -16,7 +16,7 @@ void PushBackStream::push( int const c ) noexcept
 
     if ( c== '\n' ) { --errorInfo_.lineNumber; }
 
-    --errorInfo_.charIndex;
+    --errorInfo_.columnNumber;
 }
 
 std::optional< int > PushBackStream::pop() noexcept
@@ -68,7 +68,7 @@ std::optional< int > PushBackStream::pop() noexcept
 
     if ( result == '\n' ) { ++errorInfo_.lineNumber; }
 
-    ++errorInfo_.charIndex;
+    ++errorInfo_.columnNumber;
 
     return result;
 }
