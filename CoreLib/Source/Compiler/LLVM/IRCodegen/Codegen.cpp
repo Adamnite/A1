@@ -48,7 +48,7 @@ namespace
     [[ nodiscard ]]
     llvm::Value * createBlock( llvm::Module * module_, llvm::LLVMContext * ctx, std::string_view const name )
     {
-        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt64Ty( *ctx ) }, "Block" ) };
+        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt32Ty( *ctx ) }, "Block" ) };
         auto * block
         {
             new llvm::GlobalVariable

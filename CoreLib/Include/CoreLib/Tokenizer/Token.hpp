@@ -28,7 +28,7 @@ struct Indentation : std::monostate {};
 struct Newline     : std::monostate {};
 struct Eof         : std::monostate {};
 
-using Number = std::uint64_t;
+using Number = std::uint32_t;
 using String = std::string;
 
 class Token

@@ -35,9 +35,9 @@ namespace
     [[ nodiscard ]]
     llvm::Value * getPrintFormat( Context & ctx, llvm::Type const * type )
     {
-        if ( type->isIntegerTy( 64U ) )
+        if ( type->isIntegerTy( sizeof( Number ) * 8U ) )
         {
-            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%llu\n", "numFormat", 0U, ctx.module_.get() ) };
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%lu\n", "numFormat", 0U, ctx.module_.get() ) };
             return format;
         }
         else if
@@ -61,7 +61,7 @@ namespace
     {
         if ( typeID == Registry::getNumberHandle() )
         {
-            return llvm::Type::getInt64Ty( *ctx.internalCtx );
+            return llvm::Type::getInt32Ty( *ctx.internalCtx );
         }
         else if ( typeID == Registry::getStringLiteralHandle() )
         {
@@ -145,7 +145,7 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
         // Access data member
         auto * variable { ctx.symbols.variables[ variableName ] };
         auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
-        return ctx.builder->CreateLoad( llvm::Type::getInt64Ty( *ctx.internalCtx ), memberPtr );
+        return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), memberPtr );
     }
     else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
@@ -176,8 +176,8 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
             if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
-                dataMemberTypes.push_back( llvm::Type::getInt64Ty( *ctx.internalCtx ) );
-                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
+                dataMemberTypes.push_back( llvm::Type::getInt32Ty( *ctx.internalCtx ) );
+                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
             }
             else if ( node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition )
             {
@@ -329,8 +329,8 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
         auto const typeID{ node->get< TypeID >() };
         if ( typeID == Registry::getNumberHandle() )
         {
-            value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
-            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
+            value = inScopeBuilder.CreateAlloca( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, name.data() );
+            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
         }
         else if ( typeID == Registry::getStringLiteralHandle() )
         {
@@ -339,7 +339,7 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
     }
     else if ( node->is< Number >() )
     {
-        value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
+        value = inScopeBuilder.CreateAlloca( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, name.data() );
         inScopeBuilder.CreateStore( codegen( ctx, node ), value );
     }
     else
@@ -358,7 +358,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     if ( condition == nullptr ) { return nullptr; }
 
     // Convert condition to boolean by comparing it to 0
-    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
     condition = ctx.builder->CreateICmpNE
     (
         condition,
@@ -455,7 +455,7 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     if ( condition == nullptr ) { return nullptr; }
 
     // Convert condition to boolean by comparing it to 0
-    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
     condition = ctx.builder->CreateICmpNE
     (
         condition,
