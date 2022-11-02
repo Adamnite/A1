@@ -43,6 +43,8 @@
 #   pragma GCC diagnostic pop
 #endif
 
+#include <fmt/format.h>
+
 namespace A1::LLVM
 {
 
@@ -61,9 +63,12 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
      * In order to specify the architecture we want to target, we need the
      * target triple which has the form: '<arch><sub>-<vendor>-<sys>-<abi>'.
      * An example of such target triple is: 'x86_64-unknown-linux-gnu'.
-     * Even though LLVM supports cross-compilation, we target current machine here.
      */
+#ifdef TESTS_ENABLED
     auto const targetTriple{ llvm::sys::getDefaultTargetTriple() };
+#else
+    auto const targetTriple{ "wasm32-unknown-wasi" };
+#endif // TESTS_ENABLED
 
     std::string error;
     auto const * target{ llvm::TargetRegistry::lookupTarget( targetTriple, error ) };
@@ -147,7 +152,28 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
     clang::DiagnosticsEngine diagnosticsEngine{ diagnosticIDs, &*diagnosticOptions, diagnosticClient };
 
     clang::driver::Driver driver{ CLANG_PATH, targetTriple, diagnosticsEngine };
-    clang::ArrayRef< char const * > arguments{ "-g", IROutputFilename, "-o", settings.executableFilename.c_str() };
+
+#ifndef TESTS_ENABLED
+    static std::array< std::string, 3U > ownedArguments
+    {
+        {
+            fmt::format( "--target={}" , targetTriple              ),
+            fmt::format( "--sysroot={}", WASM_SYSROOT_PATH         ),
+            fmt::format( "-L{}"        , WASM_RUNTIME_LIBRARY_PATH )
+        },
+    };
+#endif // TESTS_ENABLED
+
+    clang::ArrayRef< char const * > arguments
+    {
+#ifndef TESTS_ENABLED
+        ownedArguments[ 0U ].data(),
+        ownedArguments[ 1U ].data(),
+        ownedArguments[ 2U ].data(),
+#endif // TESTS_ENABLED
+        "-g", IROutputFilename,
+        "-o", settings.executableFilename.data()
+    };
 
     std::unique_ptr< clang::driver::Compilation > compilation{ driver.BuildCompilation( arguments ) };
 

@@ -3,6 +3,7 @@
 <p align="center">
     <a href="#getting-started">Getting started</a> |
     <a href="#development">Development</a> |
+    <a href="#smart-contracts">Smart contracts</a> |
     <a href="#join-us">Join us</a>
 </p>
 
@@ -26,24 +27,40 @@ Learn more about the A1 project:
 
 ## Development
 
-### Install prerequisites on MacOS
+### Prerequisites
 
-Run the following commands to install the prerequisites on MacOS:
+- WASI SDK 15.0
+- LLVM 14
+- Clang 14
+
+Since A1 is compiled down to WASM, we need WASM sysroot as well as WASM runtime library. We recommend using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) but any other toolchain will work too.
+
+Run following commands in order to get both sysroot and runtime library:
+
+```sh
+$ # WASI sysroot
+$ curl -LO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/wasi-sysroot-15.0.tar.gz
+$ tar xzvf wasi-sysroot-15.0.tar.gz
+$ export WASI_SYSROOT=$(pwd)/wasi-sysroot
+$
+$ # WASI runtime
+$ curl -LO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/libclang_rt.builtins-wasm32-wasi-15.0.tar.gz
+$ tar xzvf libclang_rt.builtins-wasm32-wasi-15.0.tar.gz
+$ export WASI_RUNTIME=$(pwd)/lib/wasi/libclang_rt.builtins-wasm32.a
+```
+
+### MacOS specific
+
+Run the following commands to install the rest of prerequisites on MacOS:
 
 ```sh
 $ brew install wget llvm@14 cmake ninja
 $ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
 ```
 
+## Ubuntu specific
 
-### Install prerequisites on Windows
-
-Please use the following [guide](https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/) for setting up a Linux Subsystem and running the Bash shell on your windows machine. Then proceed to follow the A1 installation instructions for Ubuntu Linux.
-
-
-### Install prerequisites on Ubuntu Linux
-
-Run the following commands to install the prerequisites on Ubuntu Linux:
+Run the following commands to install the rest of prerequisites on Ubuntu:
 
 ```sh
 $ # Install cmake
@@ -66,32 +83,38 @@ Make sure you are in the A1 directory. Then, execute the following commands in o
 
 ```sh
 $ mkdir -p build && cd build
-$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
+$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DWASM_SYSROOT_PATH=$WASI_SYSROOT -DWASM_RUNTIME_LIBRARY_PATH=$WASI_RUNTIME ..
 $ ninja
 ```
 
-### Writing and compiling an A1 smart contract 
+## Smart contracts
 
-Once the build is successful, you are ready to start playing around!
+We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
 
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration. Please note that regardless of your machine, the instructions for writing and compiling your smart contract should be the same. 
+You can find basic smart contract examples in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory. Following code snippet represents simple Hello World example:
 
-You can find examples of basic contracts in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory, such as the "Hello World" example below.
-
-```python
+```py
 contract HelloWorld:
     def get() -> str:
         return "Hello World!"
 
-let var = HelloWorld()
-print(var.get())
+let main = HelloWorld()
+print(main.get())
 ```
 
-Once you have written your contract, save it with the ".ao" extension and run the following commands to compile the program and return an output. Be sure to replace "hello_world" with the name of your A1 file.
+A1 source files have `.ao` extension.
+
+In order to compile and run above smart contract, you will first need to install WebAssembly runtime (we recommend using [wasmtime](https://github.com/bytecodealliance/wasmtime) but any other runtime will work too) and then run the following commands:
 
 ```sh
-$ ./build/bin/aoc hello_world.ao -o output
-$ ./output
+$ aoc hello_world.ao -o test.wasm
+$ wasmtime test.wasm
+```
+
+The output should be:
+
+```
+Hello, world!
 ```
 
 ## Join us

@@ -48,7 +48,7 @@ namespace
     [[ nodiscard ]]
     llvm::Value * createBlock( llvm::Module * module_, llvm::LLVMContext * ctx, std::string_view const name )
     {
-        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt64Ty( *ctx ) }, "Block" ) };
+        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt32Ty( *ctx ) }, "Block" ) };
         auto * block
         {
             new llvm::GlobalVariable
@@ -165,8 +165,20 @@ Context codegen
         "Module definition is the root node of the AST"
     );
 
-    auto * mainFunctionType{ llvm::FunctionType::get( llvm::Type::getVoidTy( *ctx.internalCtx ), false ) };
-    auto * mainFunction    { llvm::Function::Create( mainFunctionType, llvm::Function::ExternalLinkage, "main", *ctx.module_ ) };
+    /**
+     * Main function in WASM is required to have
+     * the following signature: (i32, i32) -> i32
+     */
+    auto * mainFunctionType
+    {
+        llvm::FunctionType::get
+        (
+            llvm::Type::getInt32Ty( *ctx.internalCtx ),
+            std::array< llvm::Type *, 2U >{ { llvm::Type::getInt32Ty( *ctx.internalCtx ), llvm::Type::getInt32Ty( *ctx.internalCtx ) } },
+            false
+        )
+    };
+    auto * mainFunction{ llvm::Function::Create( mainFunctionType, llvm::Function::ExternalLinkage, "main", *ctx.module_ ) };
 
     auto * mainBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "entry", mainFunction ) };
     ctx.builder->SetInsertPoint( mainBlock );
@@ -201,7 +213,7 @@ Context codegen
         }
     }
 
-    ctx.builder->CreateRetVoid();
+    ctx.builder->CreateRet( llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ) );
     return ctx;
 }
 
