@@ -3,6 +3,13 @@ include_guard()
 option( ENABLE_LLVM "Enable LLVM" ON )
 message( STATUS "LLVM enabled: ${ENABLE_LLVM}" )
 
+# WASM specific options
+option( WASM_SYSROOT_PATH         "Path to WASM sysroot (unused if tests are enabled)"                "" )
+option( WASM_RUNTIME_LIBRARY_PATH "Path to static WASM runtime library (unused if tests are enabled)" "" )
+
+message( STATUS "WASM sysroot path:         ${WASM_SYSROOT_PATH}"         )
+message( STATUS "WASM runtime library path: ${WASM_RUNTIME_LIBRARY_PATH}" )
+
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib.srcs.cmake )
 
 add_library( CoreLib STATIC ${SOURCES} )
@@ -16,8 +23,11 @@ target_include_directories(
 target_link_libraries( CoreLib PRIVATE fmt::fmt )
 
 if( ENABLE_TESTS )
+    target_compile_definitions( CoreLib PRIVATE TESTS_ENABLED=1 )
+else()
     target_compile_definitions( CoreLib PRIVATE
-        TESTS_ENABLED=1
+        WASM_SYSROOT_PATH=\"${WASM_SYSROOT_PATH}\"
+        WASM_RUNTIME_LIBRARY_PATH=\"${WASM_RUNTIME_LIBRARY_PATH}\"
     )
 endif()
 
