@@ -24,9 +24,20 @@ struct Identifier
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
 };
 
-struct Indentation : std::monostate {};
-struct Newline     : std::monostate {};
-struct Eof         : std::monostate {};
+struct Indentation
+{
+    [[ nodiscard ]] bool operator==( Indentation const & ) const = default;
+};
+
+struct Newline
+{
+    [[ nodiscard ]] bool operator==( Newline const & ) const = default;
+};
+
+struct Eof
+{
+    [[ nodiscard ]] bool operator==( Eof const & ) const = default;
+};
 
 using Number = std::uint32_t;
 using String = std::string;
