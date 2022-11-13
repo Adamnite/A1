@@ -51,104 +51,111 @@ namespace
 
     constexpr std::array keywords
     {
-        StringifiedToken{ "False"   , ReservedToken::KwFalse    },
-        StringifiedToken{ "None"    , ReservedToken::KwNone     },
-        StringifiedToken{ "True"    , ReservedToken::KwTrue     },
-        StringifiedToken{ "and"     , ReservedToken::KwAnd      },
-        StringifiedToken{ "as"      , ReservedToken::KwAs       },
-        StringifiedToken{ "assert"  , ReservedToken::KwAssert   },
-        StringifiedToken{ "break"   , ReservedToken::KwBreak    },
-        StringifiedToken{ "class"   , ReservedToken::KwClass    },
-        StringifiedToken{ "continue", ReservedToken::KwContinue },
-        StringifiedToken{ "contract", ReservedToken::KwContract },
-        StringifiedToken{ "def"     , ReservedToken::KwDef      },
-        StringifiedToken{ "del"     , ReservedToken::KwDel      },
-        StringifiedToken{ "elif"    , ReservedToken::KwElif     },
-        StringifiedToken{ "else"    , ReservedToken::KwElse     },
-        StringifiedToken{ "except"  , ReservedToken::KwExcept   },
-        StringifiedToken{ "finally" , ReservedToken::KwFinally  },
-        StringifiedToken{ "for"     , ReservedToken::KwFor      },
-        StringifiedToken{ "from"    , ReservedToken::KwFrom     },
-        StringifiedToken{ "global"  , ReservedToken::KwGlobal   },
-        StringifiedToken{ "if"      , ReservedToken::KwIf       },
-        StringifiedToken{ "import"  , ReservedToken::KwImport   },
-        StringifiedToken{ "in"      , ReservedToken::KwIn       },
-        StringifiedToken{ "is"      , ReservedToken::KwIs       },
-        StringifiedToken{ "lambda"  , ReservedToken::KwLambda   },
-        StringifiedToken{ "let"     , ReservedToken::KwLet      },
-        StringifiedToken{ "non"     , ReservedToken::KwNon      },
-        StringifiedToken{ "nonlocal", ReservedToken::KwNonLocal },
-        StringifiedToken{ "not"     , ReservedToken::KwNot      },
-        StringifiedToken{ "num"     , ReservedToken::KwNumber   },
-        StringifiedToken{ "or"      , ReservedToken::KwOr       },
-        StringifiedToken{ "pass"    , ReservedToken::KwPass     },
-        StringifiedToken{ "raise"   , ReservedToken::KwRaise    },
-        StringifiedToken{ "return"  , ReservedToken::KwReturn   },
-        StringifiedToken{ "str"     , ReservedToken::KwString   },
-        StringifiedToken{ "try"     , ReservedToken::KwTry      },
-        StringifiedToken{ "while"   , ReservedToken::KwWhile    },
-        StringifiedToken{ "with"    , ReservedToken::KwWith     },
-        StringifiedToken{ "yield"   , ReservedToken::KwYield    }
+        sort
+        (
+            std::array
+            {
+                StringifiedToken{ "False"   , ReservedToken::KwFalse    },
+                StringifiedToken{ "None"    , ReservedToken::KwNone     },
+                StringifiedToken{ "True"    , ReservedToken::KwTrue     },
+                StringifiedToken{ "and"     , ReservedToken::KwAnd      },
+                StringifiedToken{ "as"      , ReservedToken::KwAs       },
+                StringifiedToken{ "assert"  , ReservedToken::KwAssert   },
+                StringifiedToken{ "break"   , ReservedToken::KwBreak    },
+                StringifiedToken{ "class"   , ReservedToken::KwClass    },
+                StringifiedToken{ "continue", ReservedToken::KwContinue },
+                StringifiedToken{ "contract", ReservedToken::KwContract },
+                StringifiedToken{ "def"     , ReservedToken::KwDef      },
+                StringifiedToken{ "del"     , ReservedToken::KwDel      },
+                StringifiedToken{ "elif"    , ReservedToken::KwElif     },
+                StringifiedToken{ "else"    , ReservedToken::KwElse     },
+                StringifiedToken{ "except"  , ReservedToken::KwExcept   },
+                StringifiedToken{ "finally" , ReservedToken::KwFinally  },
+                StringifiedToken{ "for"     , ReservedToken::KwFor      },
+                StringifiedToken{ "from"    , ReservedToken::KwFrom     },
+                StringifiedToken{ "global"  , ReservedToken::KwGlobal   },
+                StringifiedToken{ "if"      , ReservedToken::KwIf       },
+                StringifiedToken{ "import"  , ReservedToken::KwImport   },
+                StringifiedToken{ "in"      , ReservedToken::KwIn       },
+                StringifiedToken{ "is"      , ReservedToken::KwIs       },
+                StringifiedToken{ "lambda"  , ReservedToken::KwLambda   },
+                StringifiedToken{ "let"     , ReservedToken::KwLet      },
+                StringifiedToken{ "non"     , ReservedToken::KwNon      },
+                StringifiedToken{ "nonlocal", ReservedToken::KwNonLocal },
+                StringifiedToken{ "not"     , ReservedToken::KwNot      },
+                StringifiedToken{ "num"     , ReservedToken::KwNumber   },
+                StringifiedToken{ "or"      , ReservedToken::KwOr       },
+                StringifiedToken{ "pass"    , ReservedToken::KwPass     },
+                StringifiedToken{ "raise"   , ReservedToken::KwRaise    },
+                StringifiedToken{ "return"  , ReservedToken::KwReturn   },
+                StringifiedToken{ "str"     , ReservedToken::KwString   },
+                StringifiedToken{ "try"     , ReservedToken::KwTry      },
+                StringifiedToken{ "while"   , ReservedToken::KwWhile    },
+                StringifiedToken{ "with"    , ReservedToken::KwWith     },
+                StringifiedToken{ "yield"   , ReservedToken::KwYield    }
+            }
+        )
     };
 
-    constexpr std::array operators
+    constexpr auto operators
     {
-        StringifiedToken{ "!"  , ReservedToken::OpLogicalNot              },
-        StringifiedToken{ "!=" , ReservedToken::OpNotEqual                },
-        StringifiedToken{ "%"  , ReservedToken::OpMod                     },
-        StringifiedToken{ "%=" , ReservedToken::OpAssignMod               },
-        StringifiedToken{ "&"  , ReservedToken::OpBitwiseAnd              },
-        StringifiedToken{ "&&" , ReservedToken::OpLogicalAnd              },
-        StringifiedToken{ "&=" , ReservedToken::OpAssignBitwiseAnd        },
-        StringifiedToken{ "("  , ReservedToken::OpParenthesisOpen         },
-        StringifiedToken{ ")"  , ReservedToken::OpParenthesisClose        },
-        StringifiedToken{ "*"  , ReservedToken::OpMul                     },
-        StringifiedToken{ "**" , ReservedToken::OpExp                     },
-        StringifiedToken{ "**=", ReservedToken::OpAssignExp               },
-        StringifiedToken{ "*=" , ReservedToken::OpAssignMul               },
-        StringifiedToken{ "+"  , ReservedToken::OpAdd                     },
-        StringifiedToken{ "+=" , ReservedToken::OpAssignAdd               },
-        StringifiedToken{ ","  , ReservedToken::OpComma                   },
-        StringifiedToken{ "-"  , ReservedToken::OpSub                     },
-        StringifiedToken{ "-=" , ReservedToken::OpAssignSub               },
-        StringifiedToken{ "->" , ReservedToken::OpArrow                   },
-        StringifiedToken{ "."  , ReservedToken::OpDot                     },
-        StringifiedToken{ "/"  , ReservedToken::OpDiv                     },
-        StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
-        StringifiedToken{ "//=", ReservedToken::OpAssignFloorDiv          },
-        StringifiedToken{ "/=" , ReservedToken::OpAssignDiv               },
-        StringifiedToken{ ":"  , ReservedToken::OpColon                   },
-        StringifiedToken{ "<"  , ReservedToken::OpLessThan                },
-        StringifiedToken{ "<<" , ReservedToken::OpBitwiseLeftShift        },
-        StringifiedToken{ "<<=", ReservedToken::OpAssignBitwiseLeftShift  },
-        StringifiedToken{ "<=" , ReservedToken::OpLessThanEqual           },
-        StringifiedToken{ "="  , ReservedToken::OpAssign                  },
-        StringifiedToken{ "==" , ReservedToken::OpEqual                   },
-        StringifiedToken{ ">"  , ReservedToken::OpGreaterThan             },
-        StringifiedToken{ ">=" , ReservedToken::OpGreaterThanEqual        },
-        StringifiedToken{ ">>" , ReservedToken::OpBitwiseRightShift       },
-        StringifiedToken{ ">>=", ReservedToken::OpAssignBitwiseRightShift },
-        StringifiedToken{ "["  , ReservedToken::OpSubscriptOpen           },
-        StringifiedToken{ "]"  , ReservedToken::OpSubscriptClose          },
-        StringifiedToken{ "^"  , ReservedToken::OpBitwiseXor              },
-        StringifiedToken{ "^=" , ReservedToken::OpAssignBitwiseXor        },
-        StringifiedToken{ "|"  , ReservedToken::OpBitwiseOr               },
-        StringifiedToken{ "|=" , ReservedToken::OpAssignBitwiseOr         },
-        StringifiedToken{ "||" , ReservedToken::OpLogicalOr               },
-        StringifiedToken{ "~"  , ReservedToken::OpBitwiseNot              }
+        sort
+        (
+            std::array
+            {
+                StringifiedToken{ "!"  , ReservedToken::OpLogicalNot              },
+                StringifiedToken{ "!=" , ReservedToken::OpNotEqual                },
+                StringifiedToken{ "%"  , ReservedToken::OpMod                     },
+                StringifiedToken{ "%=" , ReservedToken::OpAssignMod               },
+                StringifiedToken{ "&"  , ReservedToken::OpBitwiseAnd              },
+                StringifiedToken{ "&&" , ReservedToken::OpLogicalAnd              },
+                StringifiedToken{ "&=" , ReservedToken::OpAssignBitwiseAnd        },
+                StringifiedToken{ "("  , ReservedToken::OpParenthesisOpen         },
+                StringifiedToken{ ")"  , ReservedToken::OpParenthesisClose        },
+                StringifiedToken{ "*"  , ReservedToken::OpMul                     },
+                StringifiedToken{ "**" , ReservedToken::OpExp                     },
+                StringifiedToken{ "**=", ReservedToken::OpAssignExp               },
+                StringifiedToken{ "*=" , ReservedToken::OpAssignMul               },
+                StringifiedToken{ "+"  , ReservedToken::OpAdd                     },
+                StringifiedToken{ "+=" , ReservedToken::OpAssignAdd               },
+                StringifiedToken{ ","  , ReservedToken::OpComma                   },
+                StringifiedToken{ "-"  , ReservedToken::OpSub                     },
+                StringifiedToken{ "-=" , ReservedToken::OpAssignSub               },
+                StringifiedToken{ "->" , ReservedToken::OpArrow                   },
+                StringifiedToken{ "."  , ReservedToken::OpDot                     },
+                StringifiedToken{ "/"  , ReservedToken::OpDiv                     },
+                StringifiedToken{ "//" , ReservedToken::OpFloorDiv                },
+                StringifiedToken{ "//=", ReservedToken::OpAssignFloorDiv          },
+                StringifiedToken{ "/=" , ReservedToken::OpAssignDiv               },
+                StringifiedToken{ ":"  , ReservedToken::OpColon                   },
+                StringifiedToken{ "<"  , ReservedToken::OpLessThan                },
+                StringifiedToken{ "<<" , ReservedToken::OpBitwiseLeftShift        },
+                StringifiedToken{ "<<=", ReservedToken::OpAssignBitwiseLeftShift  },
+                StringifiedToken{ "<=" , ReservedToken::OpLessThanEqual           },
+                StringifiedToken{ "="  , ReservedToken::OpAssign                  },
+                StringifiedToken{ "==" , ReservedToken::OpEqual                   },
+                StringifiedToken{ ">"  , ReservedToken::OpGreaterThan             },
+                StringifiedToken{ ">=" , ReservedToken::OpGreaterThanEqual        },
+                StringifiedToken{ ">>" , ReservedToken::OpBitwiseRightShift       },
+                StringifiedToken{ ">>=", ReservedToken::OpAssignBitwiseRightShift },
+                StringifiedToken{ "["  , ReservedToken::OpSubscriptOpen           },
+                StringifiedToken{ "]"  , ReservedToken::OpSubscriptClose          },
+                StringifiedToken{ "^"  , ReservedToken::OpBitwiseXor              },
+                StringifiedToken{ "^=" , ReservedToken::OpAssignBitwiseXor        },
+                StringifiedToken{ "|"  , ReservedToken::OpBitwiseOr               },
+                StringifiedToken{ "|=" , ReservedToken::OpAssignBitwiseOr         },
+                StringifiedToken{ "||" , ReservedToken::OpLogicalOr               },
+                StringifiedToken{ "~"  , ReservedToken::OpBitwiseNot              }
+            }
+        )
     };
 
     constexpr auto allTokens{ sort( concat( keywords, operators ) ) };
-
     static_assert
     (
         std::size( allTokens ) == static_cast< std::size_t >( ReservedToken::Count ) - 1 /* Unknown */,
         "There are reserved tokens that are not included in tokens map"
     );
-
-    static_assert( std::is_sorted( std::begin( keywords  ), std::end( keywords  ) ), "Keywords map is not sorted"  );
-    static_assert( std::is_sorted( std::begin( operators ), std::end( operators ) ), "Operators map is not sorted" );
-    static_assert( std::is_sorted( std::begin( allTokens ), std::end( allTokens ) ), "Tokens map is not sorted"    );
 
     class MaximalMunchComp
     {
