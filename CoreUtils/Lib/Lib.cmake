@@ -1,6 +1,6 @@
 include_guard()
 
-include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtils.srcs.cmake )
+include( ${CMAKE_CURRENT_LIST_DIR}/Lib.srcs.cmake )
 
 add_library( CoreUtils STATIC ${SOURCES} )
 

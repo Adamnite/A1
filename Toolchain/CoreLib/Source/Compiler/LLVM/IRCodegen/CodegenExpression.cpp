@@ -123,6 +123,10 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
 
             return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
         }
+        else if ( name == "add" )
+        {
+            return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
+        }
 
         return arguments.empty()
             ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None, "" )

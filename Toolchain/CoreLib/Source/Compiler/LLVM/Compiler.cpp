@@ -172,6 +172,7 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
         ownedArguments[ 2U ].data(),
 #endif // TESTS_ENABLED
         "-g", IROutputFilename,
+        "/Users/marin/personal/A1/add.wasm",
         "-o", settings.executableFilename.data()
     };
 

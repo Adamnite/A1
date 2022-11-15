@@ -1,6 +1,6 @@
 cmake_minimum_required( VERSION 3.10.0 )
 
-project( A1 VERSION 1.0.0 )
+project( Toolchain VERSION 1.0.0 )
 
 set( CMAKE_CXX_STANDARD          20 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
@@ -26,13 +26,12 @@ FetchContent_Declare( fmt
 FetchContent_MakeAvailable( fmt )
 
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib/CoreLib.cmake )
-include( ${CMAKE_CURRENT_LIST_DIR}/CoreUtils/CoreUtils.cmake )
 
 option( ENABLE_TESTS "Enable tests" OFF )
 message( STATUS "Tests enabled: ${ENABLE_TESTS}" )
 
 if( ENABLE_TESTS )
-    include( ${CMAKE_CURRENT_LIST_DIR}/Test/Test.cmake )
+    include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest/CoreLibTest.cmake )
 endif()
 
 include( ${CMAKE_CURRENT_LIST_DIR}/AOC/AOC.cmake )

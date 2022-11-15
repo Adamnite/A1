@@ -14,13 +14,11 @@
 namespace A1
 {
 
-bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
+bool compile( [[ maybe_unused ]] Compiler::Settings settings, [[ maybe_unused ]] AST::Node::Pointer const & node )
 {
 #ifdef LLVM_ENABLED
     return LLVM::compile( std::move( settings ), node );
 #else
-    ( void ) settings;
-    ( void ) node;
     return false;
 #endif // LLVM_ENABLED
 }
