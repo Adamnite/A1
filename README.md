@@ -33,9 +33,9 @@ Learn more about the A1 project:
 - LLVM 14
 - Clang 14
 
-Since A1 is compiled down to WASM, we need WASM sysroot as well as WASM runtime library. We recommend using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) but any other toolchain will work too.
+Since A1 is compiled down to WASM, we need a WASM sysroot as well as a WASM runtime library. We recommend using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk), but any other toolchain should work as well.
 
-Run following commands in order to get both sysroot and runtime library:
+Run following commands in order to get both sysroot and the runtime library:
 
 ```sh
 $ # WASI sysroot
@@ -51,7 +51,7 @@ $ export WASI_RUNTIME=$(pwd)/lib/wasi/libclang_rt.builtins-wasm32.a
 
 ### MacOS specific
 
-Run the following commands to install the rest of prerequisites on MacOS:
+If you are using MacOS, please run the following commands to download the remaining prerequisites:
 
 ```sh
 $ brew install wget llvm@14 cmake ninja
@@ -60,7 +60,7 @@ $ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
 
 ## Ubuntu specific
 
-Run the following commands to install the rest of prerequisites on Ubuntu:
+If you are using Ubuntu or a Linux-based distribution, please run the following commands to install the remaining prerequisities:
 
 ```sh
 $ # Install cmake
@@ -91,7 +91,7 @@ $ ninja
 
 We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
 
-You can find basic smart contract examples in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory. Following code snippet represents simple Hello World example:
+You can find basic smart contract examples in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory. Your best bets for testing are probably the addition.ao contract and the hello_world.ao contract.
 
 ```py
 contract HelloWorld:
