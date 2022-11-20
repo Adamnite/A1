@@ -1,4 +1,8 @@
-# A1: Develop smart contracts for the Adamnite blockchain
+<p align="center">
+    <img width="15%" align="center" src="./Docs/Images/Logo.png">
+</p>
+
+<h1 align="center">Develop smart contracts for the Adamnite blockchain</h1>
 
 <p align="center">
     <a href="#getting-started">Getting started</a> |
@@ -19,11 +23,10 @@ A1 is a high-level programming language for developing smart contracts for the A
 
 ## Getting started
 
-Learn more about the A1 project:
+Learn more about the A1 programming language:
 
 - [Types](Docs/Types.md)
 - [Declarations](Docs/Declarations.md)
-- [AOC](AOC/README.md)
 
 ## Development
 
@@ -33,65 +36,25 @@ Learn more about the A1 project:
 - LLVM 14
 - Clang 14
 
-Since A1 is compiled down to WASM, we need a WASM sysroot as well as a WASM runtime library. We recommend using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk), but any other toolchain should work as well.
+A1 programming language is compiled down to WASM. Thus, the WASM-based toolchain is needed. Using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) is recommended but any other toolchain (e.g. Emscripten) should work as well.
 
-Run following commands in order to get both sysroot and the runtime library:
-
-```sh
-$ # WASI sysroot
-$ curl -LO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/wasi-sysroot-15.0.tar.gz
-$ tar xzvf wasi-sysroot-15.0.tar.gz
-$ export WASI_SYSROOT=$(pwd)/wasi-sysroot
-$
-$ # WASI runtime
-$ curl -LO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-15/libclang_rt.builtins-wasm32-wasi-15.0.tar.gz
-$ tar xzvf libclang_rt.builtins-wasm32-wasi-15.0.tar.gz
-$ export WASI_RUNTIME=$(pwd)/lib/wasi/libclang_rt.builtins-wasm32.a
-```
-
-### MacOS specific
-
-If you are using MacOS, please run the following commands to download the remaining prerequisites:
+Run following commands in order to get the WASI SDK for MacOS:
 
 ```sh
-$ brew install wget llvm@14 cmake ninja
-$ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
+$ export WASI_VERSION=15
+$ export WASI_VERSION_FULL=${WASI_VERSION}.0
+$ wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION_FULL}-macos.tar.gz
+$ tar xvf wasi-sdk-${WASI_VERSION_FULL}-macos.tar.gz
 ```
 
-## Ubuntu specific
+Learn more about the project:
 
-If you are using Ubuntu or a Linux-based distribution, please run the following commands to install the remaining prerequisities:
-
-```sh
-$ # Install cmake
-$ sudo snap install cmake --classic
-$ # Install ninja
-$ sudo wget -qO /usr/local/bin/ninja.gz https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
-$ sudo gunzip /usr/local/bin/ninja.gz
-$ sudo chmod a+x /usr/local/bin/ninja
-$ # Install LLVM and it's dependencies
-$ sudo apt update
-$ sudo apt install build-essential llvm-14 zlib1g-dev clang
-$ sudo apt-get -y install clang-14 libclang-14-dev libffi-dev libedit-dev libpfm4-dev libtinfo-dev
-$ # Hacky workaround to trick LLVM
-$ touch /usr/lib/llvm-14/lib/libMLIRSupportIndentedOstream.a
-```
-
-### Building
-
-Make sure you are in the A1 directory. Then, execute the following commands in order to build the AOC - A1 compiler:
-
-```sh
-$ mkdir -p build && cd build
-$ cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DWASM_SYSROOT_PATH=$WASI_SYSROOT -DWASM_RUNTIME_LIBRARY_PATH=$WASI_RUNTIME ..
-$ ninja
-```
+- [CoreUtils](CoreUtils/README.md)
+- [Toolchain](Toolchain/README.md)
 
 ## Smart contracts
 
-We recommend using [Visual Studio Code](https://code.visualstudio.com/) as your IDE for ease of use and future A1 formatting extension integration.
-
-You can find basic smart contract examples in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory. Your best bets for testing are probably the addition.ao contract and the hello_world.ao contract.
+Basic smart contract examples can be found in the [Examples](https://github.com/Adamnite/A1/tree/main/Examples) directory. Following code snippet represents simple Hello World example:
 
 ```py
 contract HelloWorld:
@@ -104,7 +67,7 @@ print(main.get())
 
 A1 source files have `.ao` extension.
 
-In order to compile and run above smart contract, you will first need to install WebAssembly runtime (we recommend using [wasmtime](https://github.com/bytecodealliance/wasmtime) but any other runtime will work too) and then run the following commands:
+In order to compile and run the above smart contract, you will first need to install WebAssembly runtime (we recommend using [wasmtime](https://github.com/bytecodealliance/wasmtime) but any other runtime will work too) and then run the following commands:
 
 ```sh
 $ aoc hello_world.ao -o test.wasm
@@ -116,6 +79,8 @@ The output should be:
 ```
 Hello, world!
 ```
+
+Using [Visual Studio Code](https://code.visualstudio.com/) IDE is recommended for the development of the A1 smart contracts. Learn more about the VSCode A1 extension [here](VSCodeExtension/README.md).
 
 ## Join us
 
