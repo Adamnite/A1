@@ -17,7 +17,7 @@ TEST( Utf8Test, isUtf8 )
     EXPECT_TRUE( isUtf8( "test"  ) );
     EXPECT_TRUE( isUtf8( "🙂🙂🙂" ) );
 
-    EXPECT_FALSE( isUtf8( "a\xc5z"  ) );
+    EXPECT_FALSE( isUtf8( "a\xc5z"   ) );
     EXPECT_FALSE( isUtf8( "\xc3\x28" ) );
     EXPECT_FALSE( isUtf8( "\xa0\xa1" ) );
 }

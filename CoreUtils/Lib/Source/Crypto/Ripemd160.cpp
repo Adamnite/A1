@@ -11,6 +11,16 @@
 
 #include <array>
 
+extern "C"
+{
+    void ripemd160( char ** out, char const * data )
+    {
+        auto const hash{ A1::Utils::Ripemd160::hash( data ) };
+        *out = reinterpret_cast< char * >( std::malloc( std::size( hash ) ) );
+        std::strcpy( *out, std::data( hash ) );
+    }
+}
+
 namespace A1::Utils::Ripemd160
 {
 

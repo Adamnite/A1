@@ -10,6 +10,11 @@
 #include <string_view>
 #include <string>
 
+extern "C"
+{
+    void sha512( char ** out, char const * data );
+}
+
 namespace A1::Utils::Sha512
 {
 

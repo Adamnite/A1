@@ -14,6 +14,16 @@
 #include <vector>
 #include <array>
 
+extern "C"
+{
+    void sha512( char ** out, char const * data )
+    {
+        auto const hash{ A1::Utils::Sha512::hash( data ) };
+        *out = reinterpret_cast< char * >( std::malloc( std::size( hash ) ) );
+        std::strcpy( *out, std::data( hash ) );
+    }
+}
+
 namespace A1::Utils::Sha512
 {
 

@@ -9,6 +9,11 @@
 
 #include <string_view>
 
+extern "C"
+{
+    bool is_utf8( char const * data );
+}
+
 namespace A1::Utils
 {
 

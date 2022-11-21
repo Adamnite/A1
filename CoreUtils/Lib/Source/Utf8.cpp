@@ -7,6 +7,14 @@
 
 #include <CoreUtils/Utf8.hpp>
 
+extern "C"
+{
+    bool is_utf8( char const * data )
+    {
+        return A1::Utils::isUtf8( data );
+    }
+}
+
 namespace A1::Utils
 {
 
