@@ -176,6 +176,7 @@ namespace
             MAP_TOKEN_TO_NODE( KwWhile , StatementWhile  );
             MAP_TOKEN_TO_NODE( KwPass  , StatementPass   );
             MAP_TOKEN_TO_NODE( KwReturn, StatementReturn );
+            MAP_TOKEN_TO_NODE( KwImport, StatementImport );
 
             // Definitions
             MAP_TOKEN_TO_NODE( KwDef     , FunctionDefinition );

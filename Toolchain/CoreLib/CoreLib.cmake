@@ -7,8 +7,12 @@ message( STATUS "LLVM enabled: ${ENABLE_LLVM}" )
 option( WASM_SYSROOT_PATH         "Path to WASM sysroot (unused if tests are enabled)"                "" )
 option( WASM_RUNTIME_LIBRARY_PATH "Path to static WASM runtime library (unused if tests are enabled)" "" )
 
+# WASM external libraries
+option( WASM_UTILS_LIBRARY_PATH "Path to static WASM utils library (unused if tests are enabled)" "" )
+
 message( STATUS "WASM sysroot path:         ${WASM_SYSROOT_PATH}"         )
 message( STATUS "WASM runtime library path: ${WASM_RUNTIME_LIBRARY_PATH}" )
+message( STATUS "WASM utils library path:   ${WASM_UTILS_LIBRARY_PATH}"   )
 
 include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib.srcs.cmake )
 
@@ -28,6 +32,7 @@ else()
     target_compile_definitions( CoreLib PRIVATE
         WASM_SYSROOT_PATH=\"${WASM_SYSROOT_PATH}\"
         WASM_RUNTIME_LIBRARY_PATH=\"${WASM_RUNTIME_LIBRARY_PATH}\"
+        WASM_UTILS_LIBRARY_PATH=\"${WASM_UTILS_LIBRARY_PATH}\"
     )
 endif()
 

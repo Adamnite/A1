@@ -88,6 +88,7 @@ enum class NodeType : std::uint8_t
     StatementWhile,          // while <expression>
     StatementPass,           // pass
     StatementReturn,         // return <expression>
+    StatementImport,         // import <expression>
 
     ModuleDefinition,
     ContractDefinition,

@@ -74,6 +74,7 @@ namespace
             STR_CASE( StatementWhile              );
             STR_CASE( StatementPass               );
             STR_CASE( StatementReturn             );
+            STR_CASE( StatementImport             );
             STR_CASE( ModuleDefinition            );
             STR_CASE( ContractDefinition          );
             STR_CASE( FunctionDefinition          );

@@ -99,6 +99,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
         case NodeType::StatementWhile:
         case NodeType::StatementPass:
         case NodeType::StatementReturn:
+        case NodeType::StatementImport:
         case NodeType::ModuleDefinition:
         case NodeType::ContractDefinition:
         case NodeType::FunctionDefinition:
@@ -134,6 +135,7 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::BitwiseNot:
         case NodeType::LogicalNot:
         case NodeType::StatementReturn:
+        case NodeType::StatementImport:
             return 1U;
 
         case NodeType::Index:

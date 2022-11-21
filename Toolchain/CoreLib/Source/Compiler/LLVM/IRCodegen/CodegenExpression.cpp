@@ -110,6 +110,8 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
             arguments.push_back( value );
         }
 
+        auto const & builtInFunctions{ ctx.symbols.builtInFunctions() };
+
         /**
          * At the moment, the only standard function is 'print' function
          * TODO: Improve handling of standard functions uniformly.
@@ -121,11 +123,11 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
 
             arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
-            return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
+            return ctx.builder->CreateCall( builtInFunctions.at( name ), arguments, "" );
         }
-        else if ( name == "add" )
+        else if ( auto it{ builtInFunctions.find( name ) }; it != std::end( builtInFunctions ) )
         {
-            return ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( name ), arguments, "" );
+            return ctx.builder->CreateCall( builtInFunctions.at( name ), arguments, "" );
         }
 
         return arguments.empty()

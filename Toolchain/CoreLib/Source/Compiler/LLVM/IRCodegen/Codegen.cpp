@@ -115,6 +115,17 @@ namespace
             )
         );
 
+        functions[ "is_utf8" ] = module_->getOrInsertFunction
+        (
+            "is_utf8",
+            llvm::FunctionType::get
+            (
+                llvm::IntegerType::getInt32Ty( *ctx ),
+                llvm::PointerType::get( llvm::Type::getInt8Ty( *ctx ), 0 ),
+                false
+            )
+        );
+
         return functions;
     }
 } // namespace

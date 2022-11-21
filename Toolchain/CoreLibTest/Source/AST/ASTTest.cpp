@@ -265,6 +265,25 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression   = "import core",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::StatementImport,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "core" } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .expression   = "return a < b",
             .expectedRoot = std::make_shared< Node >
             (

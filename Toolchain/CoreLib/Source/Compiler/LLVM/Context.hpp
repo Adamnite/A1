@@ -44,6 +44,9 @@ struct Context
 
     /** Stores all the symbols within the module. */
     Symbols symbols;
+
+    /** Stores all the module names that are imported within the module currently compiled. */
+    std::vector< std::string > importedModules;
 };
 
 } // namespace A1::LLVM

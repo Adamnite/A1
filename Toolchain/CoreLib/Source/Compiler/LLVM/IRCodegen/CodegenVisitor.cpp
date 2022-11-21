@@ -109,6 +109,17 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                         return codegen( ctx, node->children()[ 0U ] );
                     }
 
+                    case AST::NodeType::StatementImport:
+                    {
+                        auto const & nodes{ node->children() };
+
+                        ASSERT( std::size( nodes ) == 1U );
+                        ASSERTM( nodes[ 0U ]->is< Identifier >(), "Module identifier is the first and only child node in the import statement" );
+
+                        ctx.importedModules.push_back( nodes[ 0U ]->get< Identifier >().name );
+                        return nullptr;
+                    }
+
                     case AST::NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
                     case AST::NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
                     case AST::NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );
