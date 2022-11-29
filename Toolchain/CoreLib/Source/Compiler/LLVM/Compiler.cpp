@@ -5,7 +5,6 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "Backend/ADTargetVirtualMachine.hpp"
 #include "IRCodegen/Codegen.hpp"
 
 #include <CoreLib/Compiler/LLVM/Compiler.hpp>
