@@ -45,7 +45,7 @@ struct Context
     /** Stores all the symbols within the module. */
     Symbols symbols;
 
-    /** Stores all the module names that are imported within the module currently compiled. */
+    /** Stores all the external module names that are imported within the current module. */
     std::vector< std::string > importedModules;
 };
 
