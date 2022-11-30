@@ -166,6 +166,8 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
     std::vector< char const * > arguments
     {
+        "-flto",
+        "-Os",
         "-g", IROutputFilename,
         "-o", settings.executableFilename.data(),
 #ifndef TESTS_ENABLED

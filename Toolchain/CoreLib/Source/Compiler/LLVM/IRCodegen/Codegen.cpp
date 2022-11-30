@@ -176,16 +176,12 @@ Context codegen
         "Module definition is the root node of the AST"
     );
 
-    /**
-     * Main function in WASM is required to have
-     * the following signature: (i32, i32) -> i32
-     */
     auto * mainFunctionType
     {
         llvm::FunctionType::get
         (
             llvm::Type::getInt32Ty( *ctx.internalCtx ),
-            std::array< llvm::Type *, 2U >{ { llvm::Type::getInt32Ty( *ctx.internalCtx ), llvm::Type::getInt32Ty( *ctx.internalCtx ) } },
+            std::array< llvm::Type *, 0U >{},
             false
         )
     };
