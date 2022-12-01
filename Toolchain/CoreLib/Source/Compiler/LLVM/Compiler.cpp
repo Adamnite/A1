@@ -5,8 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "Backend/ADTargetVirtualMachine.hpp"
 #include "IRCodegen/Codegen.hpp"
+#include "Utils/Utils.hpp"
 
 #include <CoreLib/Compiler/LLVM/Compiler.hpp>
 
@@ -43,10 +43,21 @@
 #   pragma GCC diagnostic pop
 #endif
 
-#include <fmt/format.h>
+#include <unordered_map>
+#include <span>
 
 namespace A1::LLVM
 {
+
+namespace
+{
+    std::unordered_map< std::string_view, char const * > externalModulePaths
+    {
+        {
+            { "core", WASM_UTILS_LIBRARY_PATH }
+        }
+    };
+} // namespace
 
 bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 {
@@ -153,28 +164,23 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
     clang::driver::Driver driver{ CLANG_PATH, targetTriple, diagnosticsEngine };
 
-#ifndef TESTS_ENABLED
-    static std::array< std::string, 3U > ownedArguments
+    std::vector< char const * > arguments
     {
-        {
-            fmt::format( "--target={}" , targetTriple              ),
-            fmt::format( "--sysroot={}", WASM_SYSROOT_PATH         ),
-            fmt::format( "-L{}"        , WASM_RUNTIME_LIBRARY_PATH )
-        },
-    };
-#endif // TESTS_ENABLED
-
-    clang::ArrayRef< char const * > arguments
-    {
-#ifndef TESTS_ENABLED
-        ownedArguments[ 0U ].data(),
-        ownedArguments[ 1U ].data(),
-        ownedArguments[ 2U ].data(),
-#endif // TESTS_ENABLED
-        WASM_UTILS_LIBRARY_PATH,
+        "-flto",
+        "-Os",
         "-g", IROutputFilename,
-        "-o", settings.executableFilename.data()
+        "-o", settings.executableFilename.data(),
+#ifndef TESTS_ENABLED
+        "-target"  , targetTriple,
+        "--sysroot", WASM_SYSROOT_PATH,
+        "-L"       , WASM_RUNTIME_LIBRARY_PATH
+#endif // TESTS_ENABLED
     };
+
+    for ( auto const & module : context.importedModules )
+    {
+        arguments.push_back( externalModulePaths[ module ] );
+    }
 
     std::unique_ptr< clang::driver::Compilation > compilation{ driver.BuildCompilation( arguments ) };
 
@@ -185,7 +191,11 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
     }
 
     clang::SmallVector< std::pair< int, clang::driver::Command const * >, 4U > failingCommands;
-    driver.ExecuteCompilation( *compilation, failingCommands );
+    if ( driver.ExecuteCompilation( *compilation, failingCommands ) )
+    {
+        std::remove( IROutputFilename );
+        return false;
+    }
 
     std::remove( IROutputFilename );
     return true;
