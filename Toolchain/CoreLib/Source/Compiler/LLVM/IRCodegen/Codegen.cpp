@@ -220,6 +220,12 @@ Context codegen
         }
     }
 
+    if ( !inMainBlock )
+    {
+        // Getting back to main block
+        ctx.builder->SetInsertPoint( mainBlock );
+    }
+
     ctx.builder->CreateRet( llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ) );
     return ctx;
 }
