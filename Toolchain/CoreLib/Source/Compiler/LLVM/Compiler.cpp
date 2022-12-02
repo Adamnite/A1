@@ -54,7 +54,9 @@ namespace
     std::unordered_map< std::string_view, char const * > externalModulePaths
     {
         {
+#ifndef TESTS_ENABLED
             { "core", WASM_UTILS_LIBRARY_PATH }
+#endif // TESTS_ENABLED
         }
     };
 } // namespace
