@@ -171,6 +171,9 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
         "-g", IROutputFilename,
         "-o", settings.executableFilename.data(),
 #ifndef TESTS_ENABLED
+        "-nostdlib",
+        "-Wl,--no-entry",
+        "-Wl,--export-all",
         "-target"  , targetTriple,
         "--sysroot", WASM_SYSROOT_PATH,
         "-L"       , WASM_RUNTIME_LIBRARY_PATH
