@@ -227,6 +227,16 @@ Context codegen
     }
 
     ctx.builder->CreateRet( llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ) );
+
+#ifndef TESTS_ENABLED
+    /**
+     * @note: Main function exists only for the sake of testing.
+     * In production, when source code is built to WASM, main function
+     * should be left out.
+     */
+    mainFunction->eraseFromParent();
+#endif // TESTS_ENABLED
+
     return ctx;
 }
 
