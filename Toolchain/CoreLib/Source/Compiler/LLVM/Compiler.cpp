@@ -116,10 +116,10 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
      * Optimize LLVM IR.
      */
     {
-        llvm::LoopAnalysisManager     loopAnalysisManager;
-        llvm::FunctionAnalysisManager functionAnalysisManager;
-        llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
         llvm::ModuleAnalysisManager   moduleAnalysisManager;
+        llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
+        llvm::FunctionAnalysisManager functionAnalysisManager;
+        llvm::LoopAnalysisManager     loopAnalysisManager;
 
         llvm::PassBuilder passBuilder{ targetMachine };
         passBuilder.registerModuleAnalyses  ( moduleAnalysisManager   );

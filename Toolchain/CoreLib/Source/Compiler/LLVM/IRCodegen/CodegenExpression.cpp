@@ -248,6 +248,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
         else if ( node->is< TypeID >() )
         {
             returnType = getType( ctx, node->get< TypeID >() );
+            break;
         }
     }
 
