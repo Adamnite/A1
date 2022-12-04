@@ -200,7 +200,7 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         // Create default constructor
         auto   ctorName{ fmt::format( "{}_DefaultCTOR", contractName ) };
         auto * ctorType{ llvm::FunctionType::get( contractType, false ) };
-        auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::InternalLinkage, ctorName, ctx.module_.get() ) };
+        auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::ExternalLinkage, ctorName, ctx.module_.get() ) };
         auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "entry", ctor ) };
         ctx.builder->SetInsertPoint( block );
 
@@ -248,11 +248,12 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
         else if ( node->is< TypeID >() )
         {
             returnType = getType( ctx, node->get< TypeID >() );
+            break;
         }
     }
 
     auto * functionType{ llvm::FunctionType::get( returnType, parameters, false ) };
-    auto * function    { llvm::Function::Create( functionType, llvm::Function::InternalLinkage, name, ctx.module_.get() ) };
+    auto * function    { llvm::Function::Create( functionType, llvm::Function::ExternalLinkage, name, ctx.module_.get() ) };
 
     // Set names for all the arguments
     auto idx{ 0U };

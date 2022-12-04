@@ -43,7 +43,7 @@ struct Symbols
     std::map< std::string, llvm::FunctionCallee > functions;
 
     /** Stores all user-defined contract types. */
-    std::map< std::string, llvm::Type * > contractTypes;
+    std::map< std::string, llvm::StructType * > contractTypes;
 
     Symbols() = default;
 

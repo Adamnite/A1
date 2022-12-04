@@ -54,7 +54,9 @@ namespace
     std::unordered_map< std::string_view, char const * > externalModulePaths
     {
         {
+#ifndef TESTS_ENABLED
             { "core", WASM_UTILS_LIBRARY_PATH }
+#endif // TESTS_ENABLED
         }
     };
 } // namespace
@@ -112,12 +114,16 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
     /**
      * Optimize LLVM IR.
+     *
+     * @note: Optimizations are turned on only for the sake of testing.
+     * In production, we do not want optimizations to remove all unused functions,
+     * smart contracts, etc. as these are used later by the VM.
      */
-    {
-        llvm::LoopAnalysisManager     loopAnalysisManager;
-        llvm::FunctionAnalysisManager functionAnalysisManager;
-        llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
+#ifdef TESTS_ENABLED
         llvm::ModuleAnalysisManager   moduleAnalysisManager;
+        llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
+        llvm::FunctionAnalysisManager functionAnalysisManager;
+        llvm::LoopAnalysisManager     loopAnalysisManager;
 
         llvm::PassBuilder passBuilder{ targetMachine };
         passBuilder.registerModuleAnalyses  ( moduleAnalysisManager   );
@@ -129,7 +135,7 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
         auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
         modulePassManager.run( *context.module_, moduleAnalysisManager );
-    }
+#endif // TESTS_ENABLED
 
     if ( settings.outputIR )
     {
@@ -171,6 +177,10 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
         "-g", IROutputFilename,
         "-o", settings.executableFilename.data(),
 #ifndef TESTS_ENABLED
+        "-nostdlib",
+        "-Wl,--no-entry",
+        "-Wl,--allow-undefined",
+        "-Wl,--export-dynamic",
         "-target"  , targetTriple,
         "--sysroot", WASM_SYSROOT_PATH,
         "-L"       , WASM_RUNTIME_LIBRARY_PATH
