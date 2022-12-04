@@ -114,8 +114,12 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
     /**
      * Optimize LLVM IR.
+     *
+     * @note: Optimizations are turned on only for the sake of testing.
+     * In production, we do not want optimizations to remove all unused functions,
+     * smart contracts, etc. as these are used later by the VM.
      */
-    {
+#ifdef TESTS_ENABLED
         llvm::ModuleAnalysisManager   moduleAnalysisManager;
         llvm::CGSCCAnalysisManager    cGSCCAnalysisManager;
         llvm::FunctionAnalysisManager functionAnalysisManager;
@@ -131,7 +135,7 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
         auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
         modulePassManager.run( *context.module_, moduleAnalysisManager );
-    }
+#endif // TESTS_ENABLED
 
     if ( settings.outputIR )
     {
@@ -175,7 +179,8 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 #ifndef TESTS_ENABLED
         "-nostdlib",
         "-Wl,--no-entry",
-        "-Wl,--export-all",
+        "-Wl,--allow-undefined",
+        "-Wl,--export-dynamic",
         "-target"  , targetTriple,
         "--sysroot", WASM_SYSROOT_PATH,
         "-L"       , WASM_RUNTIME_LIBRARY_PATH
