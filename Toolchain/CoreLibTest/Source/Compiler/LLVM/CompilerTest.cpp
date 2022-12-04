@@ -119,6 +119,23 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .input =
+                "let var1 = (5 + 2)\n"
+                "let var2 = (5 + 2) * 2\n"
+                "let var3 = 2 * (5 + 2)\n"
+                "let var4 = (5 + 2) * (5 + 2)\n"
+                "print(var1)\n"
+                "print(var2)\n"
+                "print(var3)\n"
+                "print(var4)",
+            .expectedOutput =
+                "7\n"
+                "14\n"
+                "14\n"
+                "49"
+        },
+        TestParameter
+        {
+            .input =
                 "let i: num = 0\n"
                 "if i == 0:\n"
                 "    print(\"Inside 1st if\")\n"

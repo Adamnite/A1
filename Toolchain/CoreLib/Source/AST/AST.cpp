@@ -80,9 +80,9 @@ namespace
 
         switch ( token )
         {
-            MAP_TOKEN_TO_NODE( OpParenthesisOpen, Call       );
-            MAP_TOKEN_TO_NODE( OpSubscriptOpen  , Index      );
-            MAP_TOKEN_TO_NODE( OpDot            , MemberCall );
+            MAP_TOKEN_TO_NODE( OpParenthesisOpen, Parentheses );
+            MAP_TOKEN_TO_NODE( OpSubscriptOpen  , Index       );
+            MAP_TOKEN_TO_NODE( OpDot            , MemberCall  );
 
             // Arithmetic operators
             MAP_TOKEN_TO_NODE( OpDiv     , Division       );
@@ -274,7 +274,7 @@ namespace
     }
 
     template< ReservedToken tokenToSkip, ReservedToken ... moreTokensToSkip >
-    void skipOneOfReservedTokens( TokenIterator & tokenIt )
+    void skipOneOf( TokenIterator & tokenIt )
     {
         if
         (
@@ -455,9 +455,14 @@ namespace
                     popOperator( operands, operators, tokenIt->errorInfo() );
                 }
 
-                if ( nodeInfo.type == NodeType::Call )
+                if ( nodeInfo.type == NodeType::Parentheses )
                 {
-                    skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
+                    skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpParenthesisClose )
+                    {
+                        throw std::runtime_error( "Expected expression" );
+                    }
 
                     if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
@@ -484,19 +489,21 @@ namespace
                                 }
                             }
                         }
+
+                        --nodeInfo.operandsCount;
                     }
                 }
                 else if ( nodeInfo.type == NodeType::Index )
                 {
-                    skipOneOfReservedTokens< ReservedToken::OpSubscriptOpen >( tokenIt );
+                    skipOneOf< ReservedToken::OpSubscriptOpen >( tokenIt );
                     operands.push( parseImpl( tokenIt ) );
-                    skipOneOfReservedTokens< ReservedToken::OpSubscriptClose >( tokenIt );
+                    skipOneOf< ReservedToken::OpSubscriptClose >( tokenIt );
                 }
                 else if ( nodeInfo.type == NodeType::StatementIf || nodeInfo.type == NodeType::StatementElif )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
+                    skipOneOf< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
                     operands.push( parseImpl( tokenIt ) ); // parse condition
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
@@ -526,8 +533,8 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::StatementElse )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwElse  >( tokenIt );
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipOneOf< ReservedToken::KwElse  >( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
@@ -536,9 +543,9 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::StatementWhile )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwWhile >( tokenIt );
+                    skipOneOf< ReservedToken::KwWhile >( tokenIt );
                     operands.push( parseImpl( tokenIt ) ); // parse condition
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
@@ -547,7 +554,7 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::FunctionDefinition )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwDef >( tokenIt );
+                    skipOneOf< ReservedToken::KwDef >( tokenIt );
 
                     operands.push( parseOperand( tokenIt ) ); // parse function name
                     tokenIt++;
@@ -555,7 +562,7 @@ namespace
                     {
                         // we are parsing function parameters
 
-                        skipOneOfReservedTokens< ReservedToken::OpParenthesisOpen >( tokenIt );
+                        skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
 
                         if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                         {
@@ -569,7 +576,7 @@ namespace
                                 };
 
                                 operands.push( parseImpl( tokenIt ) ); // parse parameter name
-                                skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                                skipOneOf< ReservedToken::OpColon >( tokenIt );
                                 operands.push( parseImpl( tokenIt ) ); // parse parameter type
 
                                 operators.push( parameterDefinition );
@@ -599,7 +606,7 @@ namespace
                                 }
                             }
                         }
-                        skipOneOfReservedTokens< ReservedToken::OpParenthesisClose >( tokenIt );
+                        skipOneOf< ReservedToken::OpParenthesisClose >( tokenIt );
                     }
 
                     if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpArrow )
@@ -609,7 +616,7 @@ namespace
                         nodeInfo.operandsCount++;
                     }
 
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
@@ -618,7 +625,7 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::VariableDefinition )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwLet >( tokenIt );
+                    skipOneOf< ReservedToken::KwLet >( tokenIt );
                     operands.push( parseOperand( tokenIt ) ); // parse variable name
                     ++tokenIt;
 
@@ -641,9 +648,9 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::ContractDefinition )
                 {
-                    skipOneOfReservedTokens< ReservedToken::KwContract >( tokenIt );
+                    skipOneOf< ReservedToken::KwContract >( tokenIt );
                     operands.push( parseImpl( tokenIt ) ); // parse contract name
-                    skipOneOfReservedTokens< ReservedToken::OpColon >( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( tokenIt );
                     skipNewline( tokenIt );
 
                     auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
@@ -669,6 +676,64 @@ namespace
 
                 operands.push( parseOperand( tokenIt ) );
                 expectingOperand = false;
+
+                if ( operands.top()->is< Identifier >() )
+                {
+                    auto oldToken{ tokenIt };
+                    ++tokenIt;
+
+                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpParenthesisOpen )
+                    {
+                        NodeInfo nodeInfo
+                        {
+                            .type          = NodeType::Call,
+                            .errorInfo     = tokenIt->errorInfo(),
+                            .operandsCount = getOperandsCount( NodeType::Call )
+                        };
+
+                        skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+
+                        if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                        {
+                            while ( true )
+                            {
+                                operands.push( parseImpl( tokenIt ) );
+
+                                ++nodeInfo.operandsCount;
+
+                                if ( tokenIt->is< ReservedToken >() )
+                                {
+                                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                    if ( reservedToken == ReservedToken::OpParenthesisClose )
+                                    {
+                                        break;
+                                    }
+                                    else if ( reservedToken == ReservedToken::OpComma )
+                                    {
+                                        ++tokenIt;
+                                    }
+                                    else
+                                    {
+                                        throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                    }
+                                }
+                            }
+                        }
+
+                        if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+                        {
+                            operators.top().operandsCount++;
+                        }
+
+                        operators.push( nodeInfo );
+
+                        expectingOperand = nodeInfo.operandsCount != 0;
+                    }
+                    else
+                    {
+                        tokenIt = oldToken;
+                    }
+                }
             }
 
             if ( tokenIt->is< Newline >() )

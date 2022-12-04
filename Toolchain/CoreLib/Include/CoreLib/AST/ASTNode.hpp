@@ -24,7 +24,8 @@ enum class NodeType : std::uint8_t
 {
     Unknown,
 
-    Call,                    // ( <operand>, <operand>, ... )
+    Call,                    // <operand>( <operand>, <operand>, ... )
+    Parentheses,             // ( <operand>, <operand>, ... )
     Index,                   // [ <operand> ]
     MemberCall,              // <operand>.<operand>
 

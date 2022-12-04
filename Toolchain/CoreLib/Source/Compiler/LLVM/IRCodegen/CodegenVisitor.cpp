@@ -81,9 +81,14 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                     CODEGEN( AssignBitwiseXor       , codegenAssign, CreateXor , "xortmp"  );
 
 #undef CODEGEN
-                    case AST::NodeType::Assign    : return codegenVariableDefinition( ctx, node->children() );
-                    case AST::NodeType::Call      : return codegenCall              ( ctx, node->children() );
-                    case AST::NodeType::MemberCall: return codegenMemberCall        ( ctx, node->children() );
+                    case AST::NodeType::Assign     : return codegenVariableDefinition( ctx, node->children() );
+                    case AST::NodeType::Call       : return codegenCall              ( ctx, node->children() );
+                    case AST::NodeType::MemberCall : return codegenMemberCall        ( ctx, node->children() );
+                    case AST::NodeType::Parentheses:
+                    {
+                        ASSERT( std::size( node->children() ) == 1U );
+                        return codegen( ctx, node->children()[ 0U ] );
+                    }
 
                     case AST::NodeType::StatementIf:
                     case AST::NodeType::StatementElif:

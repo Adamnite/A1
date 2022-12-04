@@ -25,6 +25,7 @@ namespace
 #define STR_CASE( x ) case NodeType::x: return #x
             STR_CASE( Unknown                     );
             STR_CASE( Call                        );
+            STR_CASE( Parentheses                 );
             STR_CASE( Index                       );
             STR_CASE( MemberCall                  );
             STR_CASE( Exponent                    );

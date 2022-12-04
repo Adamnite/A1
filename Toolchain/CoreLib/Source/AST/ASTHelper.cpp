@@ -17,6 +17,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
     switch ( type )
     {
         case NodeType::Call:
+        case NodeType::Parentheses:
             return NodePrecedence::Group1;
 
         case NodeType::Index:
@@ -181,8 +182,8 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
             return 2U;
 
         /**
-         * Since the number of statements in a body of the following
-         * constructs is variable, it is detected by the parser itself.
+         * Since the number of operands of the following constructs is
+         * variable, it is detected by the parser itself.
          */
         case NodeType::StatementElse:
         case NodeType::ModuleDefinition:
@@ -191,10 +192,11 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         /**
          * Since the number of operands of the following constructs is
          * variable, it is detected by the parser itself. Only one operand is
-         * required to exist, e.g. branch condition and function, smart contract
-         * or variable name identifier.
+         * required to exist, e.g. branch condition or function/smart contract/
+         * variable name identifier.
          */
         case NodeType::Call:
+        case NodeType::Parentheses:
         case NodeType::StatementIf:
         case NodeType::StatementElif:
         case NodeType::StatementWhile:
