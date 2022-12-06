@@ -127,6 +127,42 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression   = "var = 5 + 5 + 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Assign,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::Addition,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Number{ 5U } ),
+                                            std::make_unique< Node >( A1::Number{ 5U } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Number{ 5U } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .expression   = "var = (5 + 5)",
             .expectedRoot = std::make_shared< Node >
             (
