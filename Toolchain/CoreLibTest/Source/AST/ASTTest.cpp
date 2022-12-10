@@ -411,6 +411,42 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression   = "var.member = 1 + 2",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Assign,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                NodeType::MemberCall,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "var"    } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "member" } )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Number{ 1U } ),
+                                    std::make_unique< Node >( A1::Number{ 2U } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .expression   = "print(func(1.4, \"This is random string\", 5))",
             .expectedRoot = std::make_shared< Node >
             (
@@ -1351,8 +1387,9 @@ INSTANTIATE_TEST_SUITE_P
             .expression =
                 "contract Example:\n"
                 "    let foo: num = 101\n"
-                "    def func(param1: num, param2: num) -> num:\n"
-                "        return param1 + param2\n"
+                "    def func(self, param1: num, param2: num) -> num:\n"
+                "        self.foo = param1 + param2\n"
+                "        return self.foo\n"
                 "\n"
                 "let var = Example()\n"
                 "print(var.foo)\n"
@@ -1389,6 +1426,14 @@ INSTANTIATE_TEST_SUITE_P
                                         NodeType::FunctionParameterDefinition,
                                         makeChildren
                                         (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "self" } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::FunctionParameterDefinition,
+                                        makeChildren
+                                        (
                                             std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
                                             std::make_unique< Node >( A1::Registry::getNumberHandle() )
                                         )
@@ -1405,9 +1450,18 @@ INSTANTIATE_TEST_SUITE_P
                                     std::make_unique< Node >( A1::Registry::getNumberHandle() ),
                                     std::make_unique< Node >
                                     (
-                                        NodeType::StatementReturn,
+                                        NodeType::Assign,
                                         makeChildren
                                         (
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::MemberCall,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "self" } ),
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
+                                                )
+                                            ),
                                             std::make_unique< Node >
                                             (
                                                 NodeType::Addition,
@@ -1415,6 +1469,22 @@ INSTANTIATE_TEST_SUITE_P
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "param1" } ),
                                                     std::make_unique< Node >( A1::Identifier{ .name = "param2" } )
+                                                )
+                                            )
+                                        )
+                                    ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::StatementReturn,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::MemberCall,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "self" } ),
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
                                                 )
                                             )
                                         )

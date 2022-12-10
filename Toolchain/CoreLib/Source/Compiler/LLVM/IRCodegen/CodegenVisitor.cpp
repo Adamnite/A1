@@ -81,9 +81,9 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                     CODEGEN( AssignBitwiseXor       , codegenAssign, CreateXor , "xortmp"  );
 
 #undef CODEGEN
-                    case AST::NodeType::Assign     : return codegenVariableDefinition( ctx, node->children() );
-                    case AST::NodeType::Call       : return codegenCall              ( ctx, node->children() );
-                    case AST::NodeType::MemberCall : return codegenMemberCall        ( ctx, node->children() );
+                    case AST::NodeType::Assign     : return codegenAssignSpec( ctx, node->children() );
+                    case AST::NodeType::Call       : return codegenCall      ( ctx, node->children() );
+                    case AST::NodeType::MemberCall : return codegenMemberCall( ctx, node->children() );
                     case AST::NodeType::Parentheses:
                     {
                         ASSERT( std::size( node->children() ) == 1U );
@@ -135,14 +135,13 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
             },
             [ &ctx ]( Identifier const & identifier ) -> llvm::Value *
             {
-                auto * value{ ctx.symbols.getVariable( identifier.name ) };
-                if ( value == nullptr ) { return nullptr; }
-
-                if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+                return [ &symbols = ctx.symbols, &name = identifier.name ]()
                 {
-                    return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), value );
-                }
-                return value;
+                    auto * value{ symbols.variable( name ) };
+                    if ( value != nullptr ) { return value; }
+
+                    return symbols.memberVariable( name );
+                }();
             },
             [ &ctx ]( Number const number ) -> llvm::Value *
             {

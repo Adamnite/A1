@@ -453,6 +453,11 @@ namespace
                 if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, nodeInfo.type ) )
                 {
                     popOperator( operands, operators, tokenIt->errorInfo() );
+
+                    if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
+                    {
+                        operators.top().operandsCount--;
+                    }
                 }
 
                 if ( nodeInfo.type == NodeType::Parentheses )
@@ -563,6 +568,40 @@ namespace
                         // we are parsing function parameters
 
                         skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+
+                        if ( tokenIt->is< Identifier >() && tokenIt->get< Identifier >().name == "self" )
+                        {
+                            NodeInfo const parameterDefinition
+                            {
+                                .type          = NodeType::FunctionParameterDefinition,
+                                .errorInfo     = tokenIt->errorInfo(),
+                                .operandsCount = 1U
+                            };
+
+                            operands.push( parseImpl( tokenIt ) ); // parse self parameter name
+                            operators.push( parameterDefinition );
+
+                            while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
+                            {
+                                popOperator( operands, operators, tokenIt->errorInfo());
+                            }
+
+                            ++nodeInfo.operandsCount;
+
+                            ++tokenIt;
+                            if ( tokenIt->is< ReservedToken >() )
+                            {
+                                auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                if ( reservedToken == ReservedToken::OpComma )
+                                {
+                                    ++tokenIt;
+                                }
+                                else if ( reservedToken != ReservedToken::OpParenthesisClose )
+                                {
+                                    throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                }
+                            }
+                        }
 
                         if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                         {

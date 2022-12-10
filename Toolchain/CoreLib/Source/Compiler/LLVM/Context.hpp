@@ -32,7 +32,7 @@
 namespace A1::LLVM
 {
 
-struct Context
+struct Context final
 {
     std::unique_ptr< llvm::LLVMContext > internalCtx;
 

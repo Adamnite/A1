@@ -25,13 +25,15 @@
 #   pragma GCC diagnostic pop
 #endif
 
+#include <fmt/format.h>
+
 #include <string>
 #include <map>
 
 namespace A1::LLVM
 {
 
-struct Symbols
+struct Symbols final
 {
     /**
      * Stores both local and global variables as well as function parameters.
@@ -44,6 +46,12 @@ struct Symbols
 
     /** Stores all user-defined contract types. */
     std::map< std::string, llvm::StructType * > contractTypes;
+
+    /** Name of a function that is currently being processed (used for mangling). */
+    std::string currentFunctionName;
+
+    /** Name of a contract that is currently being processed (used for mangling). */
+    std::string currentContractName;
 
     Symbols() = default;
 
@@ -60,13 +68,29 @@ struct Symbols
     [[ nodiscard ]] std::map< std::string, llvm::FunctionCallee > const & builtInFunctions      () const noexcept { return builtInFunctions_;       }
 
     [[ nodiscard ]]
-    llvm::Value * getVariable( std::string const & name ) const noexcept
+    llvm::Value * variable( std::string_view const name ) noexcept
     {
-        if ( auto it{ variables.find( name ) }; it != std::end( variables ) )
+        if ( auto it{ variables.find( mangle( name ) ) }; it != std::end( variables ) )
         {
             return it->second;
         }
         return nullptr;
+    }
+
+    [[ nodiscard ]]
+    llvm::Value * memberVariable( std::string_view const name ) noexcept
+    {
+        if ( auto it{ variables.find( fmt::format( "{}__{}", currentContractName, name ) ) }; it != std::end( variables ) )
+        {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    [[ nodiscard ]]
+    std::string mangle( std::string_view const name ) const
+    {
+        return fmt::format( "{}_{}_{}", currentContractName, currentFunctionName, name );
     }
 
 private:

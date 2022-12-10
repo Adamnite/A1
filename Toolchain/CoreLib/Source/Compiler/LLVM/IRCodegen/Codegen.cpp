@@ -208,6 +208,24 @@ Context codegen
             inMainBlock = false;
             codegen( ctx, node );
         }
+        else if ( node->is< AST::NodeType >() && node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
+        {
+            if ( !inMainBlock )
+            {
+                // Getting back to main block
+                ctx.builder->SetInsertPoint( mainBlock );
+                inMainBlock = true;
+            }
+
+            auto const & nodes{ node->children() };
+
+            ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of an identifier and either type annotation or initialization or both" );
+
+            ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
+            auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+
+            ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = codegen( ctx, node );
+        }
         else
         {
             if ( !inMainBlock )

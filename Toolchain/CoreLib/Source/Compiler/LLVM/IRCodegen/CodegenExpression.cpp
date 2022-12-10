@@ -107,6 +107,12 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
         {
             auto * value{ codegen( ctx, nodes[ i ] ) };
             if ( value == nullptr ) { return nullptr; }
+
+            if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+            {
+                value = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), value );
+            }
+
             arguments.push_back( value );
         }
 
@@ -149,14 +155,31 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
     if ( member->is< Identifier >() )
     {
         // Access data member
-        auto * variable { ctx.symbols.variables[ variableName ] };
+        auto * variable { ctx.symbols.variable( variableName ) };
         auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
         return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), memberPtr );
     }
     else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
         // Access function member
-        return codegen( ctx, member );
+        auto const & memberNodes{ member->children() };
+
+        ASSERTM( std::size( memberNodes ) >= 1U, "Call expression consists of identifier and parameters, if any" );
+
+        ASSERTM( memberNodes[ 0U ]->is< Identifier >(), "Identifier is the first child node in the call expression" );
+        auto const & name{ memberNodes[ 0U ]->get< Identifier >().name };
+
+        std::vector< llvm::Value * > arguments{ ctx.symbols.variable( variableName ) };
+        for ( auto i{ 1U }; i < std::size( memberNodes ); i++ )
+        {
+            auto * value{ codegen( ctx, memberNodes[ i ] ) };
+            if ( value == nullptr ) { return nullptr; }
+            arguments.push_back( value );
+        }
+
+        return memberNodes.size() == 1U
+            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None, "" )
+            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments , "" );
     }
 
     return nullptr;
@@ -174,6 +197,8 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
     std::vector< llvm::Constant * > dataMemberInitialValues;
     std::vector< llvm::Type     * > dataMemberTypes;
 
+    ctx.symbols.currentContractName = contractName;
+
     for ( auto i{ 1U }; i < std::size( nodes ); i++ )
     {
         auto const & node{ nodes[ i ] };
@@ -184,10 +209,6 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
                 // TODO: Support other member types
                 dataMemberTypes.push_back( llvm::Type::getInt32Ty( *ctx.internalCtx ) );
                 dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
-            }
-            else if ( node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition )
-            {
-                // TODO: Call a function with contract type name prefix
                 codegen( ctx, node );
             }
         }
@@ -195,6 +216,19 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
 
     contractType->setBody( dataMemberTypes );
     ctx.symbols.contractTypes[ contractName ] = contractType;
+
+    for ( auto i{ 1U }; i < std::size( nodes ); i++ )
+    {
+        auto const & node{ nodes[ i ] };
+        if ( node->is< AST::NodeType >() )
+        {
+            if ( node->get< AST::NodeType >() == AST::NodeType::FunctionDefinition )
+            {
+                // TODO: Call a function with contract type name prefix
+                codegen( ctx, node );
+            }
+        }
+    }
 
     {
         // Create default constructor
@@ -210,6 +244,19 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         ctx.symbols.functions[ ctorName ] = ctor;
     }
 
+    /**
+     * Remove contract member variables from scope.
+     */
+    for ( auto it{ std::begin( ctx.symbols.variables ) }; it != std::end( ctx.symbols.variables ); )
+    {
+        if ( it->first.starts_with( fmt::format( "{}_{}_", ctx.symbols.currentContractName, ctx.symbols.currentFunctionName ) ) )
+        {
+            ctx.symbols.variables.erase( it++ );
+        }
+        else { ++it; }
+    }
+
+    ctx.symbols.currentContractName.clear();
     return nullptr;
 }
 
@@ -218,12 +265,14 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
     ASSERTM( std::size( nodes ) >= 2U, "Function definition consists of an identifier and at least one statement in the function body" );
 
     ASSERTM( nodes[ 0U ]->is< Identifier >(), "Function identifier is the first child node in the function definition" );
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+    auto const & functionName{ nodes[ 0U ]->get< Identifier >().name };
 
     std::vector< std::string > parameterNames;
     std::vector< llvm::Type * > parameters;
 
     llvm::Type * returnType{ llvm::Type::getVoidTy( *ctx.internalCtx ) };
+
+    ctx.symbols.currentFunctionName = functionName;
 
     /**
      * Gather all the info required to define the LLVM IR function.
@@ -236,13 +285,26 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
             if ( node->get< AST::NodeType >() == AST::NodeType::FunctionParameterDefinition )
             {
                 auto const & parameterNodes{ node->children() };
-                ASSERTM( std::size( parameterNodes ) == 2U, "Function parameter definition consists of an identifier and type annotation" );
+                if ( std::size( parameterNodes ) == 2U )
+                {
+                    ASSERTM( parameterNodes[ 0U ]->is< Identifier >(), "Function parameter identifier is the first child node in the function parameter definition" );
+                    parameterNames.push_back( ctx.symbols.mangle( parameterNodes[ 0U ]->get< Identifier >().name ) );
 
-                ASSERTM( parameterNodes[ 0U ]->is< Identifier >(), "Function parameter identifier is the first child node in the function parameter definition" );
-                parameterNames.push_back( parameterNodes[ 0U ]->get< Identifier >().name );
+                    ASSERTM( parameterNodes[ 1U ]->is< TypeID >(), "Function parameter type annotation is the second child node in the function parameter definition" );
+                    parameters.push_back( getType( ctx, parameterNodes[ 1U ]->get< TypeID >() ) );
+                }
+                else if ( std::size( parameterNodes ) == 1U )
+                {
+                    ASSERTM( parameterNodes[ 0U ]->is< Identifier >(), "Function parameter identifier is the first child node in the function parameter definition" );
+                    parameterNames.push_back( ctx.symbols.mangle( parameterNodes[ 0U ]->get< Identifier >().name ) );
 
-                ASSERTM( parameterNodes[ 1U ]->is< TypeID >(), "Function parameter type annotation is the second child node in the function parameter definition" );
-                parameters.push_back( getType( ctx, parameterNodes[ 1U ]->get< TypeID >() ) );
+                    if ( parameterNames.back() != "self" || ctx.symbols.currentContractName.empty() )
+                    {
+                        // TODO: Throw an error here. Only 'self' parameter is allowed to not to have the type specified.
+                    }
+
+                    parameters.push_back( llvm::PointerType::get( ctx.symbols.contractTypes[ ctx.symbols.currentContractName ], 0U ) );
+                }
             }
         }
         else if ( node->is< TypeID >() )
@@ -253,7 +315,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
     }
 
     auto * functionType{ llvm::FunctionType::get( returnType, parameters, false ) };
-    auto * function    { llvm::Function::Create( functionType, llvm::Function::ExternalLinkage, name, ctx.module_.get() ) };
+    auto * function    { llvm::Function::Create( functionType, llvm::Function::ExternalLinkage, functionName, ctx.module_.get() ) };
 
     // Set names for all the arguments
     auto idx{ 0U };
@@ -289,6 +351,15 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
                     ctx.builder->CreateRet( return_ );
                 }
             }
+            else if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
+            {
+                ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of an identifier and either type annotation or initialization or both" );
+
+                ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
+                auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+
+                ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = codegen( ctx, node );
+            }
             else
             {
                 codegen( ctx, node );
@@ -301,11 +372,23 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
         ctx.builder->CreateRet( nullptr );
     }
 
-    // TODO: Remove variables from the symbols table
+    /**
+     * Remove local variables and function arguments from scope.
+     */
+    for ( auto it{ std::begin( ctx.symbols.variables ) }; it != std::end( ctx.symbols.variables ); )
+    {
+        if ( it->first.starts_with( fmt::format( "{}_{}_", ctx.symbols.currentContractName, ctx.symbols.currentFunctionName ) ) )
+        {
+            ctx.symbols.variables.erase( it++ );
+        }
+        else { ++it; }
+    }
+
+    ctx.symbols.currentFunctionName.clear();
 
     // Validate the generated code and check for consistency
     verifyFunction( *function );
-    ctx.symbols.functions[ name ] = function;
+    ctx.symbols.functions[ functionName ] = function;
     return function;
 }
 
@@ -353,7 +436,16 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
     {
         value = codegen( ctx, node );
     }
-    ctx.symbols.variables[ name ] = value;
+
+    if ( ctx.symbols.variable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
+    }
+    else if ( ctx.symbols.memberVariable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
+    }
+
     return value;
 }
 
@@ -415,7 +507,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     // Codegen of 'then' can change the current block, update 'then' block for the PHI
     thenBlock = ctx.builder->GetInsertBlock();
 
-    llvm::Value * elifOrElse_{ nullptr };
+    llvm::Value * elifOrElse{ nullptr };
     {
         // Generate LLVM IR for all statements within else body
         parent->getBasicBlockList().push_back( elseBlock );
@@ -423,8 +515,8 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
 
         for ( ; nodeIdx < std::size( nodes ); nodeIdx++ )
         {
-            elifOrElse_ = codegen( ctx, nodes[ nodeIdx ] );
-            if ( elifOrElse_ == nullptr ) { return nullptr; }
+            elifOrElse = codegen( ctx, nodes[ nodeIdx ] );
+            if ( elifOrElse == nullptr ) { return nullptr; }
         }
         // Jump to end block
         ctx.builder->CreateBr( endBlock );
@@ -441,7 +533,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     {
         auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt32Ty( *ctx.internalCtx ), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
         phi->addIncoming( then, thenBlock );
-        phi->addIncoming( elifOrElse_, elseBlock );
+        phi->addIncoming( elifOrElse, elseBlock );
         return phi;
     }
     return then;
@@ -483,6 +575,60 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     ctx.builder->CreateBr( conditionBlock );
     ctx.builder->SetInsertPoint( afterLoopBlock );
     return nullptr;
+}
+
+llvm::Value * codegenAssignSpec( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
+{
+    ASSERTM( std::size( nodes ) == 2U, "2 operands" );
+
+    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
+    if ( nodes[ 0U ]->is< AST::NodeType >() && nodes[ 0U ]->get< AST::NodeType >() == AST::NodeType::MemberCall )
+    {
+        auto const & children{ nodes[ 0U ]->children() };
+        ASSERTM( std::size( children ) == 2U, "Member call expression consists of two identifiers: variable and either data member or function member identifier" );
+
+        ASSERTM( children[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the member call expression" );
+        auto const & variableName{ children[ 0U ]->get< Identifier >().name };
+
+        auto const & member{ children[ 1U ] };
+        if ( member->is< Identifier >() )
+        {
+            // Access data member
+            auto * variable { ctx.symbols.variable( variableName ) };
+            auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
+            lhs = memberPtr;
+        }
+
+        auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
+        ctx.builder->CreateStore( rhs, lhs );
+
+        return lhs;
+    }
+
+    llvm::Value * value{ nullptr };
+    if ( nodes[ 1U ]->is< Number >() )
+    {
+        auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
+        ctx.builder->CreateStore( rhs, lhs );
+        return lhs;
+    }
+    else
+    {
+        value = codegen( ctx, nodes[ 1U ] );
+    }
+
+    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+
+    if ( ctx.symbols.variable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
+    }
+    else if ( ctx.symbols.memberVariable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
+    }
+
+    return value;
 }
 
 } // namespace A1::LLVM::IR

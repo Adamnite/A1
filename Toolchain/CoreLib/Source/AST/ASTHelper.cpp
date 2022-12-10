@@ -17,6 +17,7 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
     switch ( type )
     {
         case NodeType::Call:
+        case NodeType::MemberCall:
         case NodeType::Parentheses:
             return NodePrecedence::Group1;
 
@@ -93,7 +94,6 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
         /**
          * All other types should fall into this precedence group
          */
-        case NodeType::MemberCall:
         case NodeType::StatementIf:
         case NodeType::StatementElif:
         case NodeType::StatementElse:

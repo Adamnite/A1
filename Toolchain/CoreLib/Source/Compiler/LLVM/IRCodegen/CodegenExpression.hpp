@@ -55,6 +55,11 @@ llvm::Value * codegenUnary
 
     if ( lhs == nullptr ) { return nullptr; }
 
+    if ( lhs->getType()->getNumContainedTypes() > 0U && lhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+    {
+        lhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), lhs );
+    }
+
     return ( *( ctx.builder ).*clbk )( lhs, opName, T{} ... );
 }
 
@@ -77,6 +82,16 @@ llvm::Value * codegenBinary
 
     if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
 
+    if ( lhs->getType()->getNumContainedTypes() > 0U && lhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+    {
+        lhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), lhs );
+    }
+
+    if ( rhs->getType()->getNumContainedTypes() > 0U && rhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+    {
+        rhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), rhs );
+    }
+
     return ( *( ctx.builder ).*clbk )( lhs, rhs, opName, T{} ... );
 }
 
@@ -95,7 +110,7 @@ llvm::Value * codegenAssign
     ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
     auto const & name{ nodes[ 0U ]->get< Identifier >().name };
 
-    auto * value{ ctx.symbols.getVariable( name ) };
+    auto * value{ ctx.symbols.variable( name ) };
     if ( value == nullptr ) { return nullptr; }
 
     ctx.builder->CreateStore( codegenBinary( ctx, clbk, nodes, opName ), value );
@@ -109,5 +124,6 @@ llvm::Value * codegenAssign
 [[ nodiscard ]] llvm::Value    * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenControlFlow       ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenLoopFlow          ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenAssignSpec        ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 
 } // namespace A1::LLVM::IR

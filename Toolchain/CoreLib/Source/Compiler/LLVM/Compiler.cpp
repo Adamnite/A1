@@ -133,8 +133,8 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
         passBuilder.crossRegisterProxies( loopAnalysisManager, functionAnalysisManager, cGSCCAnalysisManager, moduleAnalysisManager );
 
-        auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
-        modulePassManager.run( *context.module_, moduleAnalysisManager );
+        // auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
+        // modulePassManager.run( *context.module_, moduleAnalysisManager );
 #endif // TESTS_ENABLED
 
     if ( settings.outputIR )
