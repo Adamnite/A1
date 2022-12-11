@@ -74,6 +74,38 @@ namespace
     }
 } // namespace
 
+llvm::Value * codegenAssign( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
+{
+    ASSERTM( std::size( nodes ) == 2U, "2 operands" );
+
+    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
+
+    llvm::Value * value{ nullptr };
+    if ( nodes[ 1U ]->is< String >() )
+    {
+        value = codegen( ctx, nodes[ 1U ] );
+    }
+    else
+    {
+        auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
+        ctx.builder->CreateStore( rhs, lhs );
+        return lhs;
+    }
+
+    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+
+    if ( ctx.symbols.variable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
+    }
+    else if ( ctx.symbols.memberVariable( name ) != nullptr )
+    {
+        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
+    }
+
+    return value;
+}
+
 llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
     ASSERTM( std::size( nodes ) >= 1U, "Call expression consists of identifier and parameters, if any" );
@@ -155,9 +187,8 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
     if ( member->is< Identifier >() )
     {
         // Access data member
-        auto * variable { ctx.symbols.variable( variableName ) };
-        auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
-        return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), memberPtr );
+        auto * variable{ ctx.symbols.variable( variableName ) };
+        return ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U );
     }
     else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
@@ -575,60 +606,6 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     ctx.builder->CreateBr( conditionBlock );
     ctx.builder->SetInsertPoint( afterLoopBlock );
     return nullptr;
-}
-
-llvm::Value * codegenAssignSpec( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
-{
-    ASSERTM( std::size( nodes ) == 2U, "2 operands" );
-
-    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
-    if ( nodes[ 0U ]->is< AST::NodeType >() && nodes[ 0U ]->get< AST::NodeType >() == AST::NodeType::MemberCall )
-    {
-        auto const & children{ nodes[ 0U ]->children() };
-        ASSERTM( std::size( children ) == 2U, "Member call expression consists of two identifiers: variable and either data member or function member identifier" );
-
-        ASSERTM( children[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the member call expression" );
-        auto const & variableName{ children[ 0U ]->get< Identifier >().name };
-
-        auto const & member{ children[ 1U ] };
-        if ( member->is< Identifier >() )
-        {
-            // Access data member
-            auto * variable { ctx.symbols.variable( variableName ) };
-            auto * memberPtr{ ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U ) };
-            lhs = memberPtr;
-        }
-
-        auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
-        ctx.builder->CreateStore( rhs, lhs );
-
-        return lhs;
-    }
-
-    llvm::Value * value{ nullptr };
-    if ( nodes[ 1U ]->is< Number >() )
-    {
-        auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
-        ctx.builder->CreateStore( rhs, lhs );
-        return lhs;
-    }
-    else
-    {
-        value = codegen( ctx, nodes[ 1U ] );
-    }
-
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-    if ( ctx.symbols.variable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
-    }
-    else if ( ctx.symbols.memberVariable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
-    }
-
-    return value;
 }
 
 } // namespace A1::LLVM::IR
