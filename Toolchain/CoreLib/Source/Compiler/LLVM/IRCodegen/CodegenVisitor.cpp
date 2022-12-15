@@ -92,8 +92,9 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
 
                     case AST::NodeType::StatementIf:
                     case AST::NodeType::StatementElif:
+                    {
                         return codegenControlFlow( ctx, node->children() );
-
+                    }
                     case AST::NodeType::StatementElse:
                     {
                         // Generate LLVM IR for all the statements in else body
@@ -104,10 +105,10 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                         }
                         return value;
                     }
-
                     case AST::NodeType::StatementWhile:
+                    {
                         return codegenLoopFlow( ctx, node->children() );
-
+                    }
                     case AST::NodeType::StatementReturn:
                     {
                         ASSERT( std::size( node->children() ) == 1U );
@@ -120,18 +121,16 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
 
                         return value;
                     }
-
                     case AST::NodeType::StatementImport:
                     {
                         auto const & nodes{ node->children() };
-
                         ASSERT( std::size( nodes ) == 1U );
                         ASSERTM( nodes[ 0U ]->is< Identifier >(), "Module identifier is the first and only child node in the import statement" );
 
                         ctx.importedModules.push_back( nodes[ 0U ]->get< Identifier >().name );
                         return nullptr;
                     }
-
+                    case AST::NodeType::StatementAssert   : return codegenAssert            ( ctx, node->children() );
                     case AST::NodeType::ContractDefinition: return codegenContractDefinition( ctx, node->children() );
                     case AST::NodeType::FunctionDefinition: return codegenFunctionDefinition( ctx, node->children() );
                     case AST::NodeType::VariableDefinition: return codegenVariableDefinition( ctx, node->children() );

@@ -125,5 +125,6 @@ llvm::Value * codegenAssign
 [[ nodiscard ]] llvm::Value    * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenControlFlow       ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 [[ nodiscard ]] llvm::Value    * codegenLoopFlow          ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
+[[ nodiscard ]] llvm::Value    * codegenAssert            ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
 
 } // namespace A1::LLVM::IR

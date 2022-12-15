@@ -608,4 +608,50 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     return nullptr;
 }
 
+llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
+{
+    ASSERT( std::size( nodes ) == 1U );
+
+    auto * condition{ codegen( ctx, nodes[ 0U ] ) };
+    if ( condition == nullptr ) { return nullptr; }
+
+    // Convert condition to boolean by comparing it to 0
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateICmpEQ
+    (
+        condition,
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        "cond"
+    );
+
+    auto * parent{ ctx.builder->GetInsertBlock()->getParent() };
+
+    auto * thenBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "if.then", parent ) };
+    auto * elseBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "if.else" ) };
+    auto * endBlock { llvm::BasicBlock::Create( *ctx.internalCtx, "if.end"  ) };
+
+    llvm::Value * then{ nullptr };
+    {
+        // Generate LLVM IR for all statements within the if body
+        ctx.builder->CreateCondBr( condition, thenBlock, elseBlock );
+        ctx.builder->SetInsertPoint( thenBlock );
+
+        then = ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( "abort" ), llvm::None, "" );
+    }
+    // Jump to end block
+    ctx.builder->CreateBr( endBlock );
+
+    // Generate LLVM IR for all statements within else body
+    parent->getBasicBlockList().push_back( elseBlock );
+    ctx.builder->SetInsertPoint( elseBlock );
+
+    // Jump to end block
+    ctx.builder->CreateBr( endBlock );
+
+    parent->getBasicBlockList().push_back( endBlock );
+    ctx.builder->SetInsertPoint( endBlock );
+
+    return then;
+}
+
 } // namespace A1::LLVM::IR

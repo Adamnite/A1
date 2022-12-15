@@ -196,7 +196,8 @@ INSTANTIATE_TEST_SUITE_P
                 "let i: num = 0\n"
                 "while i < 4:\n"
                 "    print(i)\n"
-                "    i += 1",
+                "    i += 1"
+                "    assert i < 5",
             .expectedOutput =
                 "0\n"
                 "1\n"

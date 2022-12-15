@@ -535,6 +535,33 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression   = "assert a < b",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::StatementAssert,
+                        makeChildren
+                        (
+                            std::make_unique< Node >
+                            (
+                                NodeType::LessThan,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "a" } ),
+                                    std::make_unique< Node >( A1::Identifier{ .name = "b" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .expression   = "return a < b",
             .expectedRoot = std::make_shared< Node >
             (

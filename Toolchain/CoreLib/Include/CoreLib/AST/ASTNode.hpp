@@ -90,6 +90,7 @@ enum class NodeType : std::uint8_t
     StatementPass,           // pass
     StatementReturn,         // return <expression>
     StatementImport,         // import <expression>
+    StatementAssert,         // assert <expression>
 
     ModuleDefinition,
     ContractDefinition,

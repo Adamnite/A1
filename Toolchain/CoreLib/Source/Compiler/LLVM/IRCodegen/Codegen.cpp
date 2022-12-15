@@ -115,6 +115,16 @@ namespace
             )
         );
 
+        functions[ "abort" ] = module_->getOrInsertFunction
+        (
+            "abort",
+            llvm::FunctionType::get
+            (
+                llvm::Type::getVoidTy( *ctx ),
+                true
+            )
+        );
+
         functions[ "is_utf8" ] = module_->getOrInsertFunction
         (
             "is_utf8",
