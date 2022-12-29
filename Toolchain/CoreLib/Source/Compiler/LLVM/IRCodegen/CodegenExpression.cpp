@@ -93,16 +93,7 @@ llvm::Value * codegenAssign( Context & ctx, std::span< AST::Node::Pointer const 
     }
 
     auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-    if ( ctx.symbols.variable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
-    }
-    else if ( ctx.symbols.memberVariable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
-    }
-
+    ctx.symbols.variable( name, value );
     return value;
 }
 
@@ -382,8 +373,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
 
                 ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
                 auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-                ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = codegen( ctx, node );
+                ctx.symbols.variable( name, codegen( ctx, node ) );
             }
             else
             {
@@ -462,15 +452,7 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
         value = codegen( ctx, node );
     }
 
-    if ( ctx.symbols.variable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = value;
-    }
-    else if ( ctx.symbols.memberVariable( name ) != nullptr )
-    {
-        ctx.symbols.variables[ fmt::format( "{}__{}", ctx.symbols.currentContractName, name ) ] = value;
-    }
-
+    ctx.symbols.variable( name, value );
     return value;
 }
 

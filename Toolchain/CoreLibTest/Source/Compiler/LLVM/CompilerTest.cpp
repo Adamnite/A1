@@ -313,6 +313,25 @@ INSTANTIATE_TEST_SUITE_P
                 "0\n"
                 "3\n"
                 "3"
+        },
+        TestParameter
+        {
+            .input =
+                "contract Addition:\n"
+                "    let sum: num = 0\n"
+                "\n"
+                "    def add(self, x: num, y: num) -> num:\n"
+                "        let sum = x + y\n"
+                "        return sum\n"
+                "\n"
+                "let var = Addition()\n"
+                "print(var.sum)\n"
+                "print(var.add(1, 2))\n"
+                "print(var.sum)",
+            .expectedOutput =
+                "0\n"
+                "3\n"
+                "0"
         }
     )
 );

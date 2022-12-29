@@ -135,10 +135,7 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
             },
             [ &ctx ]( Identifier const & identifier ) -> llvm::Value *
             {
-                auto * value{ ctx.symbols.variable( identifier.name ) };
-                if ( value != nullptr ) { return value; }
-
-                return ctx.symbols.memberVariable( identifier.name );
+                return ctx.symbols.variable( identifier.name );
             },
             [ &ctx ]( Number const number ) -> llvm::Value *
             {

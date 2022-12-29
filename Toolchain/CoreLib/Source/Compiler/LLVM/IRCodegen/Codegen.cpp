@@ -100,9 +100,9 @@ namespace
     }
 
     [[ nodiscard ]]
-    std::map< std::string, llvm::FunctionCallee > createBuiltInFunctions( llvm::Module * module_, llvm::LLVMContext * ctx )
+    Symbols::Table< llvm::FunctionCallee > createBuiltInFunctions( llvm::Module * module_, llvm::LLVMContext * ctx )
     {
-        std::map< std::string, llvm::FunctionCallee > functions;
+        Symbols::Table< llvm::FunctionCallee > functions;
 
         functions[ "print" ] = module_->getOrInsertFunction
         (
@@ -218,24 +218,6 @@ Context codegen
             inMainBlock = false;
             codegen( ctx, node );
         }
-        else if ( node->is< AST::NodeType >() && node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
-        {
-            if ( !inMainBlock )
-            {
-                // Getting back to main block
-                ctx.builder->SetInsertPoint( mainBlock );
-                inMainBlock = true;
-            }
-
-            auto const & nodes{ node->children() };
-
-            ASSERTM( std::size( nodes ) >= 2U, "Variable definition consists of an identifier and either type annotation or initialization or both" );
-
-            ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the variable definition" );
-            auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-
-            ctx.symbols.variables[ ctx.symbols.mangle( name ) ] = codegen( ctx, node );
-        }
         else
         {
             if ( !inMainBlock )
@@ -259,8 +241,8 @@ Context codegen
 #ifndef TESTS_ENABLED
     /**
      * @note: Main function exists only for the sake of testing.
-     * In production, when source code is built to WASM, main function
-     * should be left out.
+     * In production, when source code is built to ADVM bytecode,
+     * main function should be left out.
      */
     mainFunction->eraseFromParent();
 #endif // TESTS_ENABLED
