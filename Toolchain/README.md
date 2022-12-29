@@ -4,50 +4,60 @@ Learn more about the AOC, the A1 programming language compiler, [here](AOC/READM
 
 ## Development
 
-Assuming that the WASI SDK toolchain is installed and on the path `$WASI_SDK_PATH`, one can build `CoreLib` library and the `AOC` compiler by following below instructions.
+A1 programming language is compiled down to ADVM bytecode. ADVM is an Adamnite VM derived from WASM. Thus, the WASM-based toolchain is needed. Using [WASI-SDK](https://github.com/WebAssembly/wasi-sdk) is recommended but any other toolchain (e.g. Emscripten) should work as well.
 
-### MacOS specific
+### Prerequisites
 
-Run the following commands to install the rest of prerequisites on the MacOS:
+- WASI SDK 15.0
+- LLVM 14.0.6
+- Clang 14
+
+#### *WASI SDK 15.0*
+
+Run following instructions in order to get the WASI SDK for MacOS:
 
 ```sh
-$ brew install wget llvm@14 cmake ninja
-$ export PATH="$(brew --prefix llvm@14)/bin:${PATH}"
+$ export WASI_VERSION=15
+$ export WASI_VERSION_FULL=${WASI_VERSION}.0
+$ wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION_FULL}-macos.tar.gz
+$ tar xvf wasi-sdk-${WASI_VERSION_FULL}-macos.tar.gz
+$ export WASI_SDK_PATH=wasi-sdk-${WASI_VERSION_FULL}
 ```
 
-## Ubuntu specific
+Procedure for other platforms should be similar to this.
 
-Run the following commands to install the rest of prerequisites on the Ubuntu:
+#### *LLVM*
+
+Follow below instructions to install [Adamnite's LLVM fork](https://github.com/Adamnite/llvm-project):
 
 ```sh
-$ # Install cmake
-$ sudo snap install cmake --classic
-$
-$ # Install ninja
-$ sudo wget -qO /usr/local/bin/ninja.gz https://github.com/ninja-build/ninja/releases/latest/download/ninja-linux.zip
-$ sudo gunzip /usr/local/bin/ninja.gz
-$ sudo chmod a+x /usr/local/bin/ninja
-$
-$ # Install LLVM and it's dependencies
-$ sudo apt update
-$ sudo apt install build-essential llvm-14 zlib1g-dev clang
-$ sudo apt-get -y install clang-14 libclang-14-dev libffi-dev libedit-dev libpfm4-dev libtinfo-dev
-$
-$ # Hacky workaround to trick LLVM
-$ touch /usr/lib/llvm-14/lib/libMLIRSupportIndentedOstream.a
+$ cd llvm-project/llvm && mkdir -p build && cd build
+$ cmake -DLLVM_USE_LINKER=lld \
+        -DLLVM_ENABLE_PROJECTS="clang;lld" \
+        -DLLVM_ENABLE_TERMINFO=OFF \
+        -DLLVM_ENABLE_ZSTD=OFF \
+        -DLLVM_ENABLE_LIBEDIT=OFF \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -GNinja ..
+$ ninja
+$ cmake -DCMAKE_INSTALL_PREFIX=/tmp/llvm -P cmake_install.cmake
 ```
 
 ### Building
 
-Run the following commands in order to build the `AOC` compiler:
+Run the following commands in order to build the `aoc` compiler:
 
 ```sh
-$ cd Toolchain
-$ mkdir -p build
-$ cd build
-$ cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=OFF \
+$ cd Toolchain && mkdir -p build && cd build
+$ cmake \
+    -DLLVM_DIR=/tmp/llvm/lib/cmake/llvm \
+    -DClang_DIR=/tmp/llvm/lib/cmake/clang \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_TESTS=OFF \
     -DWASM_SYSROOT_PATH=$WASI_SDK_PATH/share/wasi-sysroot \
     -DWASM_RUNTIME_LIBRARY_PATH=$WASI_SDK_PATH/lib/clang/14.0.3/lib/wasi/libclang_rt.builtins-wasm32.a \
     -GNinja ..
 $ ninja
 ```
+
+`aoc` compiler should now be available in `build/bin` directory.

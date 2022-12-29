@@ -16,10 +16,10 @@ Furthermore, in some cases it is useful to specify integers of a specific size. 
 
 | Type | Description |
 | - | - |
-| uint8 / int8 | Represents a number of a size of 1 byte |
-| uint16 / int16 | Represents a number of a size of 2 bytes |
-| uint32 / int32 | Represents a number of a size of 4 bytes |
-| uint64 / int64 | Represents a number of a size of 8 bytes |
+| u8 / i8 | Represents a number of a size of 1 byte |
+| u16 / i16 | Represents a number of a size of 2 bytes |
+| u32 / i32 | Represents a number of a size of 4 bytes |
+| u64 / i64 | Represents a number of a size of 8 bytes |
 
 ### Complex types
 
