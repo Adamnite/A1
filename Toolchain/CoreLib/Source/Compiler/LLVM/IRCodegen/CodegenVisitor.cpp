@@ -113,13 +113,7 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                     {
                         ASSERT( std::size( node->children() ) == 1U );
                         auto * value{ codegen( ctx, node->children()[ 0U ] ) };
-
-                        if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
-                        {
-                            return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), value );
-                        }
-
-                        return value;
+                        return Detail::load( ctx, value );
                     }
                     case AST::NodeType::StatementImport:
                     {

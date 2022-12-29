@@ -139,13 +139,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
         {
             auto * value{ codegen( ctx, nodes[ i ] ) };
             if ( value == nullptr ) { return nullptr; }
-
-            if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
-            {
-                value = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), value );
-            }
-
-            arguments.push_back( value );
+            arguments.push_back( Detail::load( ctx, value ) );
         }
 
         auto const & builtInFunctions{ ctx.symbols.builtInFunctions() };

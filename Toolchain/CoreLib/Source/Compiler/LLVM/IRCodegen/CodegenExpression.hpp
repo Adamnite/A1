@@ -37,6 +37,19 @@
 namespace A1::LLVM::IR
 {
 
+namespace Detail
+{
+    [[ nodiscard  ]]
+    inline llvm::Value * load( Context & ctx, llvm::Value * value ) noexcept
+    {
+        if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+        {
+            return ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), value );
+        }
+        return value;
+    }
+} // namespace Detail
+
 template< typename ... T >
 using IRBuilderUnaryClbk = llvm::Value * ( llvm::IRBuilderBase::* )( llvm::Value *, llvm::Twine const &, T ... );
 
@@ -54,13 +67,7 @@ llvm::Value * codegenUnary
     auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
 
     if ( lhs == nullptr ) { return nullptr; }
-
-    if ( lhs->getType()->getNumContainedTypes() > 0U && lhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
-    {
-        lhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), lhs );
-    }
-
-    return ( *( ctx.builder ).*clbk )( lhs, opName, T{} ... );
+    return ( *( ctx.builder ).*clbk )( Detail::load( ctx, lhs ), opName, T{} ... );
 }
 
 template< typename ... T >
@@ -81,18 +88,7 @@ llvm::Value * codegenBinary
     auto * rhs{ codegen( ctx, nodes[ 1U ] ) };
 
     if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
-
-    if ( lhs->getType()->getNumContainedTypes() > 0U && lhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
-    {
-        lhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), lhs );
-    }
-
-    if ( rhs->getType()->getNumContainedTypes() > 0U && rhs->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
-    {
-        rhs = ctx.builder->CreateLoad( llvm::Type::getInt32Ty( *ctx.internalCtx ), rhs );
-    }
-
-    return ( *( ctx.builder ).*clbk )( lhs, rhs, opName, T{} ... );
+    return ( *( ctx.builder ).*clbk )( Detail::load( ctx, lhs ), Detail::load( ctx, rhs ), opName, T{} ... );
 }
 
 template< typename ... T >
