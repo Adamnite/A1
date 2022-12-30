@@ -15,91 +15,47 @@
 
 int main( int argc, char * argv[] )
 {
-    A1::CLI::App app
+    using A1::CLI::App;
+    using A1::CLI::Exception;
+
+    App app
     {
-        {
-            .title       = "aoc",
-            .description = "A1 smart contract programming language compiler",
-            .version     = AOC_VERSION
-        }
+        App::Title      { "aoc" },
+        App::Description{ "A1 compiler - Develop smart contracts for the Adamnite blockchain" },
+        App::Version    { AOC_VERSION }
     };
 
-    std::optional< std::string > outputFile;
-    app.addOption
-    (
-        {
-            .short_      = "-o",
-            .long_       = "--output",
-            .name        = "file",
-            .description = "Write output to specific file",
-            .output      = outputFile
-        }
-    );
+    app.addArgument( { .short_ = "-h", .long_ = "--help"   , .description  = "Print help"   , .implicit = true, .exit = true } );
+    app.addArgument( { .short_ = "-v", .long_ = "--version", .description  = "Print version", .implicit = true, .exit = true } );
 
-    std::optional< std::string > outputAST;
-    app.addOption
-    (
-        {
-            .short_       = "",
-            .long_        = "--ast",
-            .name         = "ast",
-            .description  = "Write Abstract Syntax Tree (AST) to standard output",
-            .valueOmitted = true,
-            .output       = outputAST
-        }
-    );
+    app.addArgument( {                 .long_ = "file"    , .metaName = "FILE", .description = "File to be compiled"           } );
+    app.addArgument( { .short_ = "-o", .long_ = "--output", .metaName = "FILE", .description = "Write output to specific file" } );
 
-    std::optional< std::string > outputIR;
-    app.addOption
-    (
-        {
-            .short_       = "",
-            .long_        = "--llvm-ir",
-            .name         = "llvm-ir",
-            .description  = "Write generated LLVM IR code to standard output",
-            .valueOmitted = true,
-            .output       = outputIR
-        }
-    );
-
-    std::string inputFile;
-    app.addArgument
-    (
-        {
-            .name        = "file",
-            .description = "File to be compiled",
-            .output      = inputFile
-        }
-    );
+    app.addArgument( { .long_ = "--ast"    , .description = "Write Abstract Syntax Tree (AST) to standard output", .implicit = true } );
+    app.addArgument( { .long_ = "--llvm-ir", .description = "Write generated LLVM IR code to standard output"    , .implicit = true } );
 
     try
     {
         app.parse( argc, argv );
 
-        if ( app.writeHelp() )
-        {
-            std::printf( "%s\n", app.helpMessage().c_str() );
-        }
-        else if ( app.writeVersion() )
-        {
-            std::printf( "%s\n", app.versionMessage().c_str() );
-        }
+             if ( app.get< bool >( "--help"    ) ) { std::printf( "%s\n", app.help   ().c_str() ); }
+        else if ( app.get< bool >( "--version" ) ) { std::printf( "%s\n", app.version().c_str() ); }
         else
         {
             A1::Compiler::Settings settings
             {
-                .executableFilename = outputFile.value_or( "main" ),
-                .outputAST          = outputAST.has_value(),
-                .outputIR           = outputIR.has_value()
+                .executableFilename = app.get< std::string >( "--output"  ).value_or( "main" ),
+                .outputAST          = app.get< bool        >( "--ast"     ),
+                .outputIR           = app.get< bool        >( "--llvm-ir" )
             };
 
-            if ( auto const success{ A1::load( std::move( settings ), inputFile ) }; success )
+            if ( auto const success{ A1::load( std::move( settings ), app.get< std::string >( "file" ).value_or( "" ) ) }; success )
             {
                 std::printf( "Compilation successful!" );
             }
         }
     }
-    catch ( A1::CLI::Exception const & ex )
+    catch ( Exception const & ex )
     {
         std::printf( "%s\n\n", ex.what() );
         std::printf( "%s\n\n", ex.help() );

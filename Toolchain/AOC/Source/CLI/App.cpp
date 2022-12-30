@@ -10,190 +10,125 @@
 
 #include <fmt/format.h>
 
-#include <span>
+#include <algorithm>
 
 namespace A1::CLI
 {
 
-namespace
-{
-    [[ nodiscard ]]
-    bool isOption( std::string_view const value ) noexcept
-    {
-        return value.starts_with( "-" ) || value.starts_with( "--" );
-    }
-
-    [[ nodiscard ]]
-    auto findOption( std::vector< Option > const & options, std::string_view const value ) noexcept
-    {
-        return std::find_if
-        (
-            std::begin( options ),
-            std::end  ( options ),
-            [ value ]( auto && option ) noexcept
-            {
-                return option.short_ == value || option.long_ == value;
-            }
-        );
-    }
-
-    [[ nodiscard ]]
-    std::vector< std::string_view > getArgumentNames( std::span< Argument const > const arguments )
-    {
-        std::vector< std::string_view > argumentNames;
-        std::transform
-        (
-            std::begin( arguments ),
-            std::end  ( arguments ),
-            std::back_inserter( argumentNames ),
-            []( auto && argument ) noexcept
-            {
-                return argument.name;
-            }
-        );
-        return argumentNames;
-    }
-} // namespace
-
-App::App( Settings settings ) : settings_{ std::move( settings ) }
-{
-    // add default options
-    options_.push_back
-    (
-        {
-            .short_       = "-h",
-            .long_        = "--help",
-            .name         = "help",
-            .description  = "Print help",
-            .valueOmitted = true,
-            .output       = helpOutput_
-        }
-    );
-    options_.push_back
-    (
-        {
-            .short_       = "-v",
-            .long_        = "--version",
-            .name         = "version",
-            .description  = "Print version",
-            .valueOmitted = true,
-            .output       = versionOutput_
-        }
-    );
-}
-
-void App::addOption( Option argument )
-{
-    options_.push_back( std::move( argument ) );
-}
-
-void App::addArgument( Argument argument )
-{
-    arguments_.push_back( std::move( argument ) );
-}
-
 void App::parse( int const argc, char * argv[] )
 {
-    argumentNames_ = getArgumentNames( arguments_ );
+    setArguments_          .clear();
+    implicitlySetArguments_.clear();
 
-    auto currentArgumentIdx{ 0U };
+    auto setPositionalArgumentsCount{ 0U };
+
+    static constexpr auto isOptional
+    {
+        []( std::string_view const value ) noexcept
+        {
+            return value.starts_with( "-" ) || value.starts_with( "--" );
+        }
+    };
 
     for ( auto i{ 1 }; i < argc; ++i )
     {
-        if ( isOption( argv[ i ] ) )
+        if ( isOptional( argv[ i ] ) )
         {
-            // parse option
-            if ( auto optionIt{ findOption( options_, argv[ i ] ) }; optionIt != std::end( options_ ) )
+            auto const it
             {
-                if      ( optionIt->name == "help"    ) { helpOutput_    = ""; return; }
-                else if ( optionIt->name == "version" ) { versionOutput_ = ""; return; }
+                std::find_if
+                (
+                    std::begin( optionalArguments_ ),
+                    std::end  ( optionalArguments_ ),
+                    [ value = argv[ i ] ]( auto && arg ) noexcept
+                    {
+                        return arg.short_ == value || arg.long_ == value;
+                    }
+                )
+            };
 
-                // parse value
-                if ( optionIt->valueOmitted )
-                {
-                    optionIt->output = "";
-                }
-                else if ( i + 1 < argc )
-                {
-                    optionIt->output = argv[ ++i ];
-                }
-                else
-                {
-                    throw Exception
-                    (
-                        fmt::format( "Missing a value for the option: {}", argv[ i ] ),
-                        helpMessage()
-                    );
-                }
+            if ( it == std::end( optionalArguments_ ) )
+            {
+                throw Exception( fmt::format( "Unknown argument: {}", argv[ i ] ), help() );
+            }
+
+            if ( it->implicit )
+            {
+                implicitlySetArguments_.push_back( it->long_ );
+            }
+            else if ( i + 1 < argc )
+            {
+                setArguments_[ it->long_ ] = argv[ ++i ];
             }
             else
             {
-                throw Exception
-                (
-                    fmt::format( "Unknown option: {}", argv[ i ] ),
-                    helpMessage()
-                );
+                throw Exception( fmt::format( "Missing a value for an optional argument: {}", argv[ i ] ), help() );
             }
+
+            if ( it->exit ) { return; }
         }
         else
         {
-            // parse argument
-            if ( currentArgumentIdx < std::size( arguments_ ) )
+            if ( setPositionalArgumentsCount < std::size( positionalArguments_ ) )
             {
-                arguments_[ currentArgumentIdx++ ].output = argv[ i ];
+                setArguments_[ positionalArguments_[ setPositionalArgumentsCount ].long_ ] = argv[ i++ ];
+                setPositionalArgumentsCount++;
             }
             else
             {
-                throw Exception
-                (
-                    fmt::format( "Unknown argument: {}", argv[ i ] ),
-                    helpMessage()
-                );
+                throw Exception( fmt::format( "Unknown argument: {}", argv[ i ] ), help() );
             }
         }
     }
 
-    if ( currentArgumentIdx != std::size( arguments_ ) )
+    if ( setPositionalArgumentsCount != std::size( positionalArguments_ ) )
     {
         throw Exception
         (
             fmt::format
             (
-                "Missing arguments: {}",
-                fmt::join( std::begin( argumentNames_ ) + currentArgumentIdx, std::end( argumentNames_ ), ", " )
+                "Missing positional arguments:\n{}",
+                fmt::join( std::begin( positionalArguments_ ) + setPositionalArgumentsCount, std::end( positionalArguments_ ), ", " )
             ),
-            helpMessage()
+            help()
         );
     }
 }
 
-std::string App::helpMessage() const
+std::string App::help() const
 {
+    std::vector< std::string_view > positionalArgumentNames;
+    std::transform
+    (
+        std::begin( positionalArguments_ ),
+        std::end  ( positionalArguments_ ),
+        std::back_inserter( positionalArgumentNames ),
+        []( auto && arg ) noexcept
+        {
+            return arg.long_;
+        }
+    );
+
     return fmt::format
     (
         "{} - {}\n\n"
         "USAGE: {} [OPTIONS] {}\n\n"
-        "OPTIONS:\n"
+        "Positional arguments:\n"
         "{}\n\n"
-        "ARGS:\n"
+        "Optional arguments:\n"
         "{}",
-        settings_.title,
-        settings_.description,
-        settings_.title,
-        fmt::join( argumentNames_, " "  ),
-        fmt::join( options_      , "\n" ),
-        fmt::join( arguments_    , "\n" )
+        title_      .value,
+        description_.value,
+        title_      .value,
+        fmt::join( positionalArgumentNames, " "  ),
+        fmt::join( positionalArguments_   , "\n" ),
+        fmt::join( optionalArguments_     , "\n" )
     );
 }
 
-std::string App::versionMessage() const
+std::string App::version() const
 {
-    return fmt::format
-    (
-        "{} version: {}\n",
-        settings_.title,
-        settings_.version
-    );
+    return fmt::format( "{} version: {}\n", title_.value, version_.value );
 }
 
 } // namespace A1::CLI

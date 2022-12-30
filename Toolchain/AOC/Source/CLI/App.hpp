@@ -7,52 +7,87 @@
 
 #pragma once
 
-#include "CLI/Option.hpp"
 #include "CLI/Argument.hpp"
 
+#include <map>
+#include <optional>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace A1::CLI
 {
 
-struct Settings
-{
-    std::string_view const title;
-    std::string_view const description;
-    std::string_view const version;
-};
-
 /**
  * Represents a CLI application.
- * Options -v/--version and -h/--help are added by default.
  */
-class App
+struct App final
 {
-public:
-    App( Settings settings );
+#define STRONG_TYPE( X )                 \
+    struct X                             \
+    {                                    \
+        explicit X( std::string value_ ) \
+        : value{ std::move( value_ ) }   \
+        {}                               \
+                                         \
+        std::string value;               \
+    };
 
-    void addOption  ( Option   option   );
-    void addArgument( Argument argument );
+    STRONG_TYPE( Title       )
+    STRONG_TYPE( Description )
+    STRONG_TYPE( Version     )
+#undef STRONG_TYPE
+
+    App( Title title, Description description, Version version )
+    : title_      { std::move( title       ) }
+    , description_{ std::move( description ) }
+    , version_    { std::move( version     ) }
+    {}
+
+    void addArgument( Argument argument )
+    {
+        if ( argument.isOptional() ) { optionalArguments_  .push_back( std::move( argument ) ); }
+        else                         { positionalArguments_.push_back( std::move( argument ) ); }
+    }
 
     void parse( int const argc, char * argv[] );
 
-    [[ nodiscard ]] bool writeHelp   () const noexcept { return helpOutput_   .has_value(); }
-    [[ nodiscard ]] bool writeVersion() const noexcept { return versionOutput_.has_value(); }
+    template< typename T >
+    typename std::enable_if_t< ! std::is_same_v< T, bool >, std::optional< T > >
+    get( std::string_view const argument ) const noexcept
+    {
+        if ( auto it{ setArguments_.find( argument ) }; it != std::end( setArguments_ ) )
+        {
+            return it->second;
+        }
+        return std::nullopt;
+    }
 
-    [[ nodiscard ]] std::string helpMessage   () const;
-    [[ nodiscard ]] std::string versionMessage() const;
+    template< typename T >
+    typename std::enable_if_t< std::is_same_v< T, bool >, T >
+    get( std::string_view const argument ) const noexcept
+    {
+        return std::find
+        (
+            std::begin( implicitlySetArguments_ ),
+            std::end  ( implicitlySetArguments_ ),
+            argument
+        ) != std::end( implicitlySetArguments_ );
+    }
+
+    [[ nodiscard ]] std::string help   () const;
+    [[ nodiscard ]] std::string version() const;
 
 private:
-    std::vector< Option   > options_;
-    std::vector< Argument > arguments_;
+    std::vector< Argument > optionalArguments_;
+    std::vector< Argument > positionalArguments_;
 
-    std::vector< std::string_view > argumentNames_;
+    std::vector< std::string_view > implicitlySetArguments_;
+    std::map< std::string_view, std::string > setArguments_;
 
-    std::optional< std::string > helpOutput_;
-    std::optional< std::string > versionOutput_;
-
-    Settings settings_;
+    Title       title_;
+    Description description_;
+    Version     version_;
 };
 
 } // namespace A1::CLI
