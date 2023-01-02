@@ -81,7 +81,7 @@ Context codegen
     {
         llvm::FunctionType::get
         (
-            llvm::Type::getInt32Ty( *ctx.internalCtx ),
+            llvm::Type::getInt64Ty( *ctx.internalCtx ),
             std::array< llvm::Type *, 0U >{},
             false
         )

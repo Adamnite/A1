@@ -39,7 +39,7 @@ struct Eof
     [[ nodiscard ]] bool operator==( Eof const & ) const = default;
 };
 
-using Number = std::uint32_t;
+using Number = std::int64_t;
 using String = std::string;
 
 class Token

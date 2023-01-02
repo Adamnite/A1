@@ -100,7 +100,7 @@ Symbols::Table< llvm::FunctionCallee > externalBuiltinFunctions( llvm::LLVMConte
                 "printf",
                 llvm::FunctionType::get
                 (
-                    llvm::IntegerType::getInt32Ty( ctx ),
+                    llvm::IntegerType::getInt64Ty( ctx ),
                     llvm::PointerType::get( llvm::Type::getInt8Ty( ctx ), 0 ),
                     true
                 )
@@ -125,7 +125,7 @@ Symbols::Table< llvm::FunctionCallee > externalBuiltinFunctions( llvm::LLVMConte
                 "is_utf8",
                 llvm::FunctionType::get
                 (
-                    llvm::IntegerType::getInt32Ty( ctx ),
+                    llvm::IntegerType::getInt64Ty( ctx ),
                     llvm::PointerType::get( llvm::Type::getInt8Ty( ctx ), 0 ),
                     false
                 )

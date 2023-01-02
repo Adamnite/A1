@@ -61,7 +61,7 @@ namespace
     {
         if ( typeID == Registry::getNumberHandle() )
         {
-            return llvm::Type::getInt32Ty( *ctx.internalCtx );
+            return llvm::Type::getInt64Ty( *ctx.internalCtx );
         }
         else if ( typeID == Registry::getStringLiteralHandle() )
         {
@@ -228,8 +228,8 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
             if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
-                dataMemberTypes.push_back( llvm::Type::getInt32Ty( *ctx.internalCtx ) );
-                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
+                dataMemberTypes.push_back( llvm::Type::getInt64Ty( *ctx.internalCtx ) );
+                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
                 codegen( ctx, node );
             }
         }
@@ -439,8 +439,8 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
         auto const typeID{ node->get< TypeID >() };
         if ( typeID == Registry::getNumberHandle() )
         {
-            value = inScopeBuilder.CreateAlloca( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, name.data() );
-            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
+            value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
+            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
         }
         else if ( typeID == Registry::getStringLiteralHandle() )
         {
@@ -449,7 +449,7 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
     }
     else if ( node->is< Number >() )
     {
-        value = inScopeBuilder.CreateAlloca( llvm::Type::getInt32Ty( *ctx.internalCtx ), 0U, name.data() );
+        value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
         inScopeBuilder.CreateStore( codegen( ctx, node ), value );
     }
     else
@@ -469,7 +469,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     if ( condition == nullptr ) { return nullptr; }
 
     // Convert condition to boolean by comparing it to 0
-    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
     condition = ctx.builder->CreateICmpNE
     (
         condition,
@@ -543,8 +543,8 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
 
     if ( hasElifElseBlock )
     {
-        auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt32Ty( *ctx.internalCtx ), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
-        phi->addIncoming( then, thenBlock );
+        auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt64Ty( *ctx.internalCtx ), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
+        phi->addIncoming( then      , thenBlock );
         phi->addIncoming( elifOrElse, elseBlock );
         return phi;
     }
@@ -566,7 +566,7 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     if ( condition == nullptr ) { return nullptr; }
 
     // Convert condition to boolean by comparing it to 0
-    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
     condition = ctx.builder->CreateICmpNE
     (
         condition,
@@ -597,7 +597,7 @@ llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const 
     if ( condition == nullptr ) { return nullptr; }
 
     // Convert condition to boolean by comparing it to 0
-    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt32Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
+    condition = ctx.builder->CreateIntCast( condition, llvm::Type::getInt64Ty( *ctx.internalCtx ), false /* isSigned */, "booltmp" );
     condition = ctx.builder->CreateICmpEQ
     (
         condition,
