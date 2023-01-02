@@ -52,6 +52,7 @@ namespace
         return wrapper;
     }
 
+    [[ maybe_unused ]]
     [[ nodiscard ]]
     llvm::Function * codegenContractAddress( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
@@ -64,6 +65,7 @@ namespace
         );
     }
 
+    [[ maybe_unused ]]
     [[ nodiscard ]]
     llvm::Function * codegenCallerAddress( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
@@ -76,6 +78,7 @@ namespace
         );
     }
 
+    [[ maybe_unused ]]
     [[ nodiscard ]]
     llvm::Function * codegenBlockTimestamp( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
@@ -136,16 +139,18 @@ Symbols::Table< llvm::FunctionCallee > externalBuiltinFunctions( llvm::LLVMConte
 
 Symbols::Table< llvm::Function * > internalBuiltinFunctions
 (
-    llvm::LLVMContext & ctx,
-    llvm::Module      & module_,
-    llvm::IRBuilder<> & builder
+    [[ maybe_unused ]] llvm::LLVMContext & ctx,
+    [[ maybe_unused ]] llvm::Module      & module_,
+    [[ maybe_unused ]] llvm::IRBuilder<> & builder
 )
 {
     return
     {
+#ifndef TESTS_ENABLED
         { "contract_address", codegenContractAddress( ctx, module_, builder ) },
         { "caller_address"  , codegenCallerAddress  ( ctx, module_, builder ) },
         { "block_timestamp" , codegenBlockTimestamp ( ctx, module_, builder ) }
+#endif // TESTS_ENABLED
     };
 }
 
