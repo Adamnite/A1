@@ -89,7 +89,7 @@ Context codegen
     };
     auto * mainFunction{ llvm::Function::Create( mainFunctionType, llvm::Function::ExternalLinkage, "main", *ctx.module_ ) };
 
-    auto * mainBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "entry", mainFunction ) };
+    auto * mainBlock{ llvm::BasicBlock::Create( *ctx.internalCtx, "", mainFunction ) };
     ctx.builder->SetInsertPoint( mainBlock );
 
     auto inMainBlock{ true };

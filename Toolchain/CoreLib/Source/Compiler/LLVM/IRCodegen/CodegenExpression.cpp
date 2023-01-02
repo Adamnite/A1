@@ -158,9 +158,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
             return ctx.builder->CreateCall( internalBuiltInFunctions.at( name ), arguments );
         }
 
-        return arguments.empty()
-            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None )
-            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments  );
+        return ctx.builder->CreateCall( ctx.symbols.functions[ ctx.symbols.mangle( name ) ], arguments );
     }
 
     return nullptr;
@@ -198,9 +196,21 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
             arguments.push_back( value );
         }
 
+        auto const contractTypeName
+        {
+            [ &contracts = ctx.symbols.contractTypes, type = arguments[ 0U ]->getType() ]() -> std::string
+            {
+                for ( auto const & contract : contracts )
+                {
+                    if ( contract.second == type->getContainedType( 0U ) ) { return contract.first; }
+                }
+                return {};
+            }()
+        };
+
         return memberNodes.size() == 1U
-            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None )
-            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments  );
+            ? ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}__{}", contractTypeName, name ) ], llvm::None )
+            : ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}__{}", contractTypeName, name ) ], arguments  );
     }
 
     return nullptr;
@@ -256,7 +266,7 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         auto   ctorName{ fmt::format( "{}_DefaultCTOR", contractName ) };
         auto * ctorType{ llvm::FunctionType::get( contractType, false ) };
         auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::ExternalLinkage, ctorName, ctx.module_.get() ) };
-        auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "entry", ctor ) };
+        auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "", ctor ) };
         ctx.builder->SetInsertPoint( block );
 
         auto * alloca{ ctx.builder->CreateAlloca( contractType, 0U ) };
@@ -321,7 +331,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
 
                     if ( parameterNames.back() != "self" || ctx.symbols.currentContractName.empty() )
                     {
-                        // TODO: Throw an error here. Only 'self' parameter is allowed to not to have the type specified.
+                        // TODO: Throw an error here. Only 'self' parameter is allowed not to have the type specified.
                     }
 
                     parameters.push_back( llvm::PointerType::get( ctx.symbols.contractTypes[ ctx.symbols.currentContractName ], 0U ) );
@@ -345,7 +355,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
         arg.setName( parameterNames[ idx++ ] );
     }
 
-    auto * block{ llvm::BasicBlock::Create( *ctx.internalCtx, "entry", function ) };
+    auto * block{ llvm::BasicBlock::Create( *ctx.internalCtx, "", function ) };
     ctx.builder->SetInsertPoint( block );
 
     for ( auto & arg : function->args() )
@@ -408,7 +418,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
 
     // Validate the generated code and check for consistency
     verifyFunction( *function );
-    ctx.symbols.functions[ functionName ] = function;
+    ctx.symbols.functions[ ctx.symbols.mangle( functionName ) ] = function;
     return function;
 }
 

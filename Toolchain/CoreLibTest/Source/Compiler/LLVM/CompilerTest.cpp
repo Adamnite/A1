@@ -286,14 +286,19 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .input =
+                "def get() -> str:\n"
+                "    return \"Hello, folks!\"\n"
+                "\n"
                 "contract HelloWorld:\n"
                 "    def get() -> str:\n"
                 "        return \"Hello, world!\"\n"
                 "\n"
                 "let var = HelloWorld()\n"
-                "print(var.get())",
+                "print(var.get())\n"
+                "print(get())",
             .expectedOutput =
-                "Hello, world!"
+                "Hello, world!\n"
+                "Hello, folks!"
         },
         TestParameter
         {
