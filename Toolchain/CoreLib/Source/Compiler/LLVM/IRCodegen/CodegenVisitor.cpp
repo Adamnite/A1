@@ -18,6 +18,7 @@
 #endif
 
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Value.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop

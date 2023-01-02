@@ -49,7 +49,11 @@ int main( int argc, char * argv[] )
                 .outputIR           = app.get< bool        >( "--llvm-ir" )
             };
 
-            if ( auto const success{ A1::load( std::move( settings ), app.get< std::string >( "file" ).value_or( "" ) ) }; success )
+            if
+            (
+                auto filePath{ app.get< std::string >( "file" ) };
+                filePath && A1::load( std::move( settings ), *filePath )
+            )
             {
                 std::printf( "Compilation successful!" );
             }

@@ -17,16 +17,22 @@
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
 #elif defined(__GNUC__) || defined(__GNUG__)
 #   pragma GCC diagnostic pop
 #endif
+
+namespace llvm
+{
+    // fwd
+    class Function;
+    class FunctionCallee;
+    class LLVMContext;
+    class Module;
+} // namespace llvm
 
 namespace A1::LLVM::IR
 {

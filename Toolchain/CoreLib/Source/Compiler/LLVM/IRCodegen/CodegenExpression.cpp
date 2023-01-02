@@ -76,7 +76,7 @@ namespace
 
 llvm::Value * codegenAssign( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
 {
-    ASSERTM( std::size( nodes ) == 2U, "2 operands" );
+    ASSERTM( std::size( nodes ) == 2U, "Assignment expression consists of two operands" );
 
     auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
 
@@ -117,7 +117,7 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
                 llvm::Constant::getNullValue( type->second )
             )
         };
-        auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}_DefaultCTOR", name ) ], llvm::None, "" ) };
+        auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}_DefaultCTOR", name ) ], llvm::None ) };
         ctx.builder->CreateStore( initialContract, globalContract );
         return globalContract;
     }
@@ -147,20 +147,20 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
 
             arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
-            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments, "" );
+            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments );
         }
         else if ( auto it{ externalBuiltInFunctions.find( name ) }; it != std::end( externalBuiltInFunctions ) )
         {
-            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments, "" );
+            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments );
         }
         else if ( auto it{ internalBuiltInFunctions.find( name ) }; it != std::end( internalBuiltInFunctions ) )
         {
-            return ctx.builder->CreateCall( internalBuiltInFunctions.at( name ), arguments, "" );
+            return ctx.builder->CreateCall( internalBuiltInFunctions.at( name ), arguments );
         }
 
         return arguments.empty()
-            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None, "" )
-            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments , "" );
+            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None )
+            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments  );
     }
 
     return nullptr;
@@ -199,8 +199,8 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
         }
 
         return memberNodes.size() == 1U
-            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None, "" )
-            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments , "" );
+            ? ctx.builder->CreateCall( ctx.symbols.functions[ name ], llvm::None )
+            : ctx.builder->CreateCall( ctx.symbols.functions[ name ], arguments  );
     }
 
     return nullptr;
@@ -617,7 +617,7 @@ llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const 
         ctx.builder->CreateCondBr( condition, thenBlock, elseBlock );
         ctx.builder->SetInsertPoint( thenBlock );
 
-        then = ctx.builder->CreateCall( ctx.symbols.externalBuiltInFunctions().at( "abort" ), llvm::None, "" );
+        then = ctx.builder->CreateCall( ctx.symbols.externalBuiltInFunctions().at( "abort" ), llvm::None );
     }
     // Jump to end block
     ctx.builder->CreateBr( endBlock );

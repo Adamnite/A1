@@ -15,7 +15,10 @@
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
+#include <llvm/IR/Function.h>
 #include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop

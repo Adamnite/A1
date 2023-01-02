@@ -19,6 +19,7 @@
 #   pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
+#include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>

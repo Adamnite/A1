@@ -7,25 +7,15 @@
 
 #pragma once
 
-#include "../Context.hpp"
+#include "Compiler/LLVM/Context.hpp"
 
 #include <CoreLib/AST/ASTNode.hpp>
 
-#if defined (__clang__)
-#   pragma clang diagnostic push
-#   pragma clang diagnostic ignored "-Wunused-parameter"
-#elif defined(__GNUC__) || defined(__GNUG__)
-#   pragma GCC diagnostic push
-#   pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif
-
-#include <llvm/IR/Value.h>
-
-#if defined(__clang__)
-#   pragma clang diagnostic pop
-#elif defined(__GNUC__) || defined(__GNUG__)
-#   pragma GCC diagnostic pop
-#endif
+namespace llvm
+{
+    // fwd
+    class Value;
+} // namespace llvm
 
 namespace A1::LLVM::IR
 {
