@@ -27,6 +27,7 @@
 
 #include <fmt/format.h>
 
+#include <string_view>
 #include <string>
 #include <map>
 
@@ -60,15 +61,15 @@ struct Symbols final
 
     Symbols
     (
-        Table< llvm::Value *        > builtInGlobalVariables,
-        Table< llvm::FunctionCallee > builtInFunctions
+        Table< llvm::FunctionCallee > externalBuiltInFunctions,
+        Table< llvm::Function *     > internalBuiltInFunctions
     )
-    : builtInGlobalVariables_{ std::move( builtInGlobalVariables ) }
-    , builtInFunctions_      { std::move( builtInFunctions ) }
+    : externalBuiltInFunctions_{ std::move( externalBuiltInFunctions ) }
+    , internalBuiltInFunctions_{ std::move( internalBuiltInFunctions ) }
     {}
 
-    [[ nodiscard ]] Table< llvm::Value *        > const & builtInGlobalVariables() const noexcept { return builtInGlobalVariables_; }
-    [[ nodiscard ]] Table< llvm::FunctionCallee > const & builtInFunctions      () const noexcept { return builtInFunctions_;       }
+    [[ nodiscard ]] Table< llvm::FunctionCallee > const & externalBuiltInFunctions() const noexcept { return externalBuiltInFunctions_; }
+    [[ nodiscard ]] Table< llvm::Function *     > const & internalBuiltInFunctions() const noexcept { return internalBuiltInFunctions_; }
 
     [[ nodiscard ]]
     llvm::Value * variable( std::string_view const name ) noexcept
@@ -89,8 +90,8 @@ struct Symbols final
     }
 
 private:
-    Table< llvm::Value *        > builtInGlobalVariables_;
-    Table< llvm::FunctionCallee > builtInFunctions_;
+    Table< llvm::FunctionCallee > externalBuiltInFunctions_;
+    Table< llvm::Function *     > internalBuiltInFunctions_;
 };
 
 } // namespace A1::LLVM

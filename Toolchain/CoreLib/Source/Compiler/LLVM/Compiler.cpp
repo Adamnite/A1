@@ -117,7 +117,7 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
      *
      * @note: Optimizations are turned on only for the sake of testing.
      * In production, we do not want optimizations to remove all unused functions,
-     * smart contracts, etc. as these are used later by the VM.
+     * smart contracts, etc. as these are used later by the Adamnite VM.
      */
 #ifdef TESTS_ENABLED
         llvm::ModuleAnalysisManager   moduleAnalysisManager;

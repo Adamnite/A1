@@ -7,6 +7,7 @@
 
 #include "Codegen.hpp"
 #include "CodegenVisitor.hpp"
+#include "CodegenBuiltin.hpp"
 
 #include <CoreLib/Utils/Macros.hpp>
 
@@ -29,116 +30,11 @@
 #   pragma GCC diagnostic pop
 #endif
 
-#include <string>
+#include <string_view>
 #include <memory>
-#include <map>
 
 namespace A1::LLVM::IR
 {
-
-namespace
-{
-    [[ nodiscard ]]
-    llvm::Value * createAddress( llvm::Module * module_, llvm::IRBuilder<> * builder, std::string_view const name )
-    {
-        // TODO: Make an ADVM API call to get the actual address
-        return builder->CreateGlobalStringPtr( "", name, 0U, module_ );
-    }
-
-    [[ nodiscard ]]
-    llvm::Value * createBlock( llvm::Module * module_, llvm::LLVMContext * ctx, std::string_view const name )
-    {
-        auto * blockType{ llvm::StructType::create( *ctx, { llvm::Type::getInt32Ty( *ctx ) }, "Block" ) };
-        auto * block
-        {
-            new llvm::GlobalVariable
-            (
-                *module_,
-                blockType,
-                true, /* isConstant */
-                llvm::GlobalVariable::ExternalLinkage,
-                llvm::ConstantStruct::get
-                (
-                    blockType,
-                    // Initial data members
-                    {
-                        // TODO: Make an ADVM API call to get the actual initial timestamp
-                        llvm::ConstantInt::get( llvm::Type::getInt32Ty( *ctx ), 0U, false /* isSigned */ )
-                    }
-                ),
-                name
-            )
-        };
-        return block;
-    }
-
-    [[ nodiscard ]]
-    llvm::Value * createMessage( llvm::Module * module_, llvm::IRBuilder<> * builder, llvm::LLVMContext * ctx, std::string_view const name )
-    {
-        auto * messageType{ llvm::StructType::create( *ctx, { llvm::Type::getInt8PtrTy( *ctx ) }, "Message" ) };
-        auto * message
-        {
-            new llvm::GlobalVariable
-            (
-                *module_,
-                messageType,
-                true, /* isConstant */
-                llvm::GlobalVariable::ExternalLinkage,
-                llvm::ConstantStruct::get
-                (
-                    messageType,
-                    // Initial data members
-                    {
-                        // TODO: Make an ADVM API call to get the actual sender
-                        builder->CreateGlobalStringPtr( "", "msg.sender", 0U, module_ )
-                    }
-                ),
-                name
-            )
-        };
-        return message;
-    }
-
-    [[ nodiscard ]]
-    Symbols::Table< llvm::FunctionCallee > createBuiltInFunctions( llvm::Module * module_, llvm::LLVMContext * ctx )
-    {
-        Symbols::Table< llvm::FunctionCallee > functions;
-
-        functions[ "print" ] = module_->getOrInsertFunction
-        (
-            "printf",
-            llvm::FunctionType::get
-            (
-                llvm::IntegerType::getInt32Ty( *ctx ),
-                llvm::PointerType::get( llvm::Type::getInt8Ty( *ctx ), 0 ),
-                true
-            )
-        );
-
-        functions[ "abort" ] = module_->getOrInsertFunction
-        (
-            "abort",
-            llvm::FunctionType::get
-            (
-                llvm::Type::getVoidTy( *ctx ),
-                true
-            )
-        );
-
-        functions[ "is_utf8" ] = module_->getOrInsertFunction
-        (
-            "is_utf8",
-            llvm::FunctionType::get
-            (
-                llvm::IntegerType::getInt32Ty( *ctx ),
-                llvm::PointerType::get( llvm::Type::getInt8Ty( *ctx ), 0 ),
-                false
-            )
-        );
-
-        return functions;
-    }
-} // namespace
 
 Context codegen
 (
@@ -161,13 +57,8 @@ Context codegen
 
             Symbols symbols
             {
-                // Built-in global variables
-                {
-                    { "address", createAddress( module_.get(), builder.get(), "address" ) },
-                    { "block"  , createBlock  ( module_.get(), context.get(), "block"   ) },
-                    { "msg"    , createMessage( module_.get(), builder.get(), context.get(), "msg" ) }
-                },
-                createBuiltInFunctions( module_.get(), context.get() )
+                externalBuiltinFunctions( *context, *module_ ),
+                internalBuiltinFunctions( *context, *module_, *builder )
             };
 
             return Context

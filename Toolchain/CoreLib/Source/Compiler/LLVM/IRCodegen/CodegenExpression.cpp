@@ -133,7 +133,8 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
             arguments.push_back( Detail::load( ctx, value ) );
         }
 
-        auto const & builtInFunctions{ ctx.symbols.builtInFunctions() };
+        auto const & externalBuiltInFunctions{ ctx.symbols.externalBuiltInFunctions() };
+        auto const & internalBuiltInFunctions{ ctx.symbols.internalBuiltInFunctions() };
 
         /**
          * At the moment, the only standard function is 'print' function
@@ -146,11 +147,15 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
 
             arguments.insert( std::begin( arguments ), getPrintFormat( ctx, arguments[ 0U ]->getType() ) );
 
-            return ctx.builder->CreateCall( builtInFunctions.at( name ), arguments, "" );
+            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments, "" );
         }
-        else if ( auto it{ builtInFunctions.find( name ) }; it != std::end( builtInFunctions ) )
+        else if ( auto it{ externalBuiltInFunctions.find( name ) }; it != std::end( externalBuiltInFunctions ) )
         {
-            return ctx.builder->CreateCall( builtInFunctions.at( name ), arguments, "" );
+            return ctx.builder->CreateCall( externalBuiltInFunctions.at( name ), arguments, "" );
+        }
+        else if ( auto it{ internalBuiltInFunctions.find( name ) }; it != std::end( internalBuiltInFunctions ) )
+        {
+            return ctx.builder->CreateCall( internalBuiltInFunctions.at( name ), arguments, "" );
         }
 
         return arguments.empty()
@@ -612,7 +617,7 @@ llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const 
         ctx.builder->CreateCondBr( condition, thenBlock, elseBlock );
         ctx.builder->SetInsertPoint( thenBlock );
 
-        then = ctx.builder->CreateCall( ctx.symbols.builtInFunctions().at( "abort" ), llvm::None, "" );
+        then = ctx.builder->CreateCall( ctx.symbols.externalBuiltInFunctions().at( "abort" ), llvm::None, "" );
     }
     // Jump to end block
     ctx.builder->CreateBr( endBlock );
