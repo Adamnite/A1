@@ -31,8 +31,9 @@ namespace A1::LLVM::IR
 
 namespace
 {
+    [[ maybe_unused ]]
     [[ nodiscard ]]
-    llvm::Function * createIntrinsicWrapper
+    llvm::Function * codegenIntrinsicWrapper
     (
         llvm::LLVMContext      & ctx,
         llvm::Module           & module_,
@@ -59,7 +60,7 @@ namespace
     [[ nodiscard ]]
     llvm::Function * codegenContractAddress( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
-        return createIntrinsicWrapper
+        return codegenIntrinsicWrapper
         (
             ctx, module_, builder,
             llvm::Type::getInt8PtrTy( ctx ),
@@ -72,7 +73,7 @@ namespace
     [[ nodiscard ]]
     llvm::Function * codegenCallerAddress( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
-        return createIntrinsicWrapper
+        return codegenIntrinsicWrapper
         (
             ctx, module_, builder,
             llvm::Type::getInt8PtrTy( ctx ),
@@ -85,7 +86,7 @@ namespace
     [[ nodiscard ]]
     llvm::Function * codegenBlockTimestamp( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
     {
-        return createIntrinsicWrapper
+        return codegenIntrinsicWrapper
         (
             ctx, module_, builder,
             llvm::Type::getInt64Ty( ctx ),

@@ -477,7 +477,7 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .expression   = "arr[1]",
+            .expression   = "var[1]",
             .expectedRoot = std::make_shared< Node >
             (
                 NodeType::ModuleDefinition,
@@ -488,8 +488,28 @@ INSTANTIATE_TEST_SUITE_P
                         NodeType::Index,
                         makeChildren
                         (
-                            std::make_unique< Node >( A1::Identifier{ .name = "arr" } ),
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >( A1::Number{ 1U }                )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .expression   = "var[addr]",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Index,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var"  } ),
+                            std::make_unique< Node >( A1::Identifier{ .name = "addr" } )
                         )
                     )
                 )
