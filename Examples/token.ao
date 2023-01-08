@@ -2,15 +2,18 @@
 #
 # Implements creation and transferring of a token
 
-import token
-
 contract NewToken:
-    let owner: address = msg.sender
+    let token_name: str = 'NewToken'
+    let token_supply: num = 100000000
+    let token_decimals: num = 3
 
-    def create(name: str, balance: num):
-        token.create(owner, name, balance)
+    def __init__(self):
+        self.balances[msg.sender] = self.token_supply
 
-    def transfer(new_owner: address, amount: num):
-        if owner != new_owner:
-            owner["balance"] -= amount
-            new_owner["balance"] += amount
+    def mint(self, dst: address, amount: num):
+        self.balances[dst] += amount
+        self.token_supply += amount
+
+    def transfer(self, src: address, dst: address, amount: num):
+        self.balances[src] -= amount
+        self.balances[dst] += amount
