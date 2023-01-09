@@ -3,17 +3,17 @@
 # Implements creation and transferring of a token
 
 contract NewToken:
-    let token_name: str = 'NewToken'
+    let token_name: str = "NewToken"
     let token_supply: num = 100000000
     let token_decimals: num = 3
 
     def __init__(self):
-        self.balances[msg.sender] = self.token_supply
+        self.balances[caller_address()] = self.token_supply
 
     def mint(self, dst: address, amount: num):
         self.balances[dst] += amount
         self.token_supply += amount
 
-    def transfer(self, src: address, dst: address, amount: num):
-        self.balances[src] -= amount
+    def transfer(self, dst: address, amount: num):
+        self.balances[caller_address()] -= amount
         self.balances[dst] += amount
