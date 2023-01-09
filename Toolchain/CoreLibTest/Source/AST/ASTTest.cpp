@@ -517,6 +517,33 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression   = "var[func()]",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Index,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var"  } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Call,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "func" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
             .expression   = "return 1",
             .expectedRoot = std::make_shared< Node >
             (
@@ -1276,9 +1303,11 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .expression =
-                "let var1: num\n"
-                "let var2: i64\n"
-                "let var3: u8",
+                "let var1: bool\n"
+                "let var2: num\n"
+                "let var3: str\n"
+                "let var4: i64\n"
+                "let var5: u8",
             .expectedRoot = std::make_shared< Node >
             (
                 NodeType::ModuleDefinition,
@@ -1290,7 +1319,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var1" } ),
-                            std::make_unique< Node >( A1::Registry::getNumHandle()     )
+                            std::make_unique< Node >( A1::Registry::getBoolHandle()    )
                         )
                     ),
                     std::make_unique< Node >
@@ -1299,7 +1328,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var2" } ),
-                            std::make_unique< Node >( A1::Registry::getI64Handle()     )
+                            std::make_unique< Node >( A1::Registry::getNumHandle()     )
                         )
                     ),
                     std::make_unique< Node >
@@ -1308,6 +1337,24 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var3" } ),
+                            std::make_unique< Node >( A1::Registry::getStrHandle()     )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        NodeType::VariableDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var4" } ),
+                            std::make_unique< Node >( A1::Registry::getI64Handle()     )
+                        )
+                    ),
+                    std::make_unique< Node >
+                    (
+                        NodeType::VariableDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "var5" } ),
                             std::make_unique< Node >( A1::Registry::getU8Handle()      )
                         )
                     )

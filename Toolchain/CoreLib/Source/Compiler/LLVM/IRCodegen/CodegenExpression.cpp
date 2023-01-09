@@ -59,18 +59,15 @@ namespace
     [[ nodiscard ]]
     llvm::Type * getType( Context & ctx, TypeID const typeID )
     {
-        if ( typeID == Registry::getNumHandle() )
-        {
-            return llvm::Type::getInt64Ty( *ctx.internalCtx );
-        }
-        else if ( typeID == Registry::getStrHandle() )
-        {
-            return llvm::Type::getInt8PtrTy( *ctx.internalCtx );
-        }
-        else
-        {
-            return nullptr;
-        }
+             if ( typeID == Registry::getBoolHandle() ) { return llvm::Type::getInt8Ty    ( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getNumHandle () ) { return llvm::Type::getInt64Ty   ( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getStrHandle () ) { return llvm::Type::getInt8PtrTy ( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getI8Handle  () || typeID == Registry::getU8Handle () ) { return llvm::Type::getInt8Ty ( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getI16Handle () || typeID == Registry::getU16Handle() ) { return llvm::Type::getInt16Ty( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getI32Handle () || typeID == Registry::getU32Handle() ) { return llvm::Type::getInt32Ty( *ctx.internalCtx ); }
+        else if ( typeID == Registry::getI64Handle () || typeID == Registry::getU64Handle() ) { return llvm::Type::getInt64Ty( *ctx.internalCtx ); }
+
+        return nullptr;
     }
 } // namespace
 

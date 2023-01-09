@@ -102,6 +102,8 @@ enum class NodeType : std::uint8_t
     Count
 };
 
+using Boolean = bool;
+
 class Node
 {
 public:
@@ -110,9 +112,10 @@ public:
     <
         NodeType,   // Non-leaf nodes in expression tree
         Identifier, // Names of variables, functions, smart contracts etc.
-        Number,     // Both integers and decimal numbers
-        String,     // String literals
-        TypeID      // Type declaration for variables, function parameters, return values etc.
+        TypeID,     // Type declaration for variables, function parameters, return values etc.
+        Boolean,
+        Number,
+        String
     >;
 
     Node( ValueType value, ErrorInfo errorInfo = {} );

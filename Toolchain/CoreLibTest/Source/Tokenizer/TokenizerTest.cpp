@@ -246,6 +246,20 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression     = "let var: bool = False",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwBool,
+                A1::ReservedToken::OpAssign,
+                A1::ReservedToken::KwFalse,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .expression     = "let var: num = 0",
             .expectedTokens =
             {

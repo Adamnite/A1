@@ -139,14 +139,20 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .input =
-                "let var1: num = 5\n"
-                "let var2: i8 = -12\n"
-                "let var3: u16 = 12345\n"
+                "let var1: bool = True\n"
+                "let var2: num = 5\n"
+                "let var3: str = \"foo\"\n"
+                "let var4: i8 = -12\n"
+                "let var5: u16 = 12345\n"
                 "print(var1)\n"
                 "print(var2)\n"
-                "print(var3)",
+                "print(var3)\n"
+                "print(var4)\n"
+                "print(var5)",
             .expectedOutput =
+                "1\n"
                 "5\n"
+                "foo\n"
                 "-12\n"
                 "12345"
         },

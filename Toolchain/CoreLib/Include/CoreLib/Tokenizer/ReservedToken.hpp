@@ -80,6 +80,7 @@ enum class ReservedToken : std::uint8_t
     KwAnd,
     KwAs,
     KwAssert,
+    KwBool,
     KwBreak,
     KwClass,
     KwContinue,

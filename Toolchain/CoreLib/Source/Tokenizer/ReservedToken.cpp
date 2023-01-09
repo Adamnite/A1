@@ -61,6 +61,7 @@ namespace
                 StringifiedToken{ "and"     , ReservedToken::KwAnd      },
                 StringifiedToken{ "as"      , ReservedToken::KwAs       },
                 StringifiedToken{ "assert"  , ReservedToken::KwAssert   },
+                StringifiedToken{ "bool"    , ReservedToken::KwBool     },
                 StringifiedToken{ "break"   , ReservedToken::KwBreak    },
                 StringifiedToken{ "class"   , ReservedToken::KwClass    },
                 StringifiedToken{ "continue", ReservedToken::KwContinue },

@@ -18,6 +18,7 @@ enum class PrimitiveType : std::uint8_t
 {
     Unknown,
 
+    Bool,
     Num,
     Str,
 
@@ -64,8 +65,9 @@ namespace Registry
 
 [[ nodiscard ]] TypeID getHandle( Type const & type ) noexcept;
 
-[[ nodiscard ]] TypeID getNumHandle() noexcept;
-[[ nodiscard ]] TypeID getStrHandle() noexcept;
+[[ nodiscard ]] TypeID getBoolHandle() noexcept;
+[[ nodiscard ]] TypeID getNumHandle () noexcept;
+[[ nodiscard ]] TypeID getStrHandle () noexcept;
 
 [[ nodiscard ]] TypeID getI8Handle () noexcept;
 [[ nodiscard ]] TypeID getI16Handle() noexcept;

@@ -193,6 +193,9 @@ namespace
             IGNORE_TOKEN( OpColon            );
             IGNORE_TOKEN( OpComma            );
 
+            IGNORE_TOKEN( KwFalse );
+            IGNORE_TOKEN( KwTrue  );
+
             IGNORE_TOKEN( KwNum );
             IGNORE_TOKEN( KwStr );
 
@@ -236,8 +239,12 @@ namespace
         {
             switch ( tokenIt->get< ReservedToken >() )
             {
-                case ReservedToken::KwNum: return std::make_unique< Node >( Registry::getNumHandle(), tokenIt->errorInfo() );
-                case ReservedToken::KwStr: return std::make_unique< Node >( Registry::getStrHandle(), tokenIt->errorInfo() );
+                case ReservedToken::KwFalse: return std::make_unique< Node >( false, tokenIt->errorInfo() );
+                case ReservedToken::KwTrue : return std::make_unique< Node >( true , tokenIt->errorInfo() );
+
+                case ReservedToken::KwBool: return std::make_unique< Node >( Registry::getBoolHandle(), tokenIt->errorInfo() );
+                case ReservedToken::KwNum : return std::make_unique< Node >( Registry::getNumHandle (), tokenIt->errorInfo() );
+                case ReservedToken::KwStr : return std::make_unique< Node >( Registry::getStrHandle (), tokenIt->errorInfo() );
 
                 case ReservedToken::KwI8 : return std::make_unique< Node >( Registry::getI8Handle (), tokenIt->errorInfo() );
                 case ReservedToken::KwI16: return std::make_unique< Node >( Registry::getI16Handle(), tokenIt->errorInfo() );
@@ -452,11 +459,12 @@ namespace
                     if
                     (
                         auto const reservedToken{ tokenIt->get< ReservedToken >() };
-                        reservedToken == ReservedToken::KwNum || reservedToken == ReservedToken::KwStr ||
-                        reservedToken == ReservedToken::KwI8  || reservedToken == ReservedToken::KwI16 ||
-                        reservedToken == ReservedToken::KwI32 || reservedToken == ReservedToken::KwI64 ||
-                        reservedToken == ReservedToken::KwU8  || reservedToken == ReservedToken::KwU16 ||
-                        reservedToken == ReservedToken::KwU32 || reservedToken == ReservedToken::KwU64
+                        reservedToken == ReservedToken::KwFalse || reservedToken == ReservedToken::KwTrue ||
+                        reservedToken == ReservedToken::KwNum   || reservedToken == ReservedToken::KwStr  ||
+                        reservedToken == ReservedToken::KwI8    || reservedToken == ReservedToken::KwI16  ||
+                        reservedToken == ReservedToken::KwI32   || reservedToken == ReservedToken::KwI64  ||
+                        reservedToken == ReservedToken::KwU8    || reservedToken == ReservedToken::KwU16  ||
+                        reservedToken == ReservedToken::KwU32   || reservedToken == ReservedToken::KwU64
                     )
                     {
                         if ( !expectingOperand )
