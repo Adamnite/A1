@@ -37,7 +37,7 @@ namespace
     {
         if ( type->isIntegerTy( sizeof( Number ) * 8U ) )
         {
-            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%lu\n", "numFormat", 0U, ctx.module_.get() ) };
+            static auto * format{ ctx.builder->CreateGlobalStringPtr( "%d\n", "numFormat", 0U, ctx.module_.get() ) };
             return format;
         }
         else if
@@ -59,11 +59,11 @@ namespace
     [[ nodiscard ]]
     llvm::Type * getType( Context & ctx, TypeID const typeID )
     {
-        if ( typeID == Registry::getNumberHandle() )
+        if ( typeID == Registry::getNumHandle() )
         {
             return llvm::Type::getInt64Ty( *ctx.internalCtx );
         }
-        else if ( typeID == Registry::getStringLiteralHandle() )
+        else if ( typeID == Registry::getStrHandle() )
         {
             return llvm::Type::getInt8PtrTy( *ctx.internalCtx );
         }
@@ -447,12 +447,12 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
     if ( node->is< TypeID >() )
     {
         auto const typeID{ node->get< TypeID >() };
-        if ( typeID == Registry::getNumberHandle() )
+        if ( typeID == Registry::getNumHandle() )
         {
             value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
             inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
         }
-        else if ( typeID == Registry::getStringLiteralHandle() )
+        else if ( typeID == Registry::getStrHandle() )
         {
             value = ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() );
         }

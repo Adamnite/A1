@@ -14,8 +14,11 @@ namespace A1::Registry
 
 namespace
 {
-    Type numberType;
-    Type stringLiteralType;
+    Type num;
+    Type str;
+
+    Type i8, i16, i32, i64;
+    Type u8, u16, u32, u64;
 } // namespace
 
 TypeID getHandle( Type const & type ) noexcept
@@ -28,8 +31,18 @@ TypeID getHandle( Type const & type ) noexcept
             {
                 switch ( t )
                 {
-                    case PrimitiveType::Number:        return getNumberHandle       ();
-                    case PrimitiveType::StringLiteral: return getStringLiteralHandle();
+                    case PrimitiveType::Num: return getNumHandle();
+                    case PrimitiveType::Str: return getStrHandle();
+
+                    case PrimitiveType::I8 : return getI8Handle ();
+                    case PrimitiveType::I16: return getI16Handle();
+                    case PrimitiveType::I32: return getI32Handle();
+                    case PrimitiveType::I64: return getI64Handle();
+
+                    case PrimitiveType::U8 : return getU8Handle ();
+                    case PrimitiveType::U16: return getU16Handle();
+                    case PrimitiveType::U32: return getU32Handle();
+                    case PrimitiveType::U64: return getU64Handle();
 
                     case PrimitiveType::Unknown:
                     case PrimitiveType::Count:
@@ -51,7 +64,17 @@ TypeID getHandle( Type const & type ) noexcept
     );
 }
 
-TypeID getNumberHandle       () noexcept { return &numberType;        }
-TypeID getStringLiteralHandle() noexcept { return &stringLiteralType; }
+TypeID getNumHandle() noexcept { return &num; }
+TypeID getStrHandle() noexcept { return &str; }
+
+TypeID getI8Handle () noexcept { return &i8;  }
+TypeID getI16Handle() noexcept { return &i16; }
+TypeID getI32Handle() noexcept { return &i32; }
+TypeID getI64Handle() noexcept { return &i64; }
+
+TypeID getU8Handle () noexcept { return &u8;  }
+TypeID getU16Handle() noexcept { return &u16; }
+TypeID getU32Handle() noexcept { return &u32; }
+TypeID getU64Handle() noexcept { return &u64; }
 
 } // namespace A1::Registry

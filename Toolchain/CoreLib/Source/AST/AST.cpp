@@ -192,8 +192,19 @@ namespace
             IGNORE_TOKEN( OpSubscriptClose   );
             IGNORE_TOKEN( OpColon            );
             IGNORE_TOKEN( OpComma            );
-            IGNORE_TOKEN( KwNumber           );
-            IGNORE_TOKEN( KwString           );
+
+            IGNORE_TOKEN( KwNum );
+            IGNORE_TOKEN( KwStr );
+
+            IGNORE_TOKEN( KwI8  );
+            IGNORE_TOKEN( KwI16 );
+            IGNORE_TOKEN( KwI32 );
+            IGNORE_TOKEN( KwI64 );
+
+            IGNORE_TOKEN( KwU8  );
+            IGNORE_TOKEN( KwU16 );
+            IGNORE_TOKEN( KwU32 );
+            IGNORE_TOKEN( KwU64 );
 
 #undef IGNORE_TOKEN
 
@@ -223,14 +234,23 @@ namespace
         }
         else if ( tokenIt->is< ReservedToken >() )
         {
-            auto const reservedToken{ tokenIt->get< ReservedToken >() };
-            if ( reservedToken == ReservedToken::KwNumber )
+            switch ( tokenIt->get< ReservedToken >() )
             {
-                return std::make_unique< Node >( Registry::getNumberHandle(), tokenIt->errorInfo() );
-            }
-            else if ( reservedToken == ReservedToken::KwString )
-            {
-                return std::make_unique< Node >( Registry::getStringLiteralHandle(), tokenIt->errorInfo() );
+                case ReservedToken::KwNum: return std::make_unique< Node >( Registry::getNumHandle(), tokenIt->errorInfo() );
+                case ReservedToken::KwStr: return std::make_unique< Node >( Registry::getStrHandle(), tokenIt->errorInfo() );
+
+                case ReservedToken::KwI8 : return std::make_unique< Node >( Registry::getI8Handle (), tokenIt->errorInfo() );
+                case ReservedToken::KwI16: return std::make_unique< Node >( Registry::getI16Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwI32: return std::make_unique< Node >( Registry::getI32Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwI64: return std::make_unique< Node >( Registry::getI64Handle(), tokenIt->errorInfo() );
+
+                case ReservedToken::KwU8 : return std::make_unique< Node >( Registry::getU8Handle (), tokenIt->errorInfo() );
+                case ReservedToken::KwU16: return std::make_unique< Node >( Registry::getU16Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwU32: return std::make_unique< Node >( Registry::getU32Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwU64: return std::make_unique< Node >( Registry::getU64Handle(), tokenIt->errorInfo() );
+
+                default:
+                    break;
             }
         }
 
@@ -432,8 +452,11 @@ namespace
                     if
                     (
                         auto const reservedToken{ tokenIt->get< ReservedToken >() };
-                        reservedToken == ReservedToken::KwNumber ||
-                        reservedToken == ReservedToken::KwString
+                        reservedToken == ReservedToken::KwNum || reservedToken == ReservedToken::KwStr ||
+                        reservedToken == ReservedToken::KwI8  || reservedToken == ReservedToken::KwI16 ||
+                        reservedToken == ReservedToken::KwI32 || reservedToken == ReservedToken::KwI64 ||
+                        reservedToken == ReservedToken::KwU8  || reservedToken == ReservedToken::KwU16 ||
+                        reservedToken == ReservedToken::KwU32 || reservedToken == ReservedToken::KwU64
                     )
                     {
                         if ( !expectingOperand )

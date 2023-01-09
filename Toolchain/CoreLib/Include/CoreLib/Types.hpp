@@ -18,8 +18,18 @@ enum class PrimitiveType : std::uint8_t
 {
     Unknown,
 
-    Number,
-    StringLiteral,
+    Num,
+    Str,
+
+    I8,
+    I16,
+    I32,
+    I64,
+
+    U8,
+    U16,
+    U32,
+    U64,
 
     // Number of possible primitive types
     Count
@@ -45,7 +55,7 @@ struct FunctionType
         TypeID typeID{ nullptr };
     };
 
-    TypeID                       returnTypeID    { nullptr };
+    TypeID                       returnTypeID{ nullptr };
     std::vector< ParameterType > parameterTypeIDs{};
 };
 
@@ -54,8 +64,18 @@ namespace Registry
 
 [[ nodiscard ]] TypeID getHandle( Type const & type ) noexcept;
 
-[[ nodiscard ]] TypeID getNumberHandle       () noexcept;
-[[ nodiscard ]] TypeID getStringLiteralHandle() noexcept;
+[[ nodiscard ]] TypeID getNumHandle() noexcept;
+[[ nodiscard ]] TypeID getStrHandle() noexcept;
+
+[[ nodiscard ]] TypeID getI8Handle () noexcept;
+[[ nodiscard ]] TypeID getI16Handle() noexcept;
+[[ nodiscard ]] TypeID getI32Handle() noexcept;
+[[ nodiscard ]] TypeID getI64Handle() noexcept;
+
+[[ nodiscard ]] TypeID getU8Handle () noexcept;
+[[ nodiscard ]] TypeID getU16Handle() noexcept;
+[[ nodiscard ]] TypeID getU32Handle() noexcept;
+[[ nodiscard ]] TypeID getU64Handle() noexcept;
 
 } // namespace Registry
 

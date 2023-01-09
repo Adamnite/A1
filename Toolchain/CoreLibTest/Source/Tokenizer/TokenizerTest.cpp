@@ -252,7 +252,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::KwLet,
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::KwNum,
                 A1::ReservedToken::OpAssign,
                 A1::Number{ 0 },
                 A1::Eof{}
@@ -266,7 +266,31 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::KwLet,
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwString,
+                A1::ReservedToken::KwStr,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .expression     = "let var: u16",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwU16,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .expression     = "let var: i16",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwI16,
                 A1::Eof{}
             }
         },
@@ -284,6 +308,19 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression     = "let var = -5",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpAssign,
+                A1::ReservedToken::OpSub,
+                A1::Number{ 5 },
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
@@ -295,14 +332,14 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::OpParenthesisOpen,
                 A1::Identifier{ .name = "param1" },
                 A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::KwNum,
                 A1::ReservedToken::OpComma,
                 A1::Identifier{ .name = "param2" },
                 A1::ReservedToken::OpColon,
-                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::KwNum,
                 A1::ReservedToken::OpParenthesisClose,
                 A1::ReservedToken::OpArrow,
-                A1::ReservedToken::KwNumber,
+                A1::ReservedToken::KwNum,
                 A1::ReservedToken::OpColon,
                 A1::Newline{},
 
@@ -339,7 +376,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::OpParenthesisOpen,
                 A1::ReservedToken::OpParenthesisClose,
                 A1::ReservedToken::OpArrow,
-                A1::ReservedToken::KwString,
+                A1::ReservedToken::KwStr,
                 A1::ReservedToken::OpColon,
                 A1::Newline{},
 

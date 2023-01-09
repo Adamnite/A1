@@ -125,12 +125,12 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
             },
             [ = ]( TypeID const typeID )
             {
-                if ( typeID == Registry::getNumberHandle() )
+                if ( typeID == Registry::getNumHandle() )
                 {
                     fmt::print( stream, "{:{}}", "", indentationLevel );
                     fmt::print( stream, "TypeID = num\n" );
                 }
-                else if ( typeID == Registry::getStringLiteralHandle() )
+                else if ( typeID == Registry::getStrHandle() )
                 {
                     fmt::print( stream, "{:{}}", "", indentationLevel );
                     fmt::print( stream, "TypeID = str\n" );
