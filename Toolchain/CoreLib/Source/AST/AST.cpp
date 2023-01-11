@@ -620,7 +620,6 @@ namespace
 
                             ++nodeInfo.operandsCount;
 
-                            ++tokenIt;
                             if ( tokenIt->is< ReservedToken >() )
                             {
                                 auto const reservedToken{ tokenIt->get< ReservedToken >() };
