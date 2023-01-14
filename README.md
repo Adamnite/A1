@@ -6,6 +6,7 @@
 
 <p align="center">
     <a href="#getting-started">Getting started</a> |
+    <a href="/Docs"> Documentation |
     <a href="#development">Development</a> |
     <a href="#smart-contracts">Smart contracts</a> |
     <a href="#join-us">Join us</a>
