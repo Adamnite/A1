@@ -22,3 +22,13 @@ target_link_libraries( aoc PRIVATE
 target_compile_definitions( aoc PRIVATE
     AOC_VERSION=\"${AOC_VERSION}\"
 )
+
+install( TARGETS aoc
+    CONFIGURATIONS      Release
+    RUNTIME DESTINATION bin
+)
+
+set( CPACK_PACKAGE_NAME   "aoc"      )
+set( CPACK_PACKAGE_VENDOR "Adamnite" )
+
+include( CPack )
