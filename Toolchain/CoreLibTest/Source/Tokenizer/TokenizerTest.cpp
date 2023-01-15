@@ -335,6 +335,18 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression     = "let var: address",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwAddress,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",

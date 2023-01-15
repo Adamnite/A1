@@ -14,6 +14,8 @@ namespace A1::Registry
 
 namespace
 {
+    Type address;
+
     Type bool_;
     Type num;
     Type str;
@@ -32,6 +34,8 @@ TypeID getHandle( Type const & type ) noexcept
             {
                 switch ( t )
                 {
+                    case PrimitiveType::Address: return getAddressHandle();
+
                     case PrimitiveType::Bool: return getBoolHandle();
                     case PrimitiveType::Num : return getNumHandle ();
                     case PrimitiveType::Str : return getStrHandle ();
@@ -65,6 +69,8 @@ TypeID getHandle( Type const & type ) noexcept
         type
     );
 }
+
+TypeID getAddressHandle() noexcept { return &address; }
 
 TypeID getBoolHandle() noexcept { return &bool_; }
 TypeID getNumHandle () noexcept { return &num;   }

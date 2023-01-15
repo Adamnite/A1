@@ -58,6 +58,7 @@ namespace
                 StringifiedToken{ "False"   , ReservedToken::KwFalse    },
                 StringifiedToken{ "None"    , ReservedToken::KwNone     },
                 StringifiedToken{ "True"    , ReservedToken::KwTrue     },
+                StringifiedToken{ "address" , ReservedToken::KwAddress  },
                 StringifiedToken{ "and"     , ReservedToken::KwAnd      },
                 StringifiedToken{ "as"      , ReservedToken::KwAs       },
                 StringifiedToken{ "assert"  , ReservedToken::KwAssert   },

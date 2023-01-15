@@ -77,6 +77,7 @@ enum class ReservedToken : std::uint8_t
     OpNotEqual,
 
     // Keywords
+    KwAddress,
     KwAnd,
     KwAs,
     KwAssert,
