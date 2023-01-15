@@ -6,7 +6,7 @@
  */
 
 #include <CoreLib/Tokenizer/ReservedToken.hpp>
-#include <CoreLib/Utils/PushBackStream.hpp>
+#include <CoreLib/Utils/Stream.hpp>
 
 #include "TestUtils.hpp"
 
@@ -26,31 +26,31 @@ TEST( ReservedTokenTest, keywords )
 TEST( ReservedTokenTest, operators )
 {
     {
-        A1::PushBackStream stream{ "<<=" };
+        A1::Stream stream{ "<<=" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpAssignBitwiseLeftShift );
     }
     {
-        A1::PushBackStream stream{ "/" };
+        A1::Stream stream{ "/" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpDiv );
     }
     {
-        A1::PushBackStream stream{ "<" };
+        A1::Stream stream{ "<" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLessThan );
     }
     {
-        A1::PushBackStream stream{ "/=" };
+        A1::Stream stream{ "/=" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpAssignDiv );
     }
     {
-        A1::PushBackStream stream{ "&" };
+        A1::Stream stream{ "&" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpBitwiseAnd );
     }
     {
-        A1::PushBackStream stream{ "&&" };
+        A1::Stream stream{ "&&" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::OpLogicalAnd );
     }
     {
-        A1::PushBackStream stream{ "random" };
+        A1::Stream stream{ "random" };
         EXPECT_PRED_FORMAT2( A1::areEqual, A1::getOperator( stream ), A1::ReservedToken::Unknown );
     }
 }

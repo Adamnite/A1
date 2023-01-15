@@ -33,7 +33,7 @@ TEST_P( TokenizerTestFixture, tokenization )
 
     std::size_t tokenIndex{ 0U };
 
-    auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
+    auto tokenIt{ A1::tokenize( A1::Stream{ expression } ) };
     for ( auto const & token : expectedTokens )
     {
         EXPECT_EQ( token, tokenIt->value() )
@@ -465,7 +465,7 @@ TEST_P( TokenizerErrorTestFixture, tokenizationError )
         {
             try
             {
-                auto tokenIt{ A1::tokenize( A1::PushBackStream{ expression } ) };
+                auto tokenIt{ A1::tokenize( A1::Stream{ expression } ) };
                 while ( tokenIt->is_not< A1::Eof >() ) { ++tokenIt; }
             }
             catch ( A1::ParsingError const & ex )

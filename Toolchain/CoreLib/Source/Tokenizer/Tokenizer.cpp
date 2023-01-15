@@ -38,7 +38,7 @@ namespace
         else                              { return CharType::Operator;     }
     }
 
-    void skipComment( PushBackStream & stream ) noexcept
+    void skipComment( Stream & stream ) noexcept
     {
         auto c{ stream.pop() };
 
@@ -47,7 +47,7 @@ namespace
         if ( c ) { stream.push( *c ); }
     }
 
-    [[ nodiscard ]] Token getWord( PushBackStream & stream )
+    [[ nodiscard ]] Token getWord( Stream & stream )
     {
         std::string result;
 
@@ -108,7 +108,7 @@ namespace
         }
     }
 
-    [[ nodiscard ]] Token getString( PushBackStream & stream )
+    [[ nodiscard ]] Token getString( Stream & stream )
     {
         String result;
 
@@ -148,7 +148,7 @@ namespace
         throw ParsingError{ stream.errorInfo(), "Missing closing quote" };
     }
 
-    [[ nodiscard ]] Token tokenizeImpl( PushBackStream & stream )
+    [[ nodiscard ]] Token tokenizeImpl( Stream & stream )
     {
         static constexpr auto whitespacesIndentationCount{ 4U };
         auto consecutiveWhitespacesCount{ 0U };
@@ -225,7 +225,7 @@ TokenIterator TokenIterator::operator++(int)
     return tmp;
 }
 
-TokenIterator tokenize( PushBackStream stream )
+TokenIterator tokenize( Stream stream )
 {
     return { std::move( stream ) };
 }

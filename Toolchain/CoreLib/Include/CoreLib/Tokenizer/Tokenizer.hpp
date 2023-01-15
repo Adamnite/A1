@@ -8,7 +8,7 @@
 #pragma once
 
 #include <CoreLib/Tokenizer/Token.hpp>
-#include <CoreLib/Utils/PushBackStream.hpp>
+#include <CoreLib/Utils/Stream.hpp>
 
 #include <iterator>
 
@@ -26,7 +26,7 @@ public:
     using const_pointer     = value_type const *;
     using const_reference   = value_type const &;
 
-    TokenIterator( PushBackStream stream )
+    TokenIterator( Stream stream )
     : current_{ Eof{}, ErrorInfo{} }
     , stream_ { std::move( stream ) }
     {
@@ -42,10 +42,10 @@ public:
     [[ nodiscard ]] pointer         operator->()       { return &current_; }
 
 private:
-    value_type     current_;
-    PushBackStream stream_;
+    value_type current_;
+    Stream     stream_;
 };
 
-[[ nodiscard ]] TokenIterator tokenize( PushBackStream stream );
+[[ nodiscard ]] TokenIterator tokenize( Stream stream );
 
 } // namespace A1

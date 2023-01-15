@@ -223,7 +223,7 @@ ReservedToken getKeyword( std::string_view const word ) noexcept
     return it == std::end( keywords ) ? ReservedToken::Unknown : it->token;
 }
 
-ReservedToken getOperator( PushBackStream & stream ) noexcept
+ReservedToken getOperator( Stream & stream ) noexcept
 {
     auto result{ ReservedToken::Unknown };
 

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <CoreLib/Utils/PushBackStream.hpp>
+#include <CoreLib/Utils/Stream.hpp>
 
 #include <string_view>
 #include <cstdint>
@@ -133,6 +133,6 @@ enum class ReservedToken : std::uint8_t
 [[ nodiscard ]] std::string_view toStringView( ReservedToken const token ) noexcept;
 
 [[ nodiscard ]] ReservedToken getKeyword ( std::string_view const   word   ) noexcept;
-[[ nodiscard ]] ReservedToken getOperator( PushBackStream         & stream ) noexcept;
+[[ nodiscard ]] ReservedToken getOperator( Stream                 & stream ) noexcept;
 
 } // namespace A1

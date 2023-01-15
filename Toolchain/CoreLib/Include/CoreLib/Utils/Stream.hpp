@@ -19,27 +19,27 @@ namespace A1
 {
 
 /**
- * class PushBackStream
+ * class Stream
  *
  * Allows returning character back to the stream until it is
  * certain what is the type of the specific token.
  *
  * CAUTION: Class does not own the data in the stream.
  */
-class PushBackStream
+class Stream
 {
 public:
     /**
      * Constructs the stream from the character array.
      */
-    PushBackStream( std::string_view const data )
+    Stream( std::string_view const data )
     : data_{ StringInfo { .value = data, .index = 0U } }
     {}
 
     /**
      * Constructs the stream by reading the characters from the specific file.
      */
-    PushBackStream( std::FILE * f )
+    Stream( std::FILE * f )
     : data_{ FileInfo { .file = f, .filePos = std::ftell( f ) } }
     {}
 
@@ -69,7 +69,7 @@ private:
     };
 
     std::variant< FileInfo, StringInfo > data_;
-    std::stack< int > stack_;
+    std::stack< int >                    stack_;
 
     ErrorInfo errorInfo_;
 };

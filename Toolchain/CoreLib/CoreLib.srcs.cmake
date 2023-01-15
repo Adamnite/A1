@@ -10,7 +10,7 @@ set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Token.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Tokenizer/Tokenizer.cpp
 
-    ${CMAKE_CURRENT_LIST_DIR}/Source/Utils/PushBackStream.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/Source/Utils/Stream.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/Source/Module.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Source/Types.cpp

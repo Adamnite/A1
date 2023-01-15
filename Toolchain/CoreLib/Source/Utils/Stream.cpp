@@ -5,12 +5,12 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include <CoreLib/Utils/PushBackStream.hpp>
+#include <CoreLib/Utils/Stream.hpp>
 
 namespace A1
 {
 
-void PushBackStream::push( int const c ) noexcept
+void Stream::push( int const c ) noexcept
 {
     stack_.push( c );
 
@@ -23,7 +23,7 @@ void PushBackStream::push( int const c ) noexcept
     --errorInfo_.columnNumber;
 }
 
-std::optional< int > PushBackStream::pop() noexcept
+std::optional< int > Stream::pop() noexcept
 {
     int result{ 0 };
 
