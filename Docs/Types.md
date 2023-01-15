@@ -9,17 +9,18 @@ Basic types listed below are perfectly suited for users that do not have much of
 | Type | Description |
 | - | - |
 | num | Represents both integers and decimals |
-| bool | Represents either true or false |
+| bool | Represents either true or false value |
 | str | Represents text, i.e. any series of characters |
+| address | Represents an address in the blockchain |
 
 Furthermore, in some cases it is useful to specify integers of a specific size. Therefore, we offer additional integer types:
 
 | Type | Description |
 | - | - |
-| u8 / i8 | Represents a number of a size of 1 byte |
-| u16 / i16 | Represents a number of a size of 2 bytes |
-| u32 / i32 | Represents a number of a size of 4 bytes |
-| u64 / i64 | Represents a number of a size of 8 bytes |
+| u8 / i8 | Represents a number of a size of 1 byte (unsigned / signed) |
+| u16 / i16 | Represents a number of a size of 2 bytes (unsigned / signed) |
+| u32 / i32 | Represents a number of a size of 4 bytes (unsigned / signed) |
+| u64 / i64 | Represents a number of a size of 8 bytes (unsigned / signed) |
 
 ### Complex types
 
