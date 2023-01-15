@@ -22,6 +22,7 @@ namespace
         Comment,
         Newline,
         Operator,
+        Special,
         Quote,
         Tab,
         Whitespace
@@ -30,8 +31,9 @@ namespace
     [[ nodiscard ]] CharType getCharType( int const c ) noexcept
     {
              if ( std::isalnum( c )     ) { return CharType::Alphanumeric; }
-             if ( c == '#'              ) { return CharType::Comment;      }
+        else if ( c == '#'              ) { return CharType::Comment;      }
         else if ( c == '\n'             ) { return CharType::Newline;      }
+        else if ( c == '_'              ) { return CharType::Special;      }
         else if ( c == '"' || c == '\'' ) { return CharType::Quote;        }
         else if ( c == '\t'             ) { return CharType::Tab;          }
         else if ( std::isspace( c )     ) { return CharType::Whitespace;   }
@@ -80,7 +82,7 @@ namespace
             throw ParsingError{ stream.errorInfo(), "An identifier cannot start with a number" };
         }
 
-        // return last character back to the stream
+        // Return last character back to the stream
         if ( lastChar ) { stream.push( *lastChar ); }
 
         if ( auto const keyword{ getKeyword( result ) }; keyword != ReservedToken::Unknown )
@@ -158,6 +160,7 @@ namespace
             switch ( getCharType( *c ) )
             {
                 case CharType::Alphanumeric:
+                case CharType::Special:
                 {
                     consecutiveWhitespacesCount = 0U;
                     stream.push( *c );

@@ -310,11 +310,11 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .expression     = "let var = 0",
+            .expression     = "let _var = 0",
             .expectedTokens =
             {
                 A1::ReservedToken::KwLet,
-                A1::Identifier{ .name = "var" },
+                A1::Identifier{ .name = "_var" },
                 A1::ReservedToken::OpAssign,
                 A1::Number{ 0 },
                 A1::Eof{}
@@ -322,11 +322,11 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
-            .expression     = "let var = -5",
+            .expression     = "let __var = -5",
             .expectedTokens =
             {
                 A1::ReservedToken::KwLet,
-                A1::Identifier{ .name = "var" },
+                A1::Identifier{ .name = "__var" },
                 A1::ReservedToken::OpAssign,
                 A1::ReservedToken::OpSub,
                 A1::Number{ 5 },
@@ -486,7 +486,7 @@ INSTANTIATE_TEST_SUITE_P
     (
         ErrorTestParameter
         {
-            .expression           = "var _ 5",
+            .expression           = "var ; 5",
             .expectedErrorMessage = "1:5: error: Unknown token"
         },
         ErrorTestParameter
@@ -503,7 +503,7 @@ INSTANTIATE_TEST_SUITE_P
         {
             .expression =
                 "var1 = 5\n"
-                "var2 _ 5 ",
+                "var2 ; 5 ",
             .expectedErrorMessage = "2:6: error: Unknown token"
         }
     )
