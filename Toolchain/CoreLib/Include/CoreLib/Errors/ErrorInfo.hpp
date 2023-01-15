@@ -15,10 +15,13 @@ namespace A1
 struct ErrorInfo
 {
     /** Line number where the error has happened. */
-    std::size_t lineNumber{ 0U };
+    std::size_t lineNumber{ 1U };
 
     /** Column number pointing to the beginning of the error. */
-    std::size_t columnNumber{ 0U };
+    std::size_t columnNumber{ 1U };
+
+    /** Columns count of the line previous to the one being processed currently. */
+    std::size_t prevLineColumnsCount{ 0U };
 };
 
-} // namespace A1::Compiler
+} // namespace A1

@@ -14,7 +14,11 @@ void PushBackStream::push( int const c ) noexcept
 {
     stack_.push( c );
 
-    if ( c== '\n' ) { --errorInfo_.lineNumber; }
+    if ( c== '\n' )
+    {
+        --errorInfo_.lineNumber;
+        errorInfo_.columnNumber = errorInfo_.prevLineColumnsCount;
+    }
 
     --errorInfo_.columnNumber;
 }
@@ -66,7 +70,14 @@ std::optional< int > PushBackStream::pop() noexcept
         stack_.pop();
     }
 
-    if ( result == '\n' ) { ++errorInfo_.lineNumber; }
+    if ( result == '\n' )
+    {
+        ++errorInfo_.lineNumber;
+        ++errorInfo_.columnNumber;
+
+        errorInfo_.prevLineColumnsCount = errorInfo_.columnNumber;
+        errorInfo_.columnNumber         = 0U;
+    }
 
     ++errorInfo_.columnNumber;
 

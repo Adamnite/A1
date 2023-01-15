@@ -487,17 +487,24 @@ INSTANTIATE_TEST_SUITE_P
         ErrorTestParameter
         {
             .expression           = "var _ 5",
-            .expectedErrorMessage = "0:4: error: Unknown token"
+            .expectedErrorMessage = "1:5: error: Unknown token"
         },
         ErrorTestParameter
         {
             .expression           = "var = 5a",
-            .expectedErrorMessage = "0:8: error: An identifier cannot start with a number"
+            .expectedErrorMessage = "1:9: error: An identifier cannot start with a number"
         },
         ErrorTestParameter
         {
             .expression           = "var = \"foo",
-            .expectedErrorMessage = "0:10: error: Missing closing quote"
+            .expectedErrorMessage = "1:11: error: Missing closing quote"
+        },
+        ErrorTestParameter
+        {
+            .expression =
+                "var1 = 5\n"
+                "var2 _ 5 ",
+            .expectedErrorMessage = "2:6: error: Unknown token"
         }
     )
 );
