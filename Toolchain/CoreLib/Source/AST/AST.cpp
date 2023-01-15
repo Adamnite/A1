@@ -540,7 +540,6 @@ namespace
                 {
                     skipOneOf< ReservedToken::OpSubscriptOpen >( tokenIt );
                     operands.push( parseImpl( tokenIt ) );
-                    skipOneOf< ReservedToken::OpSubscriptClose >( tokenIt );
                 }
                 else if ( nodeInfo.type == NodeType::StatementIf || nodeInfo.type == NodeType::StatementElif )
                 {

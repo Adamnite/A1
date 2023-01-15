@@ -1139,8 +1139,55 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .expression =
+                "def func(self):\n"
+                "    self.foo = 5",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::FunctionDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::FunctionParameterDefinition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "self" } )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Assign,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::MemberCall,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "self" } ),
+                                            std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .expression =
                 "def func(self) -> num:\n"
-                "    return self.foo",
+                "    self.balances[addr] = 5\n"
+                "    return self.balances[addr]",
             .expectedRoot = std::make_shared< Node >
             (
                 NodeType::ModuleDefinition,
@@ -1163,16 +1210,49 @@ INSTANTIATE_TEST_SUITE_P
                             std::make_unique< Node >( A1::Registry::getNumHandle() ),
                             std::make_unique< Node >
                             (
+                                NodeType::Assign,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::Index,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::MemberCall,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "self"     } ),
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "balances" } )
+                                                )
+                                            ),
+                                            std::make_unique< Node >( A1::Identifier{ .name = "addr" } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                )
+                            ),
+                            std::make_unique< Node >
+                            (
                                 NodeType::StatementReturn,
                                 makeChildren
                                 (
                                     std::make_unique< Node >
                                     (
-                                        NodeType::MemberCall,
+                                        NodeType::Index,
                                         makeChildren
                                         (
-                                            std::make_unique< Node >( A1::Identifier{ .name = "self" } ),
-                                            std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::MemberCall,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "self"     } ),
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "balances" } )
+                                                )
+                                            ),
+                                            std::make_unique< Node >( A1::Identifier{ .name = "addr" } )
                                         )
                                     )
                                 )
