@@ -14,7 +14,7 @@
 
 <br/>
 
-<img align="right" width="50%" src="./Docs/Images/HelloWorld.png">
+<img align="right" width="50%" src="./Docs/Images/HelloWorld.jpeg">
 
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/m-peko/bitflags/blob/master/LICENSE)
 [![Build](https://github.com/Adamnite/A1/actions/workflows/build.yml/badge.svg)](https://github.com/Adamnite/A1/actions/workflows/build.yml)
