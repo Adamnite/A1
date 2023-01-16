@@ -345,6 +345,9 @@ INSTANTIATE_TEST_SUITE_P
                 "contract Addition:\n"
                 "    let sum: num = 0\n"
                 "\n"
+                "    def __init__(self):\n"
+                "        self.sum = 5\n"
+                "\n"
                 "    def add(self, x: num, y: num) -> num:\n"
                 "        let sum = x + y\n"
                 "        return sum\n"
@@ -354,9 +357,9 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.add(1, 2))\n"
                 "print(var.sum)",
             .expectedOutput =
-                "0\n"
+                "5\n"
                 "3\n"
-                "0"
+                "5"
         }
     )
 );

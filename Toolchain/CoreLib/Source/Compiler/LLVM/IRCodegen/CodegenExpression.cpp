@@ -115,8 +115,15 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
                 llvm::Constant::getNullValue( type->second )
             )
         };
-        auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}_DefaultCTOR", name ) ], llvm::None ) };
-        ctx.builder->CreateStore( initialContract, globalContract );
+
+        if
+        (
+            auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}____init__", name ) ], { globalContract } ) };
+            !initialContract->getType()->isVoidTy()
+        )
+        {
+            ctx.builder->CreateStore( initialContract, globalContract );
+        }
         return globalContract;
     }
     else
@@ -259,17 +266,22 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         }
     }
 
+    if
+    (
+        auto const ctorName{ fmt::format( "{}____init__", contractName ) };
+        ctx.symbols.functions.find( ctorName ) == std::end( ctx.symbols.functions )
+    )
     {
-        // Create default constructor
-        auto   ctorName{ fmt::format( "{}_DefaultCTOR", contractName ) };
-        auto * ctorType{ llvm::FunctionType::get( contractType, false ) };
+        // Create default constructor if there is no user-defined constructor
+        auto * ctorType{ llvm::FunctionType::get( llvm::Type::getVoidTy( *ctx.internalCtx ), { llvm::PointerType::get( contractType, 0U ) }, false ) };
         auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::ExternalLinkage, ctorName, ctx.module_.get() ) };
         auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "", ctor ) };
         ctx.builder->SetInsertPoint( block );
 
         auto * alloca{ ctx.builder->CreateAlloca( contractType, 0U ) };
         ctx.builder->CreateStore( llvm::ConstantStruct::get( contractType, dataMemberInitialValues ), alloca );
-        ctx.builder->CreateRet( ctx.builder->CreateLoad( contractType, alloca ) );
+        ctx.builder->CreateRet( nullptr );
+
         ctx.symbols.functions[ ctorName ] = ctor;
     }
 
