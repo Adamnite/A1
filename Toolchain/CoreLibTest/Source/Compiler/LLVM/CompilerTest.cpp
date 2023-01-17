@@ -344,6 +344,7 @@ INSTANTIATE_TEST_SUITE_P
             .input =
                 "contract Addition:\n"
                 "    let sum: num = 0\n"
+                "    let name: str = \"Addition\"\n"
                 "\n"
                 "    def __init__(self):\n"
                 "        self.sum = 5\n"
@@ -353,10 +354,12 @@ INSTANTIATE_TEST_SUITE_P
                 "        return sum\n"
                 "\n"
                 "let var = Addition()\n"
+                "print(var.name)\n"
                 "print(var.sum)\n"
                 "print(var.add(1, 2))\n"
                 "print(var.sum)",
             .expectedOutput =
+                "Addition\n"
                 "5\n"
                 "3\n"
                 "5"

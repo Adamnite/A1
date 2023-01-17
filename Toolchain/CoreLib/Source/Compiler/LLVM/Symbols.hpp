@@ -39,6 +39,18 @@ struct Symbols final
     template< typename T >
     using Table = std::map< std::string, T >;
 
+    struct DataMemberType
+    {
+        llvm::Type  * internalType{ nullptr };
+        std::size_t   index       { 0U };
+    };
+
+    struct ContractType
+    {
+        llvm::StructType        * internalType{ nullptr };
+        Table< DataMemberType >   dataMemberTypes;
+    };
+
     /**
      * Stores both local and global variables as well as function parameters.
      * Once variable has gone out of scope, it is removed from the map.
@@ -49,7 +61,7 @@ struct Symbols final
     Table< llvm::FunctionCallee > functions;
 
     /** Stores all user-defined contract types. */
-    Table< llvm::StructType * > contractTypes;
+    Table< ContractType > contractTypes;
 
     /** Name of a function that is currently being processed (used for mangling). */
     std::string currentFunctionName;

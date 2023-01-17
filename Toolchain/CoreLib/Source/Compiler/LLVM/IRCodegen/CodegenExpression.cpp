@@ -46,7 +46,8 @@ namespace
             type->getNumContainedTypes() > 0 &&
             (
                 type->getContainedType( 0U )->isArrayTy  () ||
-                type->getContainedType( 0U )->isIntegerTy()
+                type->getContainedType( 0U )->isIntegerTy() ||
+                type->getContainedType( 0U )->isPointerTy()
             )
         )
         {
@@ -109,10 +110,10 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
             new llvm::GlobalVariable
             (
                 *ctx.module_,
-                type->second,
+                type->second.internalType,
                 false, /* isConstant */
                 llvm::GlobalVariable::ExternalLinkage,
-                llvm::Constant::getNullValue( type->second )
+                llvm::Constant::getNullValue( type->second.internalType )
             )
         };
 
@@ -176,12 +177,32 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
     ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the member call expression" );
     auto const & variableName{ nodes[ 0U ]->get< Identifier >().name };
 
+    auto * variable{ ctx.symbols.variable( variableName ) };
+
+    auto const contractTypeName
+    {
+        [ &contracts = ctx.symbols.contractTypes, type = variable->getType() ]() -> std::string
+        {
+            for ( auto const & contract : contracts )
+            {
+                if ( contract.second.internalType == type->getContainedType( 0U ) ) { return contract.first; }
+            }
+            return {};
+        }()
+    };
+
     auto const & member{ nodes[ 1U ] };
     if ( member->is< Identifier >() )
     {
+        auto const & dataMemberTypes{ ctx.symbols.contractTypes[ contractTypeName ].dataMemberTypes };
+
         // Access data member
-        auto * variable{ ctx.symbols.variable( variableName ) };
-        return ctx.builder->CreateStructGEP( variable->getType()->getContainedType( 0U ), variable, 0U );
+        return ctx.builder->CreateStructGEP
+        (
+            variable->getType()->getContainedType( 0U ),
+            variable,
+            dataMemberTypes.at( member->get< Identifier >().name ).index
+        );
     }
     else if ( member->is< AST::NodeType >() && member->get< AST::NodeType >() == AST::NodeType::Call )
     {
@@ -193,25 +214,13 @@ llvm::Value * codegenMemberCall( Context & ctx, std::span< AST::Node::Pointer co
         ASSERTM( memberNodes[ 0U ]->is< Identifier >(), "Identifier is the first child node in the call expression" );
         auto const & name{ memberNodes[ 0U ]->get< Identifier >().name };
 
-        std::vector< llvm::Value * > arguments{ ctx.symbols.variable( variableName ) };
+        std::vector< llvm::Value * > arguments{ variable };
         for ( auto i{ 1U }; i < std::size( memberNodes ); i++ )
         {
             auto * value{ codegen( ctx, memberNodes[ i ] ) };
             if ( value == nullptr ) { return nullptr; }
             arguments.push_back( value );
         }
-
-        auto const contractTypeName
-        {
-            [ &contracts = ctx.symbols.contractTypes, type = arguments[ 0U ]->getType() ]() -> std::string
-            {
-                for ( auto const & contract : contracts )
-                {
-                    if ( contract.second == type->getContainedType( 0U ) ) { return contract.first; }
-                }
-                return {};
-            }()
-        };
 
         return memberNodes.size() == 1U
             ? ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}__{}", contractTypeName, name ) ], llvm::None )
@@ -233,7 +242,11 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
     std::vector< llvm::Constant * > dataMemberInitialValues;
     std::vector< llvm::Type     * > dataMemberTypes;
 
+    Symbols::Table< Symbols::DataMemberType > dataMembers;
+
     ctx.symbols.currentContractName = contractName;
+
+    std::size_t dataMemberIndex{ 0U };
 
     for ( auto i{ 1U }; i < std::size( nodes ); i++ )
     {
@@ -243,15 +256,35 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
             if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
                 // TODO: Support other member types
-                dataMemberTypes.push_back( llvm::Type::getInt64Ty( *ctx.internalCtx ) );
                 dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
+
+                {
+                    auto const & children{ node->children() };
+
+                    ASSERTM( std::size( children ) >= 2U, "Data member definition consists of an identifier, type annotation and, optionally, initialization" );
+                    ASSERTM( children[ 0U ]->is< Identifier >(), "Data member identifier is the first child node in the definition" );
+                    ASSERTM( children[ 1U ]->is< TypeID     >(), "Data member type is the second child node in the definition" );
+
+                    dataMemberTypes.push_back( getType( ctx, children[ 1U ]->get< TypeID >() ) );
+
+                    dataMembers[ children[ 0U ]->get< Identifier >().name ] =
+                    {
+                        .internalType = dataMemberTypes[ dataMemberIndex ],
+                        .index        = dataMemberIndex++
+                    };
+                }
+
                 codegen( ctx, node );
             }
         }
     }
 
     contractType->setBody( dataMemberTypes );
-    ctx.symbols.contractTypes[ contractName ] = contractType;
+    ctx.symbols.contractTypes[ contractName ] =
+    {
+        .internalType    = contractType,
+        .dataMemberTypes = std::move( dataMembers )
+    };
 
     for ( auto i{ 1U }; i < std::size( nodes ); i++ )
     {
@@ -344,7 +377,7 @@ llvm::Function * codegenFunctionDefinition( Context & ctx, std::span< AST::Node:
                         // TODO: Throw an error here. Only 'self' parameter is allowed not to have the type specified.
                     }
 
-                    parameters.push_back( llvm::PointerType::get( ctx.symbols.contractTypes[ ctx.symbols.currentContractName ], 0U ) );
+                    parameters.push_back( llvm::PointerType::get( ctx.symbols.contractTypes[ ctx.symbols.currentContractName ].internalType, 0U ) );
                 }
             }
         }
