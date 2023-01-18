@@ -42,9 +42,22 @@ namespace Detail
     [[ nodiscard  ]]
     inline llvm::Value * load( Context & ctx, llvm::Value * value ) noexcept
     {
-        if ( value->getType()->getNumContainedTypes() > 0U && value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U ) )
+        if
+        (
+            value->getType()->getNumContainedTypes() > 0U &&
+            value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U )
+        )
         {
             return ctx.builder->CreateLoad( llvm::Type::getInt64Ty( *ctx.internalCtx ), value );
+        }
+        else if
+        (
+            value->getType()->isPointerTy() &&
+            value->getType()->getNumContainedTypes() > 0U &&
+            value->getType()->getContainedType( 0U )->isPointerTy()
+        )
+        {
+            return ctx.builder->CreateLoad( value->getType()->getContainedType( 0U ), value );
         }
         return value;
     }

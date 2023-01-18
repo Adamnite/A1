@@ -324,34 +324,12 @@ INSTANTIATE_TEST_SUITE_P
         {
             .input =
                 "contract Addition:\n"
-                "    let sum: num = 0\n"
+                "    let name: str = \"Addition\"\n"
+                "    let sum: num = 5\n"
                 "\n"
                 "    def add(self, x: num, y: num) -> num:\n"
                 "        self.sum = x + y\n"
                 "        return self.sum\n"
-                "\n"
-                "let var = Addition()\n"
-                "print(var.sum)\n"
-                "print(var.add(1, 2))\n"
-                "print(var.sum)",
-            .expectedOutput =
-                "0\n"
-                "3\n"
-                "3"
-        },
-        TestParameter
-        {
-            .input =
-                "contract Addition:\n"
-                "    let sum: num = 0\n"
-                "    let name: str = \"Addition\"\n"
-                "\n"
-                "    def __init__(self):\n"
-                "        self.sum = 5\n"
-                "\n"
-                "    def add(self, x: num, y: num) -> num:\n"
-                "        let sum = x + y\n"
-                "        return sum\n"
                 "\n"
                 "let var = Addition()\n"
                 "print(var.name)\n"
@@ -360,6 +338,42 @@ INSTANTIATE_TEST_SUITE_P
                 "print(var.sum)",
             .expectedOutput =
                 "Addition\n"
+                "5\n"
+                "3\n"
+                "3"
+        },
+        TestParameter
+        {
+            .input =
+                "contract Addition:\n"
+                "    let name: str = \"Addition\"\n"
+                "    let description: str\n"
+                "    let sum: num = 0\n"
+                "    let foo: num = 10\n"
+                "    let bar: num = 10\n"
+                "\n"
+                "    def __init__(self):\n"
+                "        self.name = \"Addition Example\"\n"
+                "        self.sum = 5\n"
+                "        self.bar = 20\n"
+                "\n"
+                "    def add(self, x: num, y: num) -> num:\n"
+                "        let sum = x + y\n"
+                "        return sum\n"
+                "\n"
+                "let var = Addition()\n"
+                "print(var.name)\n"
+                "print(var.description)\n"
+                "print(var.foo)\n"
+                "print(var.bar)\n"
+                "print(var.sum)\n"
+                "print(var.add(1, 2))\n"
+                "print(var.sum)",
+            .expectedOutput =
+                "Addition Example\n"
+                "\n"
+                "10\n"
+                "20\n"
                 "5\n"
                 "3\n"
                 "5"

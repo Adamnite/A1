@@ -91,8 +91,14 @@ llvm::Value * codegenAssign( Context & ctx, std::span< AST::Node::Pointer const 
         return lhs;
     }
 
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
-    ctx.symbols.variable( name, value );
+    if ( nodes[ 0U ]->is< Identifier >() )
+    {
+        ctx.symbols.variable( nodes[ 0U ]->get< Identifier >().name, value );
+    }
+    else
+    {
+        ctx.builder->CreateStore( value, lhs );
+    }
     return value;
 }
 
@@ -117,13 +123,12 @@ llvm::Value * codegenCall( Context & ctx, std::span< AST::Node::Pointer const > 
             )
         };
 
-        if
-        (
-            auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}____init__", name ) ], { globalContract } ) };
-            !initialContract->getType()->isVoidTy()
-        )
+        auto * initialContract{ ctx.builder->CreateCall( ctx.symbols.functions[ fmt::format( "{}____default_init__", name ) ], llvm::None ) };
+        ctx.builder->CreateStore( initialContract, globalContract );
+
+        if ( auto const ctor{ ctx.symbols.functions.find( fmt::format( "{}____init__", name ) ) }; ctor != std::end( ctx.symbols.functions ) )
         {
-            ctx.builder->CreateStore( initialContract, globalContract );
+            ctx.builder->CreateCall( ctor->second, { globalContract } );
         }
         return globalContract;
     }
@@ -255,26 +260,46 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         {
             if ( node->get< AST::NodeType >() == AST::NodeType::VariableDefinition )
             {
-                // TODO: Support other member types
-                dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ) );
+                auto const & children{ node->children() };
 
+                ASSERTM( std::size( children ) >= 2U, "Data member definition consists of an identifier, type annotation and, optionally, initialization" );
+                ASSERTM( children[ 0U ]->is< Identifier >(), "Data member identifier is the first child node in the definition" );
+                ASSERTM( children[ 1U ]->is< TypeID     >(), "Data member type is the second child node in the definition" );
+
+                auto const typeID{ children[ 1U ]->get< TypeID >() };
+                dataMemberTypes.push_back( getType( ctx, typeID ) );
+
+                if ( std::size( children ) > 2U )
                 {
-                    auto const & children{ node->children() };
-
-                    ASSERTM( std::size( children ) >= 2U, "Data member definition consists of an identifier, type annotation and, optionally, initialization" );
-                    ASSERTM( children[ 0U ]->is< Identifier >(), "Data member identifier is the first child node in the definition" );
-                    ASSERTM( children[ 1U ]->is< TypeID     >(), "Data member type is the second child node in the definition" );
-
-                    dataMemberTypes.push_back( getType( ctx, children[ 1U ]->get< TypeID >() ) );
-
-                    dataMembers[ children[ 0U ]->get< Identifier >().name ] =
+                    auto const & initNode{ children[ 2U ] };
+                    if ( initNode->is< Number >() )
                     {
-                        .internalType = dataMemberTypes[ dataMemberIndex ],
-                        .index        = dataMemberIndex++
-                    };
+                        dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), initNode->get< Number >(), true /* isSigned */ ) );
+                    }
+                    else if ( initNode->is< String >() )
+                    {
+                        dataMemberInitialValues.push_back( ctx.builder->CreateGlobalStringPtr( initNode->get< String >(), "", 0U, ctx.module_.get() ) );
+                    }
+                }
+                else
+                {
+                    if ( typeID == Registry::getNumHandle() )
+                    {
+                        dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, true /* isSigned */ ) );
+                    }
+                    else if ( typeID == Registry::getStrHandle() )
+                    {
+                        dataMemberInitialValues.push_back( ctx.builder->CreateGlobalStringPtr( "", "", 0U, ctx.module_.get() ) );
+                    }
                 }
 
-                codegen( ctx, node );
+                dataMembers[ children[ 0U ]->get< Identifier >().name ] =
+                {
+                    .internalType = dataMemberTypes[ dataMemberIndex ],
+                    .index        = dataMemberIndex++
+                };
+
+                // codegen( ctx, node );
             }
         }
     }
@@ -299,21 +324,17 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
         }
     }
 
-    if
-    (
-        auto const ctorName{ fmt::format( "{}____init__", contractName ) };
-        ctx.symbols.functions.find( ctorName ) == std::end( ctx.symbols.functions )
-    )
     {
         // Create default constructor if there is no user-defined constructor
-        auto * ctorType{ llvm::FunctionType::get( llvm::Type::getVoidTy( *ctx.internalCtx ), { llvm::PointerType::get( contractType, 0U ) }, false ) };
+        auto   ctorName{ fmt::format( "{}____default_init__", contractName ) };
+        auto * ctorType{ llvm::FunctionType::get( contractType, false ) };
         auto * ctor    { llvm::Function::Create( ctorType, llvm::Function::ExternalLinkage, ctorName, ctx.module_.get() ) };
         auto * block   { llvm::BasicBlock::Create( *ctx.internalCtx, "", ctor ) };
         ctx.builder->SetInsertPoint( block );
 
         auto * alloca{ ctx.builder->CreateAlloca( contractType, 0U ) };
         ctx.builder->CreateStore( llvm::ConstantStruct::get( contractType, dataMemberInitialValues ), alloca );
-        ctx.builder->CreateRet( nullptr );
+        ctx.builder->CreateRet( ctx.builder->CreateLoad( contractType, alloca ) );
 
         ctx.symbols.functions[ ctorName ] = ctor;
     }
@@ -493,7 +514,7 @@ llvm::Value * codegenVariableDefinition( Context & ctx, std::span< AST::Node::Po
         if ( typeID == Registry::getNumHandle() )
         {
             value = inScopeBuilder.CreateAlloca( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, name.data() );
-            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, false /* isSigned */ ), value );
+            inScopeBuilder.CreateStore( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), 0U, true /* isSigned */ ), value );
         }
         else if ( typeID == Registry::getStrHandle() )
         {
