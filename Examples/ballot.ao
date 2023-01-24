@@ -15,9 +15,9 @@ contract Ballot:
     let voters: map[address, Voter]
     let proposals: array[Proposal]
 
-    def vote(proposalIdx: num):
-        voter = voters[msg.sender]
+    def vote(self, proposalIdx: num):
+        voter = self.voters[msg.sender]
         voter.hasVoted = True
         voter.vote = proposalIdx
 
-        proposals[proposalIdx].count += voter.weight
+        self.proposals[proposalIdx].count += voter.weight

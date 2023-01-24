@@ -5,9 +5,9 @@
 contract Addition:
     let sum: num = 0
 
-    def add(x: num, y: num) -> num:
-        sum =  x + y
-        return sum
+    def add(self, x: num, y: num) -> num:
+        self.sum =  x + y
+        return self.sum
 
 
 let var = Addition()
