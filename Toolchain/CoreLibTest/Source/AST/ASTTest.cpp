@@ -528,13 +528,84 @@ INSTANTIATE_TEST_SUITE_P
                         NodeType::Index,
                         makeChildren
                         (
-                            std::make_unique< Node >( A1::Identifier{ .name = "var"  } ),
+                            std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >
                             (
                                 NodeType::Call,
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "func" } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .expression   = "func1(func2() + 5)",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Call,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "func1" } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::Call,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "func2" } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .expression   = "func1(func2(5) + 5)",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::Call,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "func1" } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::Addition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::Call,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "func2" } ),
+                                            std::make_unique< Node >( A1::Number{ 5 } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Number{ 5 } )
                                 )
                             )
                         )

@@ -802,7 +802,7 @@ namespace
 
                         operators.push( nodeInfo );
 
-                        expectingOperand = nodeInfo.operandsCount != 0;
+                        expectingOperand = false;
                     }
                     else
                     {
