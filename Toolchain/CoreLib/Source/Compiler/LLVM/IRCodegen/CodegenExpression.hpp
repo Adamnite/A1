@@ -114,16 +114,15 @@ llvm::Value * codegenAssign
     std::string_view                      const   opName
 )
 {
-    ASSERTM( std::size( nodes ) == 2U, "Assign expression consists of an identifier and value to be assigned" );
+    ASSERT( std::size( nodes ) == 2U );
 
-    ASSERTM( nodes[ 0U ]->is< Identifier >(), "Variable identifier is the first child node in the assign expression" );
-    auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+    auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
+    auto * rhs{ codegenBinary( ctx, clbk, nodes, opName ) };
 
-    auto * value{ ctx.symbols.variable( name ) };
-    if ( value == nullptr ) { return nullptr; }
+    if ( lhs == nullptr || rhs == nullptr ) { return nullptr; }
 
-    ctx.builder->CreateStore( codegenBinary( ctx, clbk, nodes, opName ), value );
-    return value;
+    ctx.builder->CreateStore( rhs, lhs );
+    return lhs;
 }
 
 [[ nodiscard ]] llvm::Value    * codegenAssign            ( Context & ctx, std::span< AST::Node::Pointer const > const nodes );
