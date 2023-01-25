@@ -31,22 +31,24 @@ namespace A1::LLVM::IR
 
 namespace
 {
+    template< typename ... ParameterTs > requires ( std::is_base_of_v< llvm::Type, std::remove_pointer_t< ParameterTs > > && ... )
     [[ maybe_unused ]]
     [[ nodiscard ]]
     llvm::Function * codegenIntrinsicWrapper
     (
+        std::string_view const   intrinsicName,
+        std::string_view const   wrapperName,
         llvm::LLVMContext      & ctx,
         llvm::Module           & module_,
         llvm::IRBuilder<>      & builder,
         llvm::Type             * returnType,
-        std::string_view const   intrinsicName,
-        std::string_view const   wrapperName
+        ParameterTs ...          parameterTypes
     )
     {
         auto const   intrinsicID{ llvm::Function::lookupIntrinsicID( intrinsicName ) };
         auto       * intrinsic  { llvm::Intrinsic::getDeclaration( &module_, intrinsicID ) };
 
-        auto * wrapperType{ llvm::FunctionType::get( returnType, false ) };
+        auto * wrapperType{ llvm::FunctionType::get( returnType, { parameterTypes ... }, false ) };
         auto * wrapper    { llvm::Function::Create( wrapperType, llvm::Function::InternalLinkage, wrapperName, &module_ ) };
         auto * block      { llvm::BasicBlock::Create( ctx, "", wrapper ) };
 
@@ -62,10 +64,10 @@ namespace
     {
         return codegenIntrinsicWrapper
         (
-            ctx, module_, builder,
-            llvm::Type::getInt8PtrTy( ctx ),
             "llvm.wasm.advm.contract.addr",
-            "contract_address"
+            "contract_address",
+            ctx, module_, builder,
+            llvm::Type::getInt8PtrTy( ctx )
         );
     }
 
@@ -75,10 +77,10 @@ namespace
     {
         return codegenIntrinsicWrapper
         (
-            ctx, module_, builder,
-            llvm::Type::getInt8PtrTy( ctx ),
             "llvm.wasm.advm.caller.addr",
-            "caller_address"
+            "caller_address",
+            ctx, module_, builder,
+            llvm::Type::getInt8PtrTy( ctx )
         );
     }
 
@@ -88,10 +90,24 @@ namespace
     {
         return codegenIntrinsicWrapper
         (
-            ctx, module_, builder,
-            llvm::Type::getInt64Ty( ctx ),
             "llvm.wasm.advm.block.ts",
-            "block_timestamp"
+            "block_timestamp",
+            ctx, module_, builder,
+            llvm::Type::getInt64Ty( ctx )
+        );
+    }
+
+    [[ maybe_unused ]]
+    [[ nodiscard ]]
+    llvm::Function * codegenBalances( llvm::LLVMContext & ctx, llvm::Module & module_, llvm::IRBuilder<> & builder )
+    {
+        return codegenIntrinsicWrapper
+        (
+            "llvm.wasm.advm.balances",
+            "balances",
+            ctx, module_, builder,
+            llvm::Type::getInt64PtrTy( ctx ),
+            llvm::Type::getInt8PtrTy( ctx )
         );
     }
 } // namespace
@@ -153,7 +169,8 @@ Symbols::Table< llvm::Function * > internalBuiltinFunctions
 #ifndef TESTS_ENABLED
         { "contract_address", codegenContractAddress( ctx, module_, builder ) },
         { "caller_address"  , codegenCallerAddress  ( ctx, module_, builder ) },
-        { "block_timestamp" , codegenBlockTimestamp ( ctx, module_, builder ) }
+        { "block_timestamp" , codegenBlockTimestamp ( ctx, module_, builder ) },
+        { "balances"        , codegenBalances       ( ctx, module_, builder ) }
 #endif // TESTS_ENABLED
     };
 }
