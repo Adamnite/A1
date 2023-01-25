@@ -48,8 +48,8 @@ bool load( Compiler::Settings settings, std::filesystem::path const inputFile )
 
     if ( FilePtr f{ std::fopen( inputFile.c_str(), "r" ), &std::fclose }; f != nullptr )
     {
-        auto tokenIt { tokenize( Stream{ f.get() } ) };
-        auto rootNode{ AST::parse( tokenIt ) };
+        auto token   { tokenize( Stream{ f.get() } ) };
+        auto rootNode{ AST::parse( token ) };
 
         if ( settings.outputAST )
         {

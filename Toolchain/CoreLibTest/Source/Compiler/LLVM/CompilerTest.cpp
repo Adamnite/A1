@@ -67,8 +67,8 @@ TEST_P( LLVMCompilerTestFixture, compilation )
 {
     auto const [ input, expectedOutput ]{ GetParam() };
 
-    auto tokenIt { A1::tokenize( A1::Stream{ input } ) };
-    auto rootNode{ A1::AST::parse( tokenIt ) };
+    auto token   { A1::tokenize( A1::Stream{ input } ) };
+    auto rootNode{ A1::AST::parse( token ) };
 
     static constexpr auto executableFilename{ "llvm_compiler_test" };
     A1::Compiler::Settings settings{ .executableFilename = executableFilename };

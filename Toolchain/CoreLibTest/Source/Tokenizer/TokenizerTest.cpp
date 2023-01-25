@@ -33,14 +33,14 @@ TEST_P( TokenizerTestFixture, tokenization )
 
     std::size_t tokenIndex{ 0U };
 
-    auto tokenIt{ A1::tokenize( A1::Stream{ expression } ) };
-    for ( auto const & token : expectedTokens )
+    auto token{ A1::tokenize( A1::Stream{ expression } ) };
+    for ( auto const & expected : expectedTokens )
     {
-        EXPECT_EQ( token, tokenIt->value() )
+        EXPECT_EQ( expected, token->value() )
             << "Token at position " << ( tokenIndex + 1 ) << " is of an incorrect type";
 
         ++tokenIndex;
-        ++tokenIt;
+        ++token;
     }
 }
 
@@ -465,8 +465,8 @@ TEST_P( TokenizerErrorTestFixture, tokenizationError )
         {
             try
             {
-                auto tokenIt{ A1::tokenize( A1::Stream{ expression } ) };
-                while ( tokenIt->is_not< A1::Eof >() ) { ++tokenIt; }
+                auto token{ A1::tokenize( A1::Stream{ expression } ) };
+                while ( token->is_not< A1::Eof >() ) { ++token; }
             }
             catch ( A1::ParsingError const & ex )
             {

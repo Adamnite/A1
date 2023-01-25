@@ -186,7 +186,6 @@ namespace
 
 #define IGNORE_TOKEN( token ) case ReservedToken::token: break;
 
-            // Ignored tokens
             IGNORE_TOKEN( Unknown            );
             IGNORE_TOKEN( OpParenthesisClose );
             IGNORE_TOKEN( OpSubscriptClose   );
@@ -224,42 +223,42 @@ namespace
     }
 
     [[ nodiscard ]]
-    Node::Pointer parseOperand( TokenIterator const & tokenIt )
+    Node::Pointer parseOperand( TokenIterator const & token )
     {
-        if ( tokenIt->is< Number >() )
+        if ( token->is< Number >() )
         {
-            return std::make_unique< Node >( tokenIt->get< Number >(), tokenIt->errorInfo() );
+            return std::make_unique< Node >( token->get< Number >(), token->errorInfo() );
         }
-        else if ( tokenIt->is< String >() )
+        else if ( token->is< String >() )
         {
-            return std::make_unique< Node >( tokenIt->get< String >(), tokenIt->errorInfo() );
+            return std::make_unique< Node >( token->get< String >(), token->errorInfo() );
         }
-        else if ( tokenIt->is< Identifier >() )
+        else if ( token->is< Identifier >() )
         {
-            return std::make_unique< Node >( tokenIt->get< Identifier >(), tokenIt->errorInfo() );
+            return std::make_unique< Node >( token->get< Identifier >(), token->errorInfo() );
         }
-        else if ( tokenIt->is< ReservedToken >() )
+        else if ( token->is< ReservedToken >() )
         {
-            switch ( tokenIt->get< ReservedToken >() )
+            switch ( token->get< ReservedToken >() )
             {
-                case ReservedToken::KwFalse: return std::make_unique< Node >( false, tokenIt->errorInfo() );
-                case ReservedToken::KwTrue : return std::make_unique< Node >( true , tokenIt->errorInfo() );
+                case ReservedToken::KwFalse: return std::make_unique< Node >( false, token->errorInfo() );
+                case ReservedToken::KwTrue : return std::make_unique< Node >( true , token->errorInfo() );
 
-                case ReservedToken::KwAddress: return std::make_unique< Node >( Registry::getAddressHandle(), tokenIt->errorInfo() );
+                case ReservedToken::KwAddress: return std::make_unique< Node >( Registry::getAddressHandle(), token->errorInfo() );
 
-                case ReservedToken::KwBool: return std::make_unique< Node >( Registry::getBoolHandle(), tokenIt->errorInfo() );
-                case ReservedToken::KwNum : return std::make_unique< Node >( Registry::getNumHandle (), tokenIt->errorInfo() );
-                case ReservedToken::KwStr : return std::make_unique< Node >( Registry::getStrHandle (), tokenIt->errorInfo() );
+                case ReservedToken::KwBool: return std::make_unique< Node >( Registry::getBoolHandle(), token->errorInfo() );
+                case ReservedToken::KwNum : return std::make_unique< Node >( Registry::getNumHandle (), token->errorInfo() );
+                case ReservedToken::KwStr : return std::make_unique< Node >( Registry::getStrHandle (), token->errorInfo() );
 
-                case ReservedToken::KwI8 : return std::make_unique< Node >( Registry::getI8Handle (), tokenIt->errorInfo() );
-                case ReservedToken::KwI16: return std::make_unique< Node >( Registry::getI16Handle(), tokenIt->errorInfo() );
-                case ReservedToken::KwI32: return std::make_unique< Node >( Registry::getI32Handle(), tokenIt->errorInfo() );
-                case ReservedToken::KwI64: return std::make_unique< Node >( Registry::getI64Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwI8 : return std::make_unique< Node >( Registry::getI8Handle (), token->errorInfo() );
+                case ReservedToken::KwI16: return std::make_unique< Node >( Registry::getI16Handle(), token->errorInfo() );
+                case ReservedToken::KwI32: return std::make_unique< Node >( Registry::getI32Handle(), token->errorInfo() );
+                case ReservedToken::KwI64: return std::make_unique< Node >( Registry::getI64Handle(), token->errorInfo() );
 
-                case ReservedToken::KwU8 : return std::make_unique< Node >( Registry::getU8Handle (), tokenIt->errorInfo() );
-                case ReservedToken::KwU16: return std::make_unique< Node >( Registry::getU16Handle(), tokenIt->errorInfo() );
-                case ReservedToken::KwU32: return std::make_unique< Node >( Registry::getU32Handle(), tokenIt->errorInfo() );
-                case ReservedToken::KwU64: return std::make_unique< Node >( Registry::getU64Handle(), tokenIt->errorInfo() );
+                case ReservedToken::KwU8 : return std::make_unique< Node >( Registry::getU8Handle (), token->errorInfo() );
+                case ReservedToken::KwU16: return std::make_unique< Node >( Registry::getU16Handle(), token->errorInfo() );
+                case ReservedToken::KwU32: return std::make_unique< Node >( Registry::getU32Handle(), token->errorInfo() );
+                case ReservedToken::KwU64: return std::make_unique< Node >( Registry::getU64Handle(), token->errorInfo() );
 
                 default:
                     break;
@@ -307,18 +306,18 @@ namespace
     }
 
     template< ReservedToken tokenToSkip, ReservedToken ... moreTokensToSkip >
-    void skipOneOf( TokenIterator & tokenIt )
+    void skipOneOf( TokenIterator & token )
     {
         if
         (
-            tokenIt->is< ReservedToken >() &&
+            token->is< ReservedToken >() &&
             (
-                    tokenIt->get< ReservedToken >() == tokenToSkip        ||
-                ( ( tokenIt->get< ReservedToken >() == moreTokensToSkip ) || ... )
+                    token->get< ReservedToken >() == tokenToSkip        ||
+                ( ( token->get< ReservedToken >() == moreTokensToSkip ) || ... )
             )
         )
         {
-            ++tokenIt;
+            ++token;
         }
         else
         {
@@ -336,11 +335,11 @@ namespace
         }
     }
 
-    void skipNewline( TokenIterator & tokenIt )
+    void skipNewline( TokenIterator & token )
     {
-        if ( tokenIt->is< Newline >() )
+        if ( token->is< Newline >() )
         {
-            ++tokenIt;
+            ++token;
         }
         else
         {
@@ -350,34 +349,34 @@ namespace
 
     Node::Pointer parseImpl
     (
-        TokenIterator       & tokenIt,
+        TokenIterator       & token,
         std::size_t   const   indentationLevel = 0U,
         bool          const   alreadyInModule  = true
     );
 
     [[ nodiscard ]]
-    std::vector< Node::Pointer > parseBody( TokenIterator & tokenIt, std::size_t const indentationLevel )
+    std::vector< Node::Pointer > parseBody( TokenIterator & token, std::size_t const indentationLevel )
     {
         std::vector< Node::Pointer > operands;
 
-        while ( tokenIt->is_not< Eof >() )
+        while ( token->is_not< Eof >() )
         {
-            // parse body statement
-            operands.push_back( parseImpl( tokenIt, indentationLevel ) );
+            // Parse body statement
+            operands.push_back( parseImpl( token, indentationLevel ) );
 
-            auto prevTokenIt{ tokenIt };
+            auto newLineBeginToken{ token };
 
             auto currentIndentationLevel{ 0U };
             while ( currentIndentationLevel != indentationLevel )
             {
-                if ( tokenIt->is< Indentation >() )
+                if ( token->is< Indentation >() )
                 {
-                    ++tokenIt;
+                    ++token;
                     currentIndentationLevel++;
                 }
-                else if ( tokenIt->is< Newline >() )
+                else if ( token->is< Newline >() )
                 {
-                    skipNewline( tokenIt );
+                    skipNewline( token );
                 }
                 else
                 {
@@ -387,7 +386,8 @@ namespace
 
             if ( currentIndentationLevel < indentationLevel )
             {
-                tokenIt = prevTokenIt; // TODO: Implement this a bit better
+                // All body statements are parsed, get back to the beginning of the line
+                token = std::move( newLineBeginToken );
                 break;
             }
         }
@@ -397,7 +397,7 @@ namespace
 
     Node::Pointer parseImpl
     (
-        TokenIterator       & tokenIt,
+        TokenIterator       & token,
         std::size_t   const   indentationLevel,
         bool          const   alreadyInModule
     )
@@ -410,9 +410,9 @@ namespace
         std::size_t currentIndentationLevel{ 0U };
         while ( currentIndentationLevel != indentationLevel )
         {
-            if ( tokenIt->is< Indentation >() )
+            if ( token->is< Indentation >() )
             {
-                ++tokenIt;
+                ++token;
                 currentIndentationLevel++;
             }
             else
@@ -429,32 +429,32 @@ namespace
                 NodeInfo
                 {
                     .type      = NodeType::ModuleDefinition,
-                    .errorInfo = tokenIt->errorInfo()
+                    .errorInfo = token->errorInfo()
                 }
             );
         }
 
-        while ( tokenIt->is< Newline >() || tokenIt->is< Eof >() )
+        while ( token->is< Newline >() || token->is< Eof >() )
         {
             // skip empty lines or comment lines
-            ++tokenIt;
-            if ( tokenIt->is< Eof >() )
+            ++token;
+            if ( token->is< Eof >() )
             {
                 expectingOperand = false;
                 break;
             }
         }
 
-        for ( ; !isEndOfExpression( *tokenIt ); ++tokenIt )
+        for ( ; !isEndOfExpression( *token ); ++token )
         {
-            if ( tokenIt->is< ReservedToken >() )
+            if ( token->is< ReservedToken >() )
             {
                 auto nodeInfo
                 {
                     getNodeInfo
                     (
-                        tokenIt->get< ReservedToken >(),
-                        tokenIt->errorInfo(),
+                        token->get< ReservedToken >(),
+                        token->errorInfo(),
                         expectingOperand
                     )
                 };
@@ -463,7 +463,7 @@ namespace
                 {
                     if
                     (
-                        auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                        auto const reservedToken{ token->get< ReservedToken >() };
                         reservedToken == ReservedToken::KwFalse   || reservedToken == ReservedToken::KwTrue ||
                         reservedToken == ReservedToken::KwAddress || reservedToken == ReservedToken::KwBool ||
                         reservedToken == ReservedToken::KwNum     || reservedToken == ReservedToken::KwStr  ||
@@ -478,10 +478,10 @@ namespace
                             throw std::runtime_error( "Syntax error" );
                         }
 
-                        operands.push( parseOperand( tokenIt ) );
+                        operands.push( parseOperand( token ) );
                         expectingOperand = false;
 
-                        ++tokenIt;
+                        ++token;
                         break;
                     }
 
@@ -490,7 +490,7 @@ namespace
 
                 if ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition && hasHigherPrecedence( operators.top().type, nodeInfo.type ) )
                 {
-                    popOperator( operands, operators, tokenIt->errorInfo() );
+                    popOperator( operands, operators, token->errorInfo() );
 
                     if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
                     {
@@ -500,31 +500,31 @@ namespace
 
                 if ( nodeInfo.type == NodeType::Parentheses )
                 {
-                    skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+                    skipOneOf< ReservedToken::OpParenthesisOpen >( token );
 
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpParenthesisClose )
+                    if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpParenthesisClose )
                     {
                         throw std::runtime_error( "Expected expression" );
                     }
 
-                    if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                    if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
                         while ( true )
                         {
-                            operands.push( parseImpl( tokenIt ) );
+                            operands.push( parseImpl( token ) );
 
                             ++nodeInfo.operandsCount;
 
-                            if ( tokenIt->is< ReservedToken >() )
+                            if ( token->is< ReservedToken >() )
                             {
-                                auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                auto const reservedToken{ token->get< ReservedToken >() };
                                 if ( reservedToken == ReservedToken::OpParenthesisClose )
                                 {
                                     break;
                                 }
                                 else if ( reservedToken == ReservedToken::OpComma )
                                 {
-                                    ++tokenIt;
+                                    ++token;
                                 }
                                 else
                                 {
@@ -538,99 +538,94 @@ namespace
                 }
                 else if ( nodeInfo.type == NodeType::Index )
                 {
-                    skipOneOf< ReservedToken::OpSubscriptOpen >( tokenIt );
-                    operands.push( parseImpl( tokenIt ) );
+                    skipOneOf< ReservedToken::OpSubscriptOpen >( token );
+                    operands.push( parseImpl( token ) );
                 }
                 else if ( nodeInfo.type == NodeType::StatementIf || nodeInfo.type == NodeType::StatementElif )
                 {
-                    skipOneOf< ReservedToken::KwIf, ReservedToken::KwElif >( tokenIt );
-                    operands.push( parseImpl( tokenIt ) ); // parse condition
-                    skipOneOf< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
+                    skipOneOf< ReservedToken::KwIf, ReservedToken::KwElif >( token );
+                    operands.push( parseImpl( token ) ); // parse condition
+                    skipOneOf< ReservedToken::OpColon >( token );
+                    skipNewline( token );
 
-                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
                     nodeInfo.operandsCount += std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
 
-                    auto prevTokenIt{ tokenIt };
-                    if ( tokenIt->is< Newline >() ) { ++tokenIt; }
+                    if ( token->is< Newline >() ) { ++token; }
 
                     if
                     (
-                        tokenIt->is< ReservedToken >() &&
+                        token->is< ReservedToken >() &&
                         (
-                            tokenIt->get< ReservedToken >() == ReservedToken::KwElif ||
-                            tokenIt->get< ReservedToken >() == ReservedToken::KwElse
+                            token->get< ReservedToken >() == ReservedToken::KwElif ||
+                            token->get< ReservedToken >() == ReservedToken::KwElse
                         )
                     )
                     {
                         // Parse elif / else expression
-                        operands.push( parseImpl( tokenIt, currentIndentationLevel ) );
+                        operands.push( parseImpl( token, currentIndentationLevel ) );
                         nodeInfo.operandsCount++;
-                    }
-                    else
-                    {
-                        tokenIt = prevTokenIt;
                     }
                 }
                 else if ( nodeInfo.type == NodeType::StatementElse )
                 {
-                    skipOneOf< ReservedToken::KwElse  >( tokenIt );
-                    skipOneOf< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
+                    skipOneOf< ReservedToken::KwElse  >( token );
+                    skipOneOf< ReservedToken::OpColon >( token );
+                    skipNewline( token );
 
-                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
                     nodeInfo.operandsCount += std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
                 }
                 else if ( nodeInfo.type == NodeType::StatementWhile )
                 {
-                    skipOneOf< ReservedToken::KwWhile >( tokenIt );
-                    operands.push( parseImpl( tokenIt ) ); // parse condition
-                    skipOneOf< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
+                    skipOneOf< ReservedToken::KwWhile >( token );
+                    operands.push( parseImpl( token ) ); // parse condition
+                    skipOneOf< ReservedToken::OpColon >( token );
+                    skipNewline( token );
 
-                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
                     nodeInfo.operandsCount += std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
                 }
                 else if ( nodeInfo.type == NodeType::FunctionDefinition )
                 {
-                    skipOneOf< ReservedToken::KwDef >( tokenIt );
+                    skipOneOf< ReservedToken::KwDef >( token );
 
-                    operands.push( parseOperand( tokenIt ) ); // parse function name
-                    tokenIt++;
+                    operands.push( parseOperand( token ) ); // parse function name
+                    token++;
 
                     {
                         // we are parsing function parameters
 
-                        skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+                        skipOneOf< ReservedToken::OpParenthesisOpen >( token );
 
-                        if ( tokenIt->is< Identifier >() && tokenIt->get< Identifier >().name == "self" )
+                        if ( token->is< Identifier >() && token->get< Identifier >().name == "self" )
                         {
                             NodeInfo const parameterDefinition
                             {
                                 .type          = NodeType::FunctionParameterDefinition,
-                                .errorInfo     = tokenIt->errorInfo(),
+                                .errorInfo     = token->errorInfo(),
                                 .operandsCount = 1U
                             };
 
-                            operands.push( parseImpl( tokenIt ) ); // parse self parameter name
+                            operands.push( parseImpl( token ) ); // parse self parameter name
                             operators.push( parameterDefinition );
 
                             while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
                             {
-                                popOperator( operands, operators, tokenIt->errorInfo());
+                                popOperator( operands, operators, token->errorInfo());
                             }
 
                             ++nodeInfo.operandsCount;
 
-                            if ( tokenIt->is< ReservedToken >() )
+                            if ( token->is< ReservedToken >() )
                             {
-                                auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                auto const reservedToken{ token->get< ReservedToken >() };
                                 if ( reservedToken == ReservedToken::OpComma )
                                 {
-                                    ++tokenIt;
+                                    ++token;
                                 }
                                 else if ( reservedToken != ReservedToken::OpParenthesisClose )
                                 {
@@ -639,40 +634,40 @@ namespace
                             }
                         }
 
-                        if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                        if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                         {
                             while ( true )
                             {
                                 NodeInfo const parameterDefinition
                                 {
                                     .type          = NodeType::FunctionParameterDefinition,
-                                    .errorInfo     = tokenIt->errorInfo(),
+                                    .errorInfo     = token->errorInfo(),
                                     .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
                                 };
 
-                                operands.push( parseImpl( tokenIt ) ); // parse parameter name
-                                skipOneOf< ReservedToken::OpColon >( tokenIt );
-                                operands.push( parseImpl( tokenIt ) ); // parse parameter type
+                                operands.push( parseImpl( token ) ); // parse parameter name
+                                skipOneOf< ReservedToken::OpColon >( token );
+                                operands.push( parseImpl( token ) ); // parse parameter type
 
                                 operators.push( parameterDefinition );
 
                                 while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
                                 {
-                                    popOperator( operands, operators, tokenIt->errorInfo());
+                                    popOperator( operands, operators, token->errorInfo());
                                 }
 
                                 nodeInfo.operandsCount++;
 
-                                if ( tokenIt->is< ReservedToken >() )
+                                if ( token->is< ReservedToken >() )
                                 {
-                                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                    auto const reservedToken{ token->get< ReservedToken >() };
                                     if ( reservedToken == ReservedToken::OpParenthesisClose )
                                     {
                                         break;
                                     }
                                     else if ( reservedToken == ReservedToken::OpComma )
                                     {
-                                        ++tokenIt;
+                                        ++token;
                                     }
                                     else
                                     {
@@ -681,54 +676,54 @@ namespace
                                 }
                             }
                         }
-                        skipOneOf< ReservedToken::OpParenthesisClose >( tokenIt );
+                        skipOneOf< ReservedToken::OpParenthesisClose >( token );
                     }
 
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpArrow )
+                    if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpArrow )
                     {
-                        ++tokenIt;
-                        operands.push( parseImpl( tokenIt ) ); // parse type
+                        ++token;
+                        operands.push( parseImpl( token ) ); // parse type
                         nodeInfo.operandsCount++;
                     }
 
-                    skipOneOf< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
+                    skipOneOf< ReservedToken::OpColon >( token );
+                    skipNewline( token );
 
-                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
                     nodeInfo.operandsCount += std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
                 }
                 else if ( nodeInfo.type == NodeType::VariableDefinition )
                 {
-                    skipOneOf< ReservedToken::KwLet >( tokenIt );
-                    operands.push( parseOperand( tokenIt ) ); // parse variable name
-                    ++tokenIt;
+                    skipOneOf< ReservedToken::KwLet >( token );
+                    operands.push( parseOperand( token ) ); // parse variable name
+                    ++token;
 
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpColon )
+                    if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpColon )
                     {
                         // there is type declaration in this variable definition
-                        ++tokenIt;
-                        operands.push( parseOperand( tokenIt ) ); // parse type
+                        ++token;
+                        operands.push( parseOperand( token ) ); // parse type
                         nodeInfo.operandsCount++;
-                        ++tokenIt;
+                        ++token;
                     }
 
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpAssign )
+                    if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpAssign )
                     {
                         // there is initialization in this variable definition
-                        ++tokenIt;
-                        operands.push( parseImpl( tokenIt ) );
+                        ++token;
+                        operands.push( parseImpl( token ) );
                         nodeInfo.operandsCount++;
                     }
                 }
                 else if ( nodeInfo.type == NodeType::ContractDefinition )
                 {
-                    skipOneOf< ReservedToken::KwContract >( tokenIt );
-                    operands.push( parseImpl( tokenIt ) ); // parse contract name
-                    skipOneOf< ReservedToken::OpColon >( tokenIt );
-                    skipNewline( tokenIt );
+                    skipOneOf< ReservedToken::KwContract >( token );
+                    operands.push( parseImpl( token ) ); // parse contract name
+                    skipOneOf< ReservedToken::OpColon >( token );
+                    skipNewline( token );
 
-                    auto bodyOperands{ parseBody( tokenIt, currentIndentationLevel + 1U ) };
+                    auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
                     nodeInfo.operandsCount += std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
                 }
@@ -749,43 +744,43 @@ namespace
                     throw std::runtime_error( "Syntax error" );
                 }
 
-                operands.push( parseOperand( tokenIt ) );
+                operands.push( parseOperand( token ) );
                 expectingOperand = false;
 
                 if ( operands.top()->is< Identifier >() )
                 {
-                    auto oldToken{ tokenIt };
-                    ++tokenIt;
+                    auto oldToken{ token };
+                    ++token;
 
-                    if ( tokenIt->is< ReservedToken >() && tokenIt->get< ReservedToken >() == ReservedToken::OpParenthesisOpen )
+                    if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpParenthesisOpen )
                     {
                         NodeInfo nodeInfo
                         {
                             .type          = NodeType::Call,
-                            .errorInfo     = tokenIt->errorInfo(),
+                            .errorInfo     = token->errorInfo(),
                             .operandsCount = getOperandsCount( NodeType::Call )
                         };
 
-                        skipOneOf< ReservedToken::OpParenthesisOpen >( tokenIt );
+                        skipOneOf< ReservedToken::OpParenthesisOpen >( token );
 
-                        if ( tokenIt->is_not< ReservedToken >() || tokenIt->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                        if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                         {
                             while ( true )
                             {
-                                operands.push( parseImpl( tokenIt ) );
+                                operands.push( parseImpl( token ) );
 
                                 ++nodeInfo.operandsCount;
 
-                                if ( tokenIt->is< ReservedToken >() )
+                                if ( token->is< ReservedToken >() )
                                 {
-                                    auto const reservedToken{ tokenIt->get< ReservedToken >() };
+                                    auto const reservedToken{ token->get< ReservedToken >() };
                                     if ( reservedToken == ReservedToken::OpParenthesisClose )
                                     {
                                         break;
                                     }
                                     else if ( reservedToken == ReservedToken::OpComma )
                                     {
-                                        ++tokenIt;
+                                        ++token;
                                     }
                                     else
                                     {
@@ -806,12 +801,12 @@ namespace
                     }
                     else
                     {
-                        tokenIt = oldToken;
+                        token = oldToken;
                     }
                 }
             }
 
-            if ( tokenIt->is< Newline >() )
+            if ( token->is< Newline >() )
             {
                 break;
             }
@@ -824,20 +819,20 @@ namespace
 
         while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
         {
-            popOperator( operands, operators, tokenIt->errorInfo());
+            popOperator( operands, operators, token->errorInfo());
         }
 
         if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
         {
-            while ( tokenIt->is_not< Eof >() )
+            while ( token->is_not< Eof >() )
             {
-                operands.push( parseImpl( tokenIt ) );
+                operands.push( parseImpl( token ) );
                 operators.top().operandsCount++;
             }
 
             while ( !operators.empty() )
             {
-                popOperator( operands, operators, tokenIt->errorInfo());
+                popOperator( operands, operators, token->errorInfo());
             }
         }
 
@@ -845,9 +840,9 @@ namespace
     }
 } // namespace
 
-Node::Pointer parse( TokenIterator & tokenIt )
+Node::Pointer parse( TokenIterator & token )
 {
-    return parseImpl( tokenIt, 0U, false );
+    return parseImpl( token, 0U, false );
 }
 
 } // namespace A1::AST

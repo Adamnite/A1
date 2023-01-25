@@ -13,6 +13,6 @@
 namespace A1::AST
 {
 
-[[ nodiscard ]] Node::Pointer parse( TokenIterator & tokenIt );
+[[ nodiscard ]] Node::Pointer parse( TokenIterator & token );
 
 } // namespace A1::AST

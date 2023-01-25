@@ -81,8 +81,8 @@ TEST_P( ASTTestFixture, parsing )
 {
     auto const [ expression, expectedRoot ]{ GetParam() };
 
-    auto tokenIt   { A1::tokenize( A1::Stream{ expression } ) };
-    auto actualRoot{ A1::AST::parse( tokenIt ) };
+    auto token     { A1::tokenize( A1::Stream{ expression } ) };
+    auto actualRoot{ A1::AST::parse( token ) };
 
     match( actualRoot.get(), expectedRoot.get() );
 }
