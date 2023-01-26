@@ -7,6 +7,7 @@
 
 #include <CoreLib/AST/AST.hpp>
 #include <CoreLib/AST/ASTNode.hpp>
+#include <CoreLib/Errors/ParsingError.hpp>
 #include <CoreLib/Utils/Macros.hpp>
 
 #include "ASTHelper.hpp"
@@ -38,17 +39,11 @@ namespace
 
         if ( token.is< ReservedToken >() )
         {
-            if
-            (
-                auto const reservedToken{ token.get< ReservedToken >() };
-                reservedToken == ReservedToken::OpParenthesisClose ||
-                reservedToken == ReservedToken::OpSubscriptClose   ||
-                reservedToken == ReservedToken::OpColon            ||
-                reservedToken == ReservedToken::OpComma
-            )
-            {
-                return true;
-            }
+            auto const reservedToken{ token.get< ReservedToken >() };
+            return reservedToken == ReservedToken::OpParenthesisClose ||
+                   reservedToken == ReservedToken::OpSubscriptClose   ||
+                   reservedToken == ReservedToken::OpColon            ||
+                   reservedToken == ReservedToken::OpComma;
         }
 
         return false;
@@ -56,9 +51,9 @@ namespace
 
     struct NodeInfo
     {
-        NodeType     type{ NodeType::Unknown };
-        ErrorInfo    errorInfo{};
+        NodeType     type         { NodeType::Unknown };
         std::size_t  operandsCount{ 0U };
+        ErrorInfo    errorInfo    {};
     };
 
     [[ nodiscard ]] NodeInfo getNodeInfo
@@ -68,7 +63,6 @@ namespace
         bool          const isPrefix
     )
     {
-
 #define MAP_TOKEN_TO_NODE( token, nodeType )                        \
     case ReservedToken::token:                                      \
         return                                                      \
@@ -214,7 +208,7 @@ namespace
 #undef IGNORE_TOKEN
 
             default:
-                throw std::runtime_error( fmt::format( "Unknown token: {}", toStringView( token ) ) );
+                throw ParsingError{ errorInfo, fmt::format( "Invalid token: {}", toStringView( token ) ) };
         }
 
         return {};
@@ -265,7 +259,7 @@ namespace
             }
         }
 
-        throw std::runtime_error( "Syntax error - unexpected operand" );
+        throw ParsingError{ token->errorInfo(), "Unexpected operand" };
     }
 
     void popOperator
@@ -279,8 +273,11 @@ namespace
 
         if ( operands.size() < lastOperator.operandsCount )
         {
-            ( void ) errorInfo;
-            throw std::runtime_error( "Compile error" );
+            throw ParsingError
+            {
+                errorInfo,
+                fmt::format( "Expecting {} operands ({} given)", lastOperator.operandsCount, operands.size() )
+            };
         }
 
         std::vector< Node::Pointer > lastOperatorOperands;
@@ -321,17 +318,18 @@ namespace
         }
         else
         {
-            throw std::runtime_error
-            (
+            throw ParsingError
+            {
+                token->errorInfo(),
                 fmt::format
                 (
-                    "Syntax error - missing {}",
+                    "Expecting {}",
                     (
                         ( std::string{ "'"     } + std::string{ toStringView( tokenToSkip      ) } + std::string{ "'" } ) + ... +
                         ( std::string{ " or '" } + std::string{ toStringView( moreTokensToSkip ) } + std::string{ "'" } )
                     )
                 )
-            );
+            };
         }
     }
 
@@ -343,7 +341,7 @@ namespace
         }
         else
         {
-            throw std::runtime_error( "Syntax error - missing newline" );
+            throw ParsingError{ token->errorInfo(), "Expecting newline character" };
         }
     }
 
@@ -464,18 +462,14 @@ namespace
                     if
                     (
                         auto const reservedToken{ token->get< ReservedToken >() };
-                        reservedToken == ReservedToken::KwFalse   || reservedToken == ReservedToken::KwTrue ||
-                        reservedToken == ReservedToken::KwAddress || reservedToken == ReservedToken::KwBool ||
-                        reservedToken == ReservedToken::KwNum     || reservedToken == ReservedToken::KwStr  ||
-                        reservedToken == ReservedToken::KwI8      || reservedToken == ReservedToken::KwI16  ||
-                        reservedToken == ReservedToken::KwI32     || reservedToken == ReservedToken::KwI64  ||
-                        reservedToken == ReservedToken::KwU8      || reservedToken == ReservedToken::KwU16  ||
-                        reservedToken == ReservedToken::KwU32     || reservedToken == ReservedToken::KwU64
+                        reservedToken == ReservedToken::KwFalse ||
+                        reservedToken == ReservedToken::KwTrue  ||
+                        isTypeSpecifier( reservedToken )
                     )
                     {
                         if ( !expectingOperand )
                         {
-                            throw std::runtime_error( "Syntax error" );
+                            throw ParsingError{ token->errorInfo(), "Unexpected operand" };
                         }
 
                         operands.push( parseOperand( token ) );
@@ -504,7 +498,7 @@ namespace
 
                     if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpParenthesisClose )
                     {
-                        throw std::runtime_error( "Expected expression" );
+                        throw ParsingError{ token->errorInfo(), "Expecting an expression inside parentheses" };
                     }
 
                     if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
@@ -515,21 +509,13 @@ namespace
 
                             ++nodeInfo.operandsCount;
 
-                            if ( token->is< ReservedToken >() )
+                            if ( !token->is< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                             {
-                                auto const reservedToken{ token->get< ReservedToken >() };
-                                if ( reservedToken == ReservedToken::OpParenthesisClose )
-                                {
-                                    break;
-                                }
-                                else if ( reservedToken == ReservedToken::OpComma )
-                                {
-                                    ++token;
-                                }
-                                else
-                                {
-                                    throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
-                                }
+                                throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
+                            }
+                            else
+                            {
+                                break;
                             }
                         }
 
@@ -629,7 +615,7 @@ namespace
                                 }
                                 else if ( reservedToken != ReservedToken::OpParenthesisClose )
                                 {
-                                    throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                    throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                                 }
                             }
                         }
@@ -671,8 +657,12 @@ namespace
                                     }
                                     else
                                     {
-                                        throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                        throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                                     }
+                                }
+                                else
+                                {
+                                    throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                                 }
                             }
                         }
@@ -741,7 +731,7 @@ namespace
             {
                 if ( !expectingOperand )
                 {
-                    throw std::runtime_error( "Syntax error" );
+                    throw ParsingError{ token->errorInfo(), "Unexpected operand" };
                 }
 
                 operands.push( parseOperand( token ) );
@@ -784,8 +774,12 @@ namespace
                                     }
                                     else
                                     {
-                                        throw std::runtime_error( "Syntax error - expecting ',' or ')'" );
+                                        throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                                     }
+                                }
+                                else
+                                {
+                                    throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                                 }
                             }
                         }
@@ -814,7 +808,7 @@ namespace
 
         if ( expectingOperand && operands.empty() )
         {
-            throw std::runtime_error( "Syntax error - expecting an operand" );
+            throw ParsingError{ token->errorInfo(), "Expecting an operand" };
         }
 
         while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )

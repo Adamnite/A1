@@ -39,13 +39,13 @@ namespace
 
     struct StringifiedToken
     {
-        std::string_view tokenStr;
+        std::string_view str;
         ReservedToken    token{ ReservedToken::Unknown };
 
         [[ nodiscard ]]
         constexpr bool operator<( StringifiedToken const & rhs ) const
         {
-            return tokenStr < rhs.tokenStr;
+            return str < rhs.str;
         }
     };
 
@@ -175,20 +175,29 @@ namespace
         [[ nodiscard ]]
         bool operator()( StringifiedToken const lhs, char const rhs ) const noexcept
         {
-            return lhs.tokenStr.size() <= idx_ || lhs.tokenStr[ idx_ ] < rhs;
+            return lhs.str.size() <= idx_ || lhs.str[ idx_ ] < rhs;
         }
 
         [[ nodiscard ]]
         bool operator()( char const lhs, StringifiedToken const rhs ) const noexcept
         {
-            return rhs.tokenStr.size() > idx_ && rhs.tokenStr[ idx_ ] > lhs;
+            return rhs.str.size() > idx_ && rhs.str[ idx_ ] > lhs;
         }
 
     private:
         std::size_t idx_{ 0U };
     };
-
 } // namespace
+
+bool isTypeSpecifier( ReservedToken const token ) noexcept
+{
+    return token == ReservedToken::KwAddress || token == ReservedToken::KwBool ||
+           token == ReservedToken::KwNum     || token == ReservedToken::KwStr  ||
+           token == ReservedToken::KwI8      || token == ReservedToken::KwU8   ||
+           token == ReservedToken::KwI16     || token == ReservedToken::KwU16  ||
+           token == ReservedToken::KwI32     || token == ReservedToken::KwU32  ||
+           token == ReservedToken::KwI64     || token == ReservedToken::KwU64;
+}
 
 std::string_view toStringView( ReservedToken const token ) noexcept
 {
@@ -203,7 +212,7 @@ std::string_view toStringView( ReservedToken const token ) noexcept
             }
         )
     };
-    return it == std::end( allTokens ) ? "" : it->tokenStr;
+    return it == std::end( allTokens ) ? "" : it->str;
 }
 
 ReservedToken getKeyword( std::string_view const word ) noexcept
@@ -215,7 +224,7 @@ ReservedToken getKeyword( std::string_view const word ) noexcept
             std::begin( keywords ), std::end( keywords ),
             [ word ]( auto const & t ) noexcept
             {
-                return t.tokenStr == word;
+                return t.str == word;
             }
         )
     };
@@ -252,7 +261,7 @@ ReservedToken getOperator( Stream & stream ) noexcept
             MaximalMunchComp{ idx }
         );
 
-        if ( candidates.first != candidates.second && candidates.first->tokenStr.size() == idx + 1 )
+        if ( candidates.first != candidates.second && candidates.first->str.size() == idx + 1 )
         {
             matchSize = idx + 1;
             result = candidates.first->token;

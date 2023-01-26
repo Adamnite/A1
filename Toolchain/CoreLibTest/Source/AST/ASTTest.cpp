@@ -6,6 +6,7 @@
  */
 
 #include <CoreLib/AST/AST.hpp>
+#include <CoreLib/Errors/ParsingError.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
 #include <gtest/gtest.h>
@@ -2014,6 +2015,88 @@ INSTANTIATE_TEST_SUITE_P
                     )
                 )
             )
+        }
+    )
+);
+
+namespace
+{
+    struct ErrorTestParameter
+    {
+        std::string_view expression;
+        std::string_view expectedErrorMessage;
+
+        friend std::ostream & operator<<( std::ostream & os, ErrorTestParameter const & param )
+        {
+            return os << param.expression;
+        }
+    };
+
+    struct ASTErrorTestFixture : ::testing::TestWithParam< ErrorTestParameter > {};
+} // namespace
+
+TEST_P( ASTErrorTestFixture, parsingError )
+{
+    auto const [ expression, expectedErrorMessage ]{ GetParam() };
+
+    EXPECT_THROW
+    (
+        {
+            try
+            {
+                auto token{ A1::tokenize( A1::Stream{ expression } ) };
+                [[ maybe_unused ]] auto root { A1::AST::parse( token ) };
+            }
+            catch ( A1::ParsingError const & ex )
+            {
+                EXPECT_STREQ( expectedErrorMessage.data(), ex.what() );
+                throw;
+            }
+        },
+        A1::ParsingError
+    );
+}
+
+INSTANTIATE_TEST_SUITE_P
+(
+    ASTErrorTest,
+    ASTErrorTestFixture,
+    ::testing::Values
+    (
+        ErrorTestParameter
+        {
+            .expression           = "var = 5 * (5 + 5",
+            .expectedErrorMessage = "1:17: error: Expecting closing parenthesis"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "var = 5 * (5 + )",
+            .expectedErrorMessage = "1:17: error: Expecting 2 operands (1 given)"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "var = ()",
+            .expectedErrorMessage = "1:9: error: Expecting an expression inside parentheses"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "def func(param1: num",
+            .expectedErrorMessage = "1:21: error: Expecting closing parenthesis"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "func(var1, var2",
+            .expectedErrorMessage = "1:16: error: Expecting closing parenthesis"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "var = 5 * 5 5",
+            .expectedErrorMessage = "1:14: error: Unexpected operand"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "if var == 5",
+            .expectedErrorMessage = "1:12: error: Expecting ':'"
         }
     )
 );

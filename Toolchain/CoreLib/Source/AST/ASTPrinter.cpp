@@ -95,13 +95,21 @@ namespace
 
 void print( Node::Pointer const & node, std::FILE * stream, std::size_t const indentationLevel )
 {
+    static auto printIndentation
+    {
+        []( std::FILE * stream, std::size_t const level )
+        {
+            fmt::print( stream, "{:{}}", "", level );
+        }
+    };
+
     std::visit
     (
         Overload
         {
             [ =, &node ]( AST::NodeType const type )
             {
-                fmt::print( stream, "{:{}}", "", indentationLevel );
+                printIndentation( stream, indentationLevel );
                 fmt::print( stream, "{}\n", toString( type ) );
                 for ( auto const & n : node->children() )
                 {
@@ -110,34 +118,34 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
             },
             [ = ]( Identifier const & identifier )
             {
-                fmt::print( stream, "{:{}}", "", indentationLevel );
+                printIndentation( stream, indentationLevel );
                 fmt::print( stream, "Identifier = '{}'\n", identifier.name );
             },
             [ = ]( Number const number )
             {
-                fmt::print( stream, "{:{}}", "", indentationLevel );
+                printIndentation( stream, indentationLevel );
                 fmt::print( stream, "Number = '{}'\n", number );
             },
             [ = ]( String const & str )
             {
-                fmt::print( stream, "{:{}}", "", indentationLevel );
+                printIndentation( stream, indentationLevel );
                 fmt::print( stream, "String = '{}'\n", str );
             },
             [ = ]( TypeID const typeID )
             {
                 if ( typeID == Registry::getNumHandle() )
                 {
-                    fmt::print( stream, "{:{}}", "", indentationLevel );
+                    printIndentation( stream, indentationLevel );
                     fmt::print( stream, "TypeID = num\n" );
                 }
                 else if ( typeID == Registry::getStrHandle() )
                 {
-                    fmt::print( stream, "{:{}}", "", indentationLevel );
+                    printIndentation( stream, indentationLevel );
                     fmt::print( stream, "TypeID = str\n" );
                 }
                 else
                 {
-                    fmt::print( stream, "{:{}}", "", indentationLevel );
+                    printIndentation( stream, indentationLevel );
                     fmt::print( stream, "TypeID = null\n" );
                 }
             }

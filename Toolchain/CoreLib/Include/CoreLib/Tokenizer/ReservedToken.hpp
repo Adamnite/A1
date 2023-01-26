@@ -130,9 +130,11 @@ enum class ReservedToken : std::uint8_t
     Count
 };
 
+[[ nodiscard ]] bool isTypeSpecifier( ReservedToken const token ) noexcept;
+
 [[ nodiscard ]] std::string_view toStringView( ReservedToken const token ) noexcept;
 
-[[ nodiscard ]] ReservedToken getKeyword ( std::string_view const   word   ) noexcept;
-[[ nodiscard ]] ReservedToken getOperator( Stream                 & stream ) noexcept;
+[[ nodiscard ]] ReservedToken getKeyword ( std::string_view const word ) noexcept;
+[[ nodiscard ]] ReservedToken getOperator( Stream & stream ) noexcept;
 
 } // namespace A1
