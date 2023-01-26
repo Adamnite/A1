@@ -90,7 +90,25 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
                         ASSERT( std::size( node->children() ) == 1U );
                         return codegen( ctx, node->children()[ 0U ] );
                     }
+                    case AST::NodeType::Index:
+                    {
+                        auto const & nodes{ node->children() };
+                        ASSERT( std::size( nodes ) == 2U );
+                        ASSERTM( nodes[ 0U ]->is< Identifier >(), "Identifier is the first child node in the subscript operator expression" );
 
+                        auto const & internalBuiltInFunctions{ ctx.symbols.internalBuiltInFunctions() };
+
+                        auto const & name{ nodes[ 0U ]->get< Identifier >().name };
+                        if ( auto it{ internalBuiltInFunctions.find( name ) }; it != std::end( internalBuiltInFunctions ) )
+                        {
+                            return ctx.builder->CreateCall( internalBuiltInFunctions.at( name ), { codegen( ctx, nodes[ 1U ] ) } );
+                        }
+
+                        /**
+                         * TODO: Implement subscript operator for user-defined maps.
+                         */
+                        return nullptr;
+                    }
                     case AST::NodeType::StatementIf:
                     case AST::NodeType::StatementElif:
                     {
