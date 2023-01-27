@@ -28,7 +28,7 @@ With its light syntax, A1 primarily strives for simplicity and ease of use while
 
 Learn more about the A1 programming language:
 
-- [Documentation](Docs/Documentation.md)
+- [Documentation](Docs/README.md)
 - [Types](Docs/Types.md)
 - [Declarations](Docs/Declarations.md)
 
