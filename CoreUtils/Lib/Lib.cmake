@@ -9,3 +9,9 @@ target_include_directories(
     PUBLIC  ${CMAKE_CURRENT_LIST_DIR}/Include
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source
 )
+
+include( ${CMAKE_CURRENT_LIST_DIR}/../../CMake/Common.cmake )
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    enable_sanitizers( CoreUtils )
+endif()

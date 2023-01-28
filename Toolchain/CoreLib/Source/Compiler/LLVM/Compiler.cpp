@@ -133,6 +133,10 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
 
         passBuilder.crossRegisterProxies( loopAnalysisManager, functionAnalysisManager, cGSCCAnalysisManager, moduleAnalysisManager );
 
+        /**
+         * @note: Crash happens in llvm::AnalysisManager, LLVM 14.0.6.
+         * Uncomment once we update LLVM to newer version.
+         */
         // auto modulePassManager{ passBuilder.buildPerModuleDefaultPipeline( llvm::OptimizationLevel::O3 ) };
         // modulePassManager.run( *context.module_, moduleAnalysisManager );
 #endif // TESTS_ENABLED

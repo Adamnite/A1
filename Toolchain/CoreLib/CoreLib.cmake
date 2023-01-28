@@ -18,6 +18,12 @@ include( ${CMAKE_CURRENT_LIST_DIR}/CoreLib.srcs.cmake )
 
 add_library( CoreLib STATIC ${SOURCES} )
 
+include( ${CMAKE_CURRENT_LIST_DIR}/../../CMake/Common.cmake )
+
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    enable_sanitizers( CoreLib )
+endif()
+
 target_include_directories(
     CoreLib
     PUBLIC  ${CMAKE_CURRENT_LIST_DIR}/Include
