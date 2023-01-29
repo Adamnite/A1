@@ -46,7 +46,7 @@ struct Context final
     Symbols symbols;
 
     /** Stores all the external module names that are imported within the current module. */
-    std::vector< std::string > importedModules;
+    std::vector< std::string > importedModules{};
 };
 
 } // namespace A1::LLVM

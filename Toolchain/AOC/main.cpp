@@ -55,7 +55,7 @@ int main( int argc, char * argv[] )
                 filePath && A1::load( std::move( settings ), *filePath )
             )
             {
-                std::printf( "Compilation successful!" );
+                std::printf( "Compilation successful!\n" );
             }
         }
     }

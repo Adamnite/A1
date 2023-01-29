@@ -25,24 +25,24 @@ struct Argument
      * A short version of an optional argument in the CLI application.
      * NOTE: Short optional argument must be prefixed with a single dash, e.g. '-o'.
      */
-    std::string_view short_;
+    std::string_view short_{};
 
     /**
      * A long version of an argument in the CLI application.
      * NOTE: If long version of an argument is prefixed with double dashes, e.g. '--option',
      *       argument is considered to be optional. Otherwise, argument is positional.
      */
-    std::string_view long_;
+    std::string_view long_{};
 
     /**
      * A meta name of an argument in the CLI application, used only in the CLI help text.
      */
-    std::string_view metaName;
+    std::string_view metaName{};
 
     /**
      * A description of an argument in the CLI application, used only in the CLI help text.
      */
-    std::string_view description;
+    std::string_view description{};
 
     /**
      * If set to true, optional argument is considered to be a flag.

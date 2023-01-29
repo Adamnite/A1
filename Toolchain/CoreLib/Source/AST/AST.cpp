@@ -63,13 +63,13 @@ namespace
         bool          const isPrefix
     )
     {
-#define MAP_TOKEN_TO_NODE( token, nodeType )                        \
-    case ReservedToken::token:                                      \
-        return                                                      \
-        {                                                           \
-            .type          = NodeType::nodeType,                    \
-            .errorInfo     = std::move( errorInfo ),                \
-            .operandsCount = getOperandsCount( NodeType::nodeType ) \
+#define MAP_TOKEN_TO_NODE( token, nodeType )                         \
+    case ReservedToken::token:                                       \
+        return                                                       \
+        {                                                            \
+            .type          = NodeType::nodeType,                     \
+            .operandsCount = getOperandsCount( NodeType::nodeType ), \
+            .errorInfo     = std::move( errorInfo )                  \
         }
 
         switch ( token )
@@ -96,16 +96,16 @@ namespace
                     return
                     {
                         .type          = NodeType::UnaryPlus,
-                        .errorInfo     = std::move( errorInfo ),
-                        .operandsCount = getOperandsCount( NodeType::UnaryPlus )
+                        .operandsCount = getOperandsCount( NodeType::UnaryPlus ),
+                        .errorInfo     = std::move( errorInfo )
                     };
                 }
 
                 return
                 {
                     .type          = NodeType::Addition,
-                    .errorInfo     = std::move( errorInfo ),
-                    .operandsCount = getOperandsCount( NodeType::Addition )
+                    .operandsCount = getOperandsCount( NodeType::Addition ),
+                    .errorInfo     = std::move( errorInfo )
                 };
             case ReservedToken::OpSub:
                 if ( isPrefix )
@@ -113,16 +113,16 @@ namespace
                     return
                     {
                         .type          = NodeType::UnaryMinus,
-                        .errorInfo     = std::move( errorInfo ),
-                        .operandsCount = getOperandsCount( NodeType::UnaryMinus )
+                        .operandsCount = getOperandsCount( NodeType::UnaryMinus ),
+                        .errorInfo     = std::move( errorInfo )
                     };
                 }
 
                 return
                 {
                     .type          = NodeType::Subtraction,
-                    .errorInfo     = std::move( errorInfo ),
-                    .operandsCount = getOperandsCount( NodeType::Subtraction )
+                    .operandsCount = getOperandsCount( NodeType::Subtraction ),
+                    .errorInfo     = std::move( errorInfo )
                 };
 
             // Bitwise operators
@@ -592,8 +592,8 @@ namespace
                             NodeInfo const parameterDefinition
                             {
                                 .type          = NodeType::FunctionParameterDefinition,
-                                .errorInfo     = token->errorInfo(),
-                                .operandsCount = 1U
+                                .operandsCount = 1U,
+                                .errorInfo     = token->errorInfo()
                             };
 
                             operands.push( parseImpl( token ) ); // parse self parameter name
@@ -627,8 +627,8 @@ namespace
                                 NodeInfo const parameterDefinition
                                 {
                                     .type          = NodeType::FunctionParameterDefinition,
-                                    .errorInfo     = token->errorInfo(),
-                                    .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition )
+                                    .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition ),
+                                    .errorInfo     = token->errorInfo()
                                 };
 
                                 operands.push( parseImpl( token ) ); // parse parameter name
@@ -747,8 +747,8 @@ namespace
                         NodeInfo nodeInfo
                         {
                             .type          = NodeType::Call,
-                            .errorInfo     = token->errorInfo(),
-                            .operandsCount = getOperandsCount( NodeType::Call )
+                            .operandsCount = getOperandsCount( NodeType::Call ),
+                            .errorInfo     = token->errorInfo()
                         };
 
                         skipOneOf< ReservedToken::OpParenthesisOpen >( token );
