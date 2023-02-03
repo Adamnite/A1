@@ -8,7 +8,7 @@ contract NewToken:
     let token_decimals: num = 3
 
     def __init__(self):
-        balances[caller_address()] = self.token_supply
+        balances[caller_address()] = 100000000
 
     def mint(self, dst: address, amount: num):
         balances[dst] += amount
