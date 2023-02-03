@@ -54,7 +54,28 @@ namespace
 
         builder.SetInsertPoint( block );
 
-        builder.CreateRet( builder.CreateCall( intrinsic, llvm::None, "" ) );
+        std::array< llvm::Value *, sizeof...( parameterTypes ) > arguments;
+        for ( std::size_t i{ 0U }; i < std::size( arguments ); ++i )
+        {
+            arguments[ i ] = wrapper->getArg( i );
+        }
+
+        auto * returnValue
+        {
+            sizeof...( parameterTypes ) == 0
+                ? builder.CreateCall( intrinsic, llvm::None )
+                : builder.CreateCall( intrinsic, arguments )
+        };
+
+        if ( returnValue->getType() == returnType )
+        {
+            builder.CreateRet( returnValue );
+        }
+        else
+        {
+            builder.CreateRet( llvm::CastInst::Create( llvm::Instruction::BitCast, returnValue, returnType, "", block ) );
+        }
+
         return wrapper;
     }
 
