@@ -1,7 +1,7 @@
 ## Documentation
 
-- [Types](Docs/Types.md)
-- [Declarations](Docs/Declarations.md)
+- [Types](Types.md)
+- [Declarations](Declarations.md)
 
 
 # I. Introduction
@@ -21,4 +21,22 @@ You can read more about A1's technical specifications in the Programming Languag
 
 # II. Getting Started
 
-- Installation and setup all A1 source files utilize the `.ao` extension.
+### Installation and Setup
+
+1. Download package from [here](https://github.com/Adamnite/A1/releases/tag/v0.1.0-beta)
+    - using Docker is probably the most convenient way of installing and using A1 compiler
+2. Installation
+    - if you have downloaded one of the *docker* packages, follow below steps:
+        - `$ docker load < package-docker.tar.gz`
+        - `$ docker images` - find loaded image
+        - `$ docker run -it package-docker bash` - enter Docker container
+        - `$ aoc --version` - try out A1 compiler
+    - if you have downloaded one of the *non-docker* packages, extract files and move them to `/usr/bin` directory
+
+### Compilation
+
+A1 source files utilize `.ao` extension.
+
+1. Write down your first smart contract using A1 programming language or simply use one of the examples from [here](../Examples/)
+2. Compile it by executing the following command `$ aoc -o my-contract my-first-contract.ao`
+3. Follow the steps specified in [goAdamnite](https://github.com/Adamnite/goAdamnite) to learn on how to easily upload your compiled contract to the blockchain
