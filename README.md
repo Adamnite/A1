@@ -26,7 +26,7 @@ With its light syntax, A1 primarily strives for simplicity and ease of use while
 
 ## Getting started
 
-Learn more about the A1 programming language:
+Learn more about the A1 programming language, to get started with A1 please read the documentation:
 
 - [Documentation](Docs/README.md)
 - [Types](Docs/Types.md)
