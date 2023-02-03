@@ -1,7 +1,7 @@
 ## Documentation
 
-- [Types](Docs/Types.md)
-- [Declarations](Docs/Declarations.md)
+- [Types](Types.md)
+- [Declarations](Declarations.md)
 
 
 # I. Introduction
@@ -20,16 +20,23 @@ A1 provides an easy-to-use script that is inherently readable, supports the use 
 You can read more about A1's technical specifications in the Programming Language and Execution section of Adamnite's [Technical Paper](https://adamnite.org/Adamnite_Technical_Paper.pdf).
 
 # II. Getting Started
-<br>
-- <strong> Installation and setup </strong> 
-All A1 source files utilize the `.ao` extension.
-<br> <br>
-- <strong> Compiling A1 code </strong>
-<br>
-```cd``` into the CLI folder and compile the A1 code to a file by running the debug command ```./cli debug --from-file examples/sum.ao 
-9703bdb17a160ed80486a83aa3c413c1 ===> i64 (i64, i64)``` replacing the examples/sum.ao with whichever .ao or A1 code file you would like to compile.
-<br>
-This should then return the hash of the code, parameters, and types as well. Using the returned hash run the execute command in the CLI like so:
-```cli % ./cli execute --from-file examples/sum.a1 --call-args 0x123,1 --gas 1000000 --function 9703bdb17a160ed80486a83aa3c413c1```
-<br>
-Lastly, to build - ```cd``` into the ```core/VM/cli folder``` and run ```go build```
+
+### Installation and Setup
+
+1. Download package from [here](https://github.com/Adamnite/A1/releases/tag/v0.1.0-beta)
+    - using Docker is probably the most convenient way of installing and using A1 compiler
+2. Installation
+    - if you have downloaded one of the *docker* packages, follow below steps:
+        - `$ docker load < package-docker.tar.gz`
+        - `$ docker images` - find loaded image
+        - `$ docker run -it package-docker bash` - enter Docker container
+        - `$ aoc --version` - try out A1 compiler
+    - if you have downloaded one of the *non-docker* packages, extract files and move them to `/usr/bin` directory
+
+### Compilation
+
+A1 source files utilize `.ao` extension.
+
+1. Write down your first smart contract using A1 programming language or simply use one of the examples from [here](../Examples/)
+2. Compile it by executing the following command `$ aoc -o my-contract my-first-contract.ao`
+3. Follow the steps specified in [goAdamnite](https://github.com/Adamnite/goAdamnite) to learn on how to easily upload your compiled contract to the blockchain
