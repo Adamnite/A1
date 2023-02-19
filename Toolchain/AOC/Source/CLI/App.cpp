@@ -71,7 +71,7 @@ void App::parse( int const argc, char * argv[] )
         {
             if ( setPositionalArgumentsCount < std::size( positionalArguments_ ) )
             {
-                setArguments_[ positionalArguments_[ setPositionalArgumentsCount ].long_ ] = argv[ i++ ];
+                setArguments_[ positionalArguments_[ setPositionalArgumentsCount ].long_ ] = argv[ i ];
                 setPositionalArgumentsCount++;
             }
             else
