@@ -36,30 +36,24 @@ if( ENABLE_TESTS )
     target_compile_definitions( CoreLib PRIVATE TESTS_ENABLED=1 )
 else()
     target_compile_definitions( CoreLib PRIVATE
-        WASM_SYSROOT_PATH=\"${WASM_SYSROOT_PATH}\"
+        WASM_WASI_LIB_PATH=\"${WASM_SYSROOT_PATH}/lib/wasm32-wasi\"
+        WASM_WASI_RUNTIME_PATH=\"${WASM_SYSROOT_PATH}/lib/wasm32-wasi/crt1-command.o\"
         WASM_RUNTIME_LIBRARY_PATH=\"${WASM_RUNTIME_LIBRARY_PATH}\"
         WASM_UTILS_LIBRARY_PATH=\"${WASM_UTILS_LIBRARY_PATH}\"
     )
 endif()
 
 if( ENABLE_LLVM )
-    find_package( LLVM  REQUIRED CONFIG )
-    find_package( Clang REQUIRED CONFIG )
-
+    find_package( LLVM REQUIRED CONFIG )
     message( STATUS "LLVM version: ${LLVM_PACKAGE_VERSION}" )
 
     target_include_directories( CoreLib AFTER PRIVATE ${LLVM_INCLUDE_DIRS} )
     add_definitions( ${LLVM_DEFINITIONS} )
 
-    target_link_libraries( CoreLib PRIVATE
-        ${LLVM_AVAILABLE_LIBS}
-        clangTooling
-    )
+    target_link_libraries( CoreLib PRIVATE ${LLVM_AVAILABLE_LIBS} )
+    target_compile_definitions( CoreLib PRIVATE LLVM_ENABLED=1 )
 
-    # In order to compile .ao source files programmatically,
-    # we need to use the Clang compiler coming with the LLVM package.
-    target_compile_definitions( CoreLib PRIVATE
-        CLANG_PATH=\"${LLVM_INSTALL_PREFIX}/bin/clang\"
-        LLVM_ENABLED=1
-    )
+    if( APPLE AND ENABLE_TESTS )
+        target_compile_definitions( CoreLib PRIVATE SYSROOT_PATH=\"${CMAKE_OSX_SYSROOT}\" )
+    endif()
 endif()

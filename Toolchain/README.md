@@ -32,12 +32,12 @@ Follow below instructions to install [Adamnite's LLVM fork](https://github.com/A
 
 ```sh
 $ cd llvm-project/llvm && mkdir -p build && cd build
-$ cmake -DLLVM_USE_LINKER=lld \
-        -DLLVM_ENABLE_PROJECTS="clang;lld" \
-        -DLLVM_ENABLE_TERMINFO=OFF \
-        -DLLVM_ENABLE_ZSTD=OFF \
-        -DLLVM_ENABLE_LIBEDIT=OFF \
-        -DCMAKE_BUILD_TYPE=Debug \
+$ cmake -DLLVM_USE_LINKER=lld        \
+        -DLLVM_ENABLE_PROJECTS="lld" \
+        -DLLVM_ENABLE_TERMINFO=OFF   \
+        -DLLVM_ENABLE_ZSTD=OFF       \
+        -DLLVM_ENABLE_LIBEDIT=OFF    \
+        -DCMAKE_BUILD_TYPE=Release   \
         -GNinja ..
 $ ninja
 $ cmake -DCMAKE_INSTALL_PREFIX=/tmp/llvm -P cmake_install.cmake
@@ -49,12 +49,11 @@ Run the following commands in order to build the `aoc` compiler:
 
 ```sh
 $ cd Toolchain && mkdir -p build && cd build
-$ cmake \
-    -DLLVM_DIR=/tmp/llvm/lib/cmake/llvm \
-    -DClang_DIR=/tmp/llvm/lib/cmake/clang \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_TESTS=OFF \
-    -DWASM_SYSROOT_PATH=$WASI_SDK_PATH/share/wasi-sysroot \
+$ cmake                                                                                                \
+    -DLLVM_DIR=/tmp/llvm/lib/cmake/llvm                                                                \
+    -DCMAKE_BUILD_TYPE=Release                                                                         \
+    -DENABLE_TESTS=OFF                                                                                 \
+    -DWASM_SYSROOT_PATH=$WASI_SDK_PATH/share/wasi-sysroot                                              \
     -DWASM_RUNTIME_LIBRARY_PATH=$WASI_SDK_PATH/lib/clang/14.0.3/lib/wasi/libclang_rt.builtins-wasm32.a \
     -GNinja ..
 $ ninja

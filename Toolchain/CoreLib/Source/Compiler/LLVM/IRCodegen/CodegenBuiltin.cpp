@@ -144,7 +144,7 @@ Symbols::Table< llvm::FunctionCallee > externalBuiltinFunctions( llvm::LLVMConte
                 "printf",
                 llvm::FunctionType::get
                 (
-                    llvm::IntegerType::getInt64Ty( ctx ),
+                    llvm::IntegerType::getInt32Ty( ctx ),
                     llvm::PointerType::get( llvm::Type::getInt8Ty( ctx ), 0 ),
                     true
                 )
