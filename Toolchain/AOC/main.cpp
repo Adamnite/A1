@@ -44,7 +44,7 @@ int main( int argc, char * argv[] )
         {
             A1::Compiler::Settings settings
             {
-                .executableFilename = app.get< std::string >( "--output"  ).value_or( "main" ),
+                .executableFilename = app.get< std::string >( "--output"  ).value_or( "out" ),
                 .outputAST          = app.get< bool        >( "--ast"     ),
                 .outputIR           = app.get< bool        >( "--llvm-ir" )
             };
