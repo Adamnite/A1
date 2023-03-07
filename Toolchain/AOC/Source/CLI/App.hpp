@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 namespace A1::CLI
 {
