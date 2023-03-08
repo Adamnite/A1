@@ -73,7 +73,8 @@ namespace
         }
         else
         {
-            builder.CreateRet( llvm::CastInst::Create( llvm::Instruction::BitCast, returnValue, returnType, "", block ) );
+            auto const castType{ returnType->isPointerTy() ? llvm::Instruction::IntToPtr : llvm::Instruction::BitCast };
+            builder.CreateRet( llvm::CastInst::Create( castType, returnValue, returnType, "", block ) );
         }
 
         return wrapper;
@@ -85,7 +86,7 @@ namespace
     {
         return codegenIntrinsicWrapper
         (
-            "llvm.wasm.advm.contract.addr",
+            "llvm.wasm.advm.contract.address",
             "contract_address",
             ctx, module_, builder,
             llvm::Type::getInt8PtrTy( ctx )
@@ -98,7 +99,7 @@ namespace
     {
         return codegenIntrinsicWrapper
         (
-            "llvm.wasm.advm.caller.addr",
+            "llvm.wasm.advm.caller.address",
             "caller_address",
             ctx, module_, builder,
             llvm::Type::getInt8PtrTy( ctx )
@@ -191,7 +192,10 @@ Symbols::Table< llvm::Function * > internalBuiltinFunctions
         { "contract_address", codegenContractAddress( ctx, module_, builder ) },
         { "caller_address"  , codegenCallerAddress  ( ctx, module_, builder ) },
         { "block_timestamp" , codegenBlockTimestamp ( ctx, module_, builder ) },
-        { "balances"        , codegenBalances       ( ctx, module_, builder ) }
+        /**
+         * TODO: Fix error: 'Cannot select: intrinsic %llvm.wasm.advm.balances'
+         */
+        // { "balances"        , codegenBalances       ( ctx, module_, builder ) }
 #endif // TESTS_ENABLED
     };
 }

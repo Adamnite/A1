@@ -14,6 +14,7 @@ WORKDIR /tmp
 
 # Install LLVM
 RUN git clone -b v14.0.6-advm-patch https://github.com/Adamnite/llvm-project \
+    && git checkout 831e79a77793ce8686f97c157b2a55667fa5e4f4                 \
     && mkdir /tmp/llvm-project/llvm/build                                    \
     && cd /tmp/llvm-project/llvm/build                                       \
     && cmake                                                                 \
