@@ -82,7 +82,7 @@ Context codegen
     {
         llvm::FunctionType::get
         (
-            llvm::Type::getInt64Ty( *ctx.internalCtx ),
+            llvm::Type::getInt32Ty( *ctx.internalCtx ),
             std::array< llvm::Type *, 0U >{},
             false
         )
@@ -128,7 +128,7 @@ Context codegen
         ctx.builder->SetInsertPoint( mainBlock );
     }
 
-    ctx.builder->CreateRet( llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ) );
+    ctx.builder->CreateRet( llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( 32U, 0U, false /* isSigned */ ) ) );
 
 #ifndef TESTS_ENABLED
     /**

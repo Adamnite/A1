@@ -27,15 +27,12 @@
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Host.h>
+#include <llvm/Support/Program.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/VirtualFileSystem.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
-
-#include <clang/Driver/Driver.h>
-#include <clang/Driver/Compilation.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #if defined(__clang__)
 #   pragma clang diagnostic pop
@@ -44,7 +41,6 @@
 #endif
 
 #include <unordered_map>
-#include <span>
 
 namespace A1::LLVM
 {
@@ -152,66 +148,85 @@ bool compile( Compiler::Settings settings, AST::Node::Pointer const & node )
     }
 
     /**
-     * Save generated LLVM IR to a file.
+     * Compile to object code.
      */
-    static constexpr auto IROutputFilename{ "tmp.ll" };
+    static constexpr auto objectCodeFilename{ "out.o" };
     {
         std::error_code errorCode;
-        llvm::raw_fd_ostream os{ IROutputFilename, errorCode, llvm::sys::fs::OF_None };
-        os << *context.module_;
-        os.flush();
+        llvm::raw_fd_ostream dst{ objectCodeFilename, errorCode, llvm::sys::fs::OF_None };
+
+        if ( errorCode )
+        {
+            llvm::errs() << "Could not open a file: " << errorCode.message();
+            return false;
+        }
+
+        llvm::legacy::PassManager passManager;
+        targetMachine->addPassesToEmitFile( passManager, dst, nullptr, llvm::CGFT_ObjectFile );
+        passManager.run( *context.module_ );
+        dst.flush();
     }
 
+#ifdef TESTS_ENABLED
+#   if __APPLE__
+    static constexpr auto linker{ "ld" };
+#   elif __linux__
     /**
-     * Compile LLVM IR file to an executable.
+     * Use gcc instead of ld on Linux as there seem to exist some issues when executing ld standalone.
      */
-
-    llvm::IntrusiveRefCntPtr< clang::DiagnosticOptions > diagnosticOptions{ new clang::DiagnosticOptions() };
-    clang::TextDiagnosticPrinter * diagnosticClient{ new clang::TextDiagnosticPrinter( llvm::errs(), &*diagnosticOptions ) };
-
-    llvm::IntrusiveRefCntPtr< clang::DiagnosticIDs > diagnosticIDs{ new clang::DiagnosticIDs() };
-    clang::DiagnosticsEngine diagnosticsEngine{ diagnosticIDs, &*diagnosticOptions, diagnosticClient };
-
-    clang::driver::Driver driver{ CLANG_PATH, targetTriple, diagnosticsEngine };
-
-    std::vector< char const * > arguments
-    {
-        "-flto",
-        "-Os",
-        "-g", IROutputFilename,
-        "-o", settings.executableFilename.data(),
-#ifndef TESTS_ENABLED
-        "-nostdlib",
-        "-Wl,--no-entry",
-        "-Wl,--allow-undefined",
-        "-Wl,--export-dynamic",
-        "-target"  , targetTriple,
-        "--sysroot", WASM_SYSROOT_PATH,
-        "-L"       , WASM_RUNTIME_LIBRARY_PATH
+    static constexpr auto linker{ "gcc" };
+#   endif
+#else
+    static constexpr auto linker{ "wasm-ld" };
 #endif // TESTS_ENABLED
-    };
 
-    for ( auto const & module : context.importedModules )
+    if ( llvm::ErrorOr< std::string > path{ llvm::sys::findProgramByName( linker ) } )
     {
-        arguments.push_back( externalModulePaths[ module ] );
+        ASSERT( llvm::sys::fs::can_execute( *path ) );
+
+        std::vector< llvm::StringRef > arguments
+        {
+            *path,
+#ifdef TESTS_ENABLED
+#   if __APPLE__
+            "-L/usr/lib", "-lSystem", "-syslibroot", SYSROOT_PATH,
+#   endif
+#else
+            /**
+             * Set following flags in case you want to run the WASM executable:
+             *     --entry main --allow-undefined -lc \
+             *     -L WASM_WASI_LIB_PATH              \
+             *     -L WASM_RUNTIME_LIBRARY_PATH       \
+             *     WASM_WASI_RUNTIME_PATH
+             */
+            "--no-entry", "--allow-undefined", "-lc",
+            "-L", WASM_WASI_LIB_PATH,
+            "-L", WASM_RUNTIME_LIBRARY_PATH,
+#endif // TESTS_ENABLED
+            "-o", settings.executableFilename, objectCodeFilename
+        };
+
+#ifndef TESTS_ENABLED
+        for ( auto const & module : context.importedModules )
+        {
+            arguments.push_back( externalModulePaths[ module ] );
+        }
+#endif // TESTS_ENABLED
+
+        auto const result{ llvm::sys::ExecuteAndWait( *path, arguments ) };
+        if ( result < 0 )
+        {
+            std::printf( "%s linker failed!", linker );
+            return false;
+        }
     }
-
-    std::unique_ptr< clang::driver::Compilation > compilation{ driver.BuildCompilation( arguments ) };
-
-    if ( compilation == nullptr || compilation->containsError() )
+    else
     {
-        std::remove( IROutputFilename );
+        std::printf( "%s linker not found in PATH!", linker );
         return false;
     }
 
-    clang::SmallVector< std::pair< int, clang::driver::Command const * >, 4U > failingCommands;
-    if ( driver.ExecuteCompilation( *compilation, failingCommands ) )
-    {
-        std::remove( IROutputFilename );
-        return false;
-    }
-
-    std::remove( IROutputFilename );
+    std::remove( objectCodeFilename );
     return true;
 }
 

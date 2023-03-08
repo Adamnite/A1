@@ -14,10 +14,11 @@ WORKDIR /tmp
 
 # Install LLVM
 RUN git clone -b v14.0.6-advm-patch https://github.com/Adamnite/llvm-project \
+    && git checkout 831e79a77793ce8686f97c157b2a55667fa5e4f4                 \
     && mkdir /tmp/llvm-project/llvm/build                                    \
     && cd /tmp/llvm-project/llvm/build                                       \
     && cmake                                                                 \
-        -DLLVM_ENABLE_PROJECTS="clang;lld"                                   \
+        -DLLVM_ENABLE_PROJECTS="lld"                                         \
         -DLLVM_ENABLE_TERMINFO=OFF                                           \
         -DLLVM_ENABLE_ZSTD=OFF                                               \
         -DLLVM_ENABLE_LIBEDIT=OFF                                            \
@@ -38,7 +39,6 @@ RUN git clone https://Adamnite:${TMP_GITHUB_PAT}@github.com/Adamnite/A1.git     
     && cd /tmp/A1/Toolchain/build                                                                            \
     && cmake                                                                                                 \
         -DLLVM_DIR=${LLVM_PATH}/lib/cmake/llvm                                                               \
-        -DClang_DIR=${LLVM_PATH}/lib/cmake/clang                                                             \
         -DCMAKE_BUILD_TYPE=Release                                                                           \
         -DENABLE_TESTS=OFF                                                                                   \
         -DWASM_SYSROOT_PATH=${WASI_SDK_PATH}/share/wasi-sysroot                                              \
@@ -51,6 +51,5 @@ RUN git clone https://Adamnite:${TMP_GITHUB_PAT}@github.com/Adamnite/A1.git     
 
 FROM ubuntu:22.04
 
-COPY --from=0 /tmp/llvm/bin/clang /tmp/llvm/bin/
-COPY --from=0 /tmp/llvm/bin/wasm-ld /tmp/llvm/bin/
+COPY --from=0 /tmp/llvm/bin/wasm-ld /usr/local/bin/
 COPY --from=0 /usr/local/bin/aoc /usr/local/bin/
