@@ -192,10 +192,7 @@ Symbols::Table< llvm::Function * > internalBuiltinFunctions
         { "contract_address", codegenContractAddress( ctx, module_, builder ) },
         { "caller_address"  , codegenCallerAddress  ( ctx, module_, builder ) },
         { "block_timestamp" , codegenBlockTimestamp ( ctx, module_, builder ) },
-        /**
-         * TODO: Fix error: 'Cannot select: intrinsic %llvm.wasm.advm.balances'
-         */
-        // { "balances"        , codegenBalances       ( ctx, module_, builder ) }
+        { "balances"        , codegenBalances       ( ctx, module_, builder ) }
 #endif // TESTS_ENABLED
     };
 }
