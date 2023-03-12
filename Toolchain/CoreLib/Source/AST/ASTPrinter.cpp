@@ -18,6 +18,25 @@ namespace A1::AST
 namespace
 {
     [[ nodiscard ]]
+    std::string_view toString( TypeID const id ) noexcept
+    {
+             if ( id == Registry::getAddressHandle() ) { return "address"; }
+        else if ( id == Registry::getBoolHandle   () ) { return "bool";    }
+        else if ( id == Registry::getNumHandle    () ) { return "num";     }
+        else if ( id == Registry::getStrHandle    () ) { return "str";     }
+        else if ( id == Registry::getI8Handle     () ) { return "i8";      }
+        else if ( id == Registry::getI16Handle    () ) { return "i16";     }
+        else if ( id == Registry::getI32Handle    () ) { return "i32";     }
+        else if ( id == Registry::getI64Handle    () ) { return "i64";     }
+        else if ( id == Registry::getU8Handle     () ) { return "u8";      }
+        else if ( id == Registry::getU16Handle    () ) { return "u16";     }
+        else if ( id == Registry::getU32Handle    () ) { return "u32";     }
+        else if ( id == Registry::getU64Handle    () ) { return "u64";     }
+
+        return "null";
+    }
+
+    [[ nodiscard ]]
     constexpr std::string_view toString( NodeType const type ) noexcept
     {
         switch ( type )
@@ -103,11 +122,13 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
         }
     };
 
+    if ( node == nullptr ) { return; }
+
     std::visit
     (
         Overload
         {
-            [ =, &node ]( AST::NodeType const type )
+            [ =, &node ]( NodeType const type )
             {
                 printIndentation( stream, indentationLevel );
                 fmt::print( stream, "{}\n", toString( type ) );
@@ -121,6 +142,11 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
                 printIndentation( stream, indentationLevel );
                 fmt::print( stream, "Identifier = '{}'\n", identifier.name );
             },
+            [ = ]( Boolean const boolean )
+            {
+                printIndentation( stream, indentationLevel );
+                fmt::print( stream, "Boolean = '{}'\n", boolean ? "true" : "false" );
+            },
             [ = ]( Number const number )
             {
                 printIndentation( stream, indentationLevel );
@@ -133,21 +159,8 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
             },
             [ = ]( TypeID const typeID )
             {
-                if ( typeID == Registry::getNumHandle() )
-                {
-                    printIndentation( stream, indentationLevel );
-                    fmt::print( stream, "TypeID = num\n" );
-                }
-                else if ( typeID == Registry::getStrHandle() )
-                {
-                    printIndentation( stream, indentationLevel );
-                    fmt::print( stream, "TypeID = str\n" );
-                }
-                else
-                {
-                    printIndentation( stream, indentationLevel );
-                    fmt::print( stream, "TypeID = null\n" );
-                }
+                printIndentation( stream, indentationLevel );
+                fmt::print( stream, "TypeID = {}\n", toString( typeID ) );
             }
         },
         node->value()
