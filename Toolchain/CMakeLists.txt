@@ -34,4 +34,11 @@ if( ENABLE_TESTS )
     include( ${CMAKE_CURRENT_LIST_DIR}/CoreLibTest/CoreLibTest.cmake )
 endif()
 
+option( ENABLE_FUZZERS "Enable fuzzers" OFF )
+message( STATUS "Fuzzers enabled: ${ENABLE_FUZZERS}" )
+
+if( ENABLE_FUZZERS )
+    include( ${CMAKE_CURRENT_LIST_DIR}/Fuzzer/Fuzzer.cmake )
+endif()
+
 include( ${CMAKE_CURRENT_LIST_DIR}/AOC/AOC.cmake )
