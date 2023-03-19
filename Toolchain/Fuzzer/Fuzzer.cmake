@@ -8,7 +8,7 @@ macro( add_fuzzer_target component )
 
     if( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         target_compile_options( ${TARGET_NAME} PRIVATE -fsanitize=fuzzer,address )
-        target_link_libraries ( ${TARGET_NAME} PRIVATE -fsanitize=fuzzer,address )
+        target_link_libraries ( ${TARGET_NAME} PRIVATE -fsanitize=fuzzer,address fmt::fmt )
     else()
         message( FATAL_ERROR "libFuzzer available only with Clang compiler" )
     endif()
