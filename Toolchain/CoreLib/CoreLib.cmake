@@ -20,7 +20,8 @@ add_library( CoreLib STATIC ${SOURCES} )
 
 include( ${CMAKE_CURRENT_LIST_DIR}/../../CMake/Common.cmake )
 
-if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+if( CMAKE_BUILD_TYPE STREQUAL "Debug" OR ENABLE_TESTS )
+    message( STATUS "Sanitizers enabled" )
     enable_sanitizers( CoreLib )
 endif()
 
