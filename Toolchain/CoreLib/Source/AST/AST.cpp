@@ -24,9 +24,9 @@ namespace
 {
     void fill( std::stack< Node::Pointer > & dst, std::vector< Node::Pointer > src )
     {
-        for ( std::size_t i{ 0U }; i < std::size( src ); i++ )
+        for ( auto && node : src )
         {
-            dst.push( std::move( src[ i ] ) );
+            dst.push( std::move( node ) );
         }
     }
 
@@ -53,7 +53,7 @@ namespace
     {
         NodeType     type         { NodeType::Unknown };
         std::size_t  operandsCount{ 0U };
-        ErrorInfo    errorInfo    {};
+        ErrorInfo    errorInfo;
     };
 
     [[ nodiscard ]] NodeInfo getNodeInfo
@@ -91,37 +91,17 @@ namespace
              * or a suffix to the operand.
              */
             case ReservedToken::OpAdd:
-                if ( isPrefix )
-                {
-                    return
-                    {
-                        .type          = NodeType::UnaryPlus,
-                        .operandsCount = getOperandsCount( NodeType::UnaryPlus ),
-                        .errorInfo     = std::move( errorInfo )
-                    };
-                }
-
                 return
                 {
-                    .type          = NodeType::Addition,
-                    .operandsCount = getOperandsCount( NodeType::Addition ),
+                    .type          = isPrefix ? NodeType::UnaryPlus : NodeType::Addition,
+                    .operandsCount = getOperandsCount( isPrefix ? NodeType::UnaryPlus : NodeType::Addition ),
                     .errorInfo     = std::move( errorInfo )
                 };
             case ReservedToken::OpSub:
-                if ( isPrefix )
-                {
-                    return
-                    {
-                        .type          = NodeType::UnaryMinus,
-                        .operandsCount = getOperandsCount( NodeType::UnaryMinus ),
-                        .errorInfo     = std::move( errorInfo )
-                    };
-                }
-
                 return
                 {
-                    .type          = NodeType::Subtraction,
-                    .operandsCount = getOperandsCount( NodeType::Subtraction ),
+                    .type          = isPrefix ? NodeType::UnaryMinus : NodeType::Subtraction,
+                    .operandsCount = getOperandsCount( isPrefix ? NodeType::UnaryMinus : NodeType::Subtraction ),
                     .errorInfo     = std::move( errorInfo )
                 };
 
@@ -501,25 +481,10 @@ namespace
                         throw ParsingError{ token->errorInfo(), "Expecting an expression inside parentheses" };
                     }
 
-                    if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
+                    operands.push( parseImpl( token ) );
+                    if ( !token->is< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                     {
-                        while ( true )
-                        {
-                            operands.push( parseImpl( token ) );
-
-                            ++nodeInfo.operandsCount;
-
-                            if ( !token->is< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
-                            {
-                                throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-
-                        --nodeInfo.operandsCount;
+                        throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
                     }
                 }
                 else if ( nodeInfo.type == NodeType::Index )
@@ -561,7 +526,7 @@ namespace
                     skipNewline( token );
 
                     auto bodyOperands{ parseBody( token, currentIndentationLevel + 1U ) };
-                    nodeInfo.operandsCount += std::size( bodyOperands );
+                    nodeInfo.operandsCount = std::size( bodyOperands );
                     fill( operands, std::move( bodyOperands ) );
                 }
                 else if ( nodeInfo.type == NodeType::StatementWhile )
@@ -795,7 +760,7 @@ namespace
                     }
                     else
                     {
-                        token = oldToken;
+                        token = std::move( oldToken );
                     }
                 }
             }
