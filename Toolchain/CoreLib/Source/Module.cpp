@@ -5,9 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "AST/ASTPrinter.hpp"
-
 #include <CoreLib/AST/AST.hpp>
+#include <CoreLib/AST/ASTPrinter.hpp>
 #include <CoreLib/Compiler/Compiler.hpp>
 #include <CoreLib/Module.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>

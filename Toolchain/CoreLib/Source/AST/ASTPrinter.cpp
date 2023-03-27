@@ -5,7 +5,8 @@
  * This code is open-sourced under the MIT license.
  */
 
-#include "ASTPrinter.hpp"
+#include <CoreLib/AST/ASTPrinter.hpp>
+
 #include "Utils/Utils.hpp"
 
 #include <fmt/format.h>
