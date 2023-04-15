@@ -27,16 +27,25 @@ struct Identifier
 struct Indentation
 {
     [[ nodiscard ]] bool operator==( Indentation const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "indentation"; }
 };
 
 struct Newline
 {
     [[ nodiscard ]] bool operator==( Newline const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "newline"; }
 };
 
 struct Eof
 {
     [[ nodiscard ]] bool operator==( Eof const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "eof"; }
 };
 
 using Number = std::int64_t;

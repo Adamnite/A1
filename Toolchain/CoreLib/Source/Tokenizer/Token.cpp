@@ -34,17 +34,9 @@ std::string Token::toString() const noexcept
             {
                 return str;
             },
-            []( Indentation )
+            []( auto const token ) -> std::string
             {
-                return std::string{ "<INDENTATION>" };
-            },
-            []( Newline )
-            {
-                return std::string{ "<NEWLINE>" };
-            },
-            []( Eof )
-            {
-                return std::string{ "<EOF>" };
+                return std::decay_t< decltype( token ) >::toString();
             }
         },
         value_
