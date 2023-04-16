@@ -10,8 +10,6 @@
 
 #include <fmt/format.h>
 
-#include <algorithm>
-
 namespace A1::CLI
 {
 

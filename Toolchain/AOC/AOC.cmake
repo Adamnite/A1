@@ -9,6 +9,9 @@ include( ${CMAKE_CURRENT_LIST_DIR}/AOC.srcs.cmake )
 
 add_executable( aoc ${SOURCES} )
 
+include( ${CMAKE_CURRENT_LIST_DIR}/../../CMake/Common.cmake )
+strip( aoc )
+
 target_include_directories(
     aoc
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Source

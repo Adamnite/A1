@@ -8,3 +8,13 @@ macro( enable_sanitizers target )
         target_link_libraries ( ${target} PUBLIC  -fsanitize=undefined -fsanitize=address -fno-sanitize=vptr )
     endif()
 endmacro()
+
+macro( strip target )
+    if( CMAKE_STRIP )
+        add_custom_command( TARGET ${target} POST_BUILD
+            COMMAND $<$<CONFIG:Release>:${CMAKE_STRIP}> $<TARGET_FILE:${target}>
+            COMMENT "Creating stripped binary for ${target}"
+            VERBATIM
+        )
+    endif()
+endmacro()
