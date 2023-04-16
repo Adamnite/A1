@@ -156,13 +156,17 @@ llvm::Value * codegen( Context & ctx, AST::Node::Pointer const & node )
             {
                 return ctx.symbols.variable( identifier.name );
             },
+            [ &ctx ]( AST::Boolean const boolean ) -> llvm::Value *
+            {
+                return llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number::Type ) * 8U /* numBits */, boolean, false /* isSigned */ ) );
+            },
             [ &ctx ]( Number const number ) -> llvm::Value *
             {
-                return llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, number, false /* isSigned */ ) );
+                return llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number::Type ) * 8U /* numBits */, number.value, false /* isSigned */ ) );
             },
-            [ &ctx ]( String const & str ) -> llvm::Value *
+            [ &ctx ]( StringLiteral const & str ) -> llvm::Value *
             {
-                return ctx.builder->CreateGlobalStringPtr( str, "", 0U, ctx.module_.get() );
+                return ctx.builder->CreateGlobalStringPtr( str.value, "", 0U, ctx.module_.get() );
             },
             []( TypeID const ) -> llvm::Value *
             {

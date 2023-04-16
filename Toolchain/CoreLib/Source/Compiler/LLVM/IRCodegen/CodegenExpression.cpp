@@ -35,7 +35,7 @@ namespace
     [[ nodiscard ]]
     llvm::Value * getPrintFormat( Context & ctx, llvm::Type const * type )
     {
-        if ( type->isIntegerTy( sizeof( Number ) * 8U ) )
+        if ( type->isIntegerTy( sizeof( Number::Type ) * 8U ) )
         {
             static auto * format{ ctx.builder->CreateGlobalStringPtr( "%d\n", "numFormat", 0U, ctx.module_.get() ) };
             return format;
@@ -80,7 +80,7 @@ llvm::Value * codegenAssign( Context & ctx, std::span< AST::Node::Pointer const 
     auto * lhs{ codegen( ctx, nodes[ 0U ] ) };
 
     llvm::Value * value{ nullptr };
-    if ( nodes[ 1U ]->is< String >() )
+    if ( nodes[ 1U ]->is< StringLiteral >() )
     {
         value = codegen( ctx, nodes[ 1U ] );
     }
@@ -274,11 +274,11 @@ llvm::Value * codegenContractDefinition( Context & ctx, std::span< AST::Node::Po
                     auto const & initNode{ children[ 2U ] };
                     if ( initNode->is< Number >() )
                     {
-                        dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), initNode->get< Number >(), true /* isSigned */ ) );
+                        dataMemberInitialValues.push_back( llvm::ConstantInt::get( llvm::Type::getInt64Ty( *ctx.internalCtx ), initNode->get< Number >().value, true /* isSigned */ ) );
                     }
-                    else if ( initNode->is< String >() )
+                    else if ( initNode->is< StringLiteral >() )
                     {
-                        dataMemberInitialValues.push_back( ctx.builder->CreateGlobalStringPtr( initNode->get< String >(), "", 0U, ctx.module_.get() ) );
+                        dataMemberInitialValues.push_back( ctx.builder->CreateGlobalStringPtr( initNode->get< StringLiteral >().value, "", 0U, ctx.module_.get() ) );
                     }
                 }
                 else
@@ -547,7 +547,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
     condition = ctx.builder->CreateICmpNE
     (
         condition,
-        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number::Type ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
         "cond"
     );
 
@@ -644,7 +644,7 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     condition = ctx.builder->CreateICmpNE
     (
         condition,
-        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number::Type ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
         "cond"
     );
 
@@ -675,7 +675,7 @@ llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const 
     condition = ctx.builder->CreateICmpEQ
     (
         condition,
-        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
+        llvm::ConstantInt::get( *ctx.internalCtx, llvm::APInt( sizeof( Number::Type ) * 8U /* numBits */, 0U, false /* isSigned */ ) ),
         "cond"
     );
 

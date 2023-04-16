@@ -120,7 +120,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Number{ 5 }                 )
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     )
                 )
@@ -150,11 +150,11 @@ INSTANTIATE_TEST_SUITE_P
                                         NodeType::Addition,
                                         makeChildren
                                         (
-                                            std::make_unique< Node >( A1::Number{ 5 } ),
-                                            std::make_unique< Node >( A1::Number{ 5 } )
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -186,8 +186,8 @@ INSTANTIATE_TEST_SUITE_P
                                         NodeType::Addition,
                                         makeChildren
                                         (
-                                            std::make_unique< Node >( A1::Number{ 5 } ),
-                                            std::make_unique< Node >( A1::Number{ 5 } )
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                                         )
                                     )
                                 )
@@ -226,13 +226,13 @@ INSTANTIATE_TEST_SUITE_P
                                                 NodeType::Addition,
                                                 makeChildren
                                                 (
-                                                    std::make_unique< Node >( A1::Number{ 5 } ),
-                                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                                 )
                                             )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 2 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 2 } )
                                 )
                             )
                         )
@@ -259,7 +259,7 @@ INSTANTIATE_TEST_SUITE_P
                                 NodeType::Multiplication,
                                 makeChildren
                                 (
-                                    std::make_unique< Node >( A1::Number{ 2 } ),
+                                    std::make_unique< Node >( A1::Number{ .value = 2 } ),
                                     std::make_unique< Node >
                                     (
                                         NodeType::Parentheses,
@@ -270,8 +270,8 @@ INSTANTIATE_TEST_SUITE_P
                                                 NodeType::Addition,
                                                 makeChildren
                                                 (
-                                                    std::make_unique< Node >( A1::Number{ 5 } ),
-                                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                                 )
                                             )
                                         )
@@ -312,8 +312,8 @@ INSTANTIATE_TEST_SUITE_P
                                                 NodeType::Addition,
                                                 makeChildren
                                                 (
-                                                    std::make_unique< Node >( A1::Number{ 5 } ),
-                                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                                 )
                                             )
                                         )
@@ -328,8 +328,8 @@ INSTANTIATE_TEST_SUITE_P
                                                 NodeType::Addition,
                                                 makeChildren
                                                 (
-                                                    std::make_unique< Node >( A1::Number{ 5 } ),
-                                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                                 )
                                             )
                                         )
@@ -381,10 +381,10 @@ INSTANTIATE_TEST_SUITE_P
                         NodeType::Call,
                         makeChildren
                         (
-                            std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
-                            std::make_unique< Node >( A1::Number{ 1 }                       ),
-                            std::make_unique< Node >( A1::String{ "This is random string" } ),
-                            std::make_unique< Node >( A1::Number{ 5 }                       )
+                            std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                            std::make_unique< Node >( A1::Number{ .value = 1 } ),
+                            std::make_unique< Node >( A1::StringLiteral{ .value = "This is random string" } ),
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     )
                 )
@@ -437,8 +437,8 @@ INSTANTIATE_TEST_SUITE_P
                                 NodeType::Addition,
                                 makeChildren
                                 (
-                                    std::make_unique< Node >( A1::Number{ 1 } ),
-                                    std::make_unique< Node >( A1::Number{ 2 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 1 } ),
+                                    std::make_unique< Node >( A1::Number{ .value = 2 } )
                                 )
                             )
                         )
@@ -465,10 +465,10 @@ INSTANTIATE_TEST_SUITE_P
                                 NodeType::Call,
                                 makeChildren
                                 (
-                                    std::make_unique< Node >( A1::Identifier{ .name = "func" }      ),
-                                    std::make_unique< Node >( A1::Number{ 1 }                       ),
-                                    std::make_unique< Node >( A1::String{ "This is random string" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                       )
+                                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                                    std::make_unique< Node >( A1::Number{ .value = 1 } ),
+                                    std::make_unique< Node >( A1::StringLiteral{ .value = "This is random string" } ),
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -490,7 +490,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Number{ 1 }                 )
+                            std::make_unique< Node >( A1::Number{ .value = 1 }        )
                         )
                     )
                 )
@@ -570,7 +570,7 @@ INSTANTIATE_TEST_SUITE_P
                                             std::make_unique< Node >( A1::Identifier{ .name = "func2" } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -603,10 +603,10 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "func2" } ),
-                                            std::make_unique< Node >( A1::Number{ 5 } )
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -627,7 +627,7 @@ INSTANTIATE_TEST_SUITE_P
                         NodeType::StatementReturn,
                         makeChildren
                         (
-                            std::make_unique< Node >( A1::Number{ 1 } )
+                            std::make_unique< Node >( A1::Number{ .value = 1 } )
                         )
                     )
                 )
@@ -744,7 +744,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                 )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -753,7 +753,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                    std::make_unique< Node >( A1::Number{ 1 }                     )
+                                    std::make_unique< Node >( A1::Number{ .value = 1 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -762,7 +762,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                    std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 1" } )
                                 )
                             )
                         )
@@ -778,7 +778,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                    std::make_unique< Node >( A1::Number{ 6 }                 )
+                                    std::make_unique< Node >( A1::Number{ .value = 6 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -787,7 +787,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                    std::make_unique< Node >( A1::Number{ 2 }                     )
+                                    std::make_unique< Node >( A1::Number{ .value = 2 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -796,7 +796,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                    std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                    std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 2" } )
                                 )
                             )
                         )
@@ -829,7 +829,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                 )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -838,7 +838,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                    std::make_unique< Node >( A1::Number{ 1 }                     )
+                                    std::make_unique< Node >( A1::Number{ .value = 1 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -847,7 +847,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                    std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 1" } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -861,7 +861,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                            std::make_unique< Node >( A1::Number{ 2 }                     )
+                                            std::make_unique< Node >( A1::Number{ .value = 2 } )
                                         )
                                     ),
                                     std::make_unique< Node >
@@ -870,7 +870,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                            std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                            std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 2" } )
                                         )
                                     )
                                 )
@@ -911,7 +911,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                 )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -920,7 +920,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                    std::make_unique< Node >( A1::Number{ 1 }                     )
+                                    std::make_unique< Node >( A1::Number{ .value = 1 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -929,7 +929,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                    std::make_unique< Node >( A1::String{ "new_var is 1" }      )
+                                    std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 1" } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -943,7 +943,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                            std::make_unique< Node >( A1::Number{ 6 }                 )
+                                            std::make_unique< Node >( A1::Number{ .value = 6 } )
                                         )
                                     ),
                                     std::make_unique< Node >
@@ -952,7 +952,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                            std::make_unique< Node >( A1::Number{ 2 }                     )
+                                            std::make_unique< Node >( A1::Number{ .value = 2 } )
                                         )
                                     ),
                                     std::make_unique< Node >
@@ -961,7 +961,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                            std::make_unique< Node >( A1::String{ "new_var is 2" }      )
+                                            std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 2" } )
                                         )
                                     ),
                                     std::make_unique< Node >
@@ -975,7 +975,7 @@ INSTANTIATE_TEST_SUITE_P
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                                                    std::make_unique< Node >( A1::Number{ 7 }                 )
+                                                    std::make_unique< Node >( A1::Number{ .value = 7 } )
                                                 )
                                             ),
                                             std::make_unique< Node >
@@ -984,7 +984,7 @@ INSTANTIATE_TEST_SUITE_P
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                                    std::make_unique< Node >( A1::Number{ 3 }                     )
+                                                    std::make_unique< Node >( A1::Number{ .value = 3 } )
                                                 )
                                             ),
                                             std::make_unique< Node >
@@ -993,7 +993,7 @@ INSTANTIATE_TEST_SUITE_P
                                                 makeChildren
                                                 (
                                                     std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                                    std::make_unique< Node >( A1::String{ "new_var is 3" }      )
+                                                    std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 3" } )
                                                 )
                                             ),
                                             std::make_unique< Node >
@@ -1007,7 +1007,7 @@ INSTANTIATE_TEST_SUITE_P
                                                         makeChildren
                                                         (
                                                             std::make_unique< Node >( A1::Identifier{ .name = "new_var" } ),
-                                                            std::make_unique< Node >( A1::Number{ 4 }                     )
+                                                            std::make_unique< Node >( A1::Number{ .value = 4 } )
                                                         )
                                                     ),
                                                     std::make_unique< Node >
@@ -1016,7 +1016,7 @@ INSTANTIATE_TEST_SUITE_P
                                                         makeChildren
                                                         (
                                                             std::make_unique< Node >( A1::Identifier{ .name = "print" } ),
-                                                            std::make_unique< Node >( A1::String{ "new_var is 4" }      )
+                                                            std::make_unique< Node >( A1::StringLiteral{ .value = "new_var is 4" } )
                                                         )
                                                     )
                                                 )
@@ -1051,7 +1051,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }               )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -1066,7 +1066,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
-                                            std::make_unique< Node >( A1::Number{ 1 }               )
+                                            std::make_unique< Node >( A1::Number{ .value = 1 } )
                                         )
                                     )
                                 )
@@ -1098,7 +1098,7 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }               )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -1122,7 +1122,7 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "i" } ),
-                                            std::make_unique< Node >( A1::Number{ 1 }               )
+                                            std::make_unique< Node >( A1::Number{ .value = 1 } )
                                         )
                                     )
                                 )
@@ -1154,7 +1154,7 @@ INSTANTIATE_TEST_SUITE_P
                                 NodeType::StatementReturn,
                                 makeChildren
                                 (
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -1200,7 +1200,7 @@ INSTANTIATE_TEST_SUITE_P
                                             std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -1246,7 +1246,7 @@ INSTANTIATE_TEST_SUITE_P
                                             std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -1302,7 +1302,7 @@ INSTANTIATE_TEST_SUITE_P
                                             std::make_unique< Node >( A1::Identifier{ .name = "addr" } )
                                         )
                                     ),
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -1535,8 +1535,8 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                  ),
-                                    std::make_unique< Node >( A1::Number{ 5 }                  )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } ),
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -1609,7 +1609,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var6" } ),
-                            std::make_unique< Node >( A1::Registry::getU8Handle()      )
+                            std::make_unique< Node >( A1::Registry::getU8Handle() )
                         )
                     )
                 )
@@ -1629,7 +1629,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Number{ 5 }                 )
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     )
                 )
@@ -1678,8 +1678,8 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var1" } ),
-                            std::make_unique< Node >( A1::Registry::getNumHandle()     ),
-                            std::make_unique< Node >( A1::Number{ 5 }                  )
+                            std::make_unique< Node >( A1::Registry::getNumHandle() ),
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     ),
                     std::make_unique< Node >
@@ -1688,13 +1688,13 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var2" } ),
-                            std::make_unique< Node >( A1::Registry::getNumHandle()     ),
+                            std::make_unique< Node >( A1::Registry::getNumHandle() ),
                             std::make_unique< Node >
                             (
                                 NodeType::UnaryMinus,
                                 makeChildren
                                 (
-                                    std::make_unique< Node >( A1::Number{ 5 } )
+                                    std::make_unique< Node >( A1::Number{ .value = 5 } )
                                 )
                             )
                         )
@@ -1718,8 +1718,8 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Registry::getNumHandle()    ),
-                            std::make_unique< Node >( A1::Number{ 5 }                 )
+                            std::make_unique< Node >( A1::Registry::getNumHandle() ),
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     ),
                     std::make_unique< Node >
@@ -1728,7 +1728,7 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Number{ 10 }                )
+                            std::make_unique< Node >( A1::Number{ .value = 10 } )
                         )
                     )
                 )
@@ -1763,8 +1763,8 @@ INSTANTIATE_TEST_SUITE_P
                         makeChildren
                         (
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
-                            std::make_unique< Node >( A1::Registry::getNumHandle()    ),
-                            std::make_unique< Node >( A1::Number{ 5 }                 )
+                            std::make_unique< Node >( A1::Registry::getNumHandle() ),
+                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                         )
                     )
                 )
@@ -1806,8 +1806,8 @@ INSTANTIATE_TEST_SUITE_P
                                 makeChildren
                                 (
                                     std::make_unique< Node >( A1::Identifier{ .name = "foo" } ),
-                                    std::make_unique< Node >( A1::Registry::getNumHandle()    ),
-                                    std::make_unique< Node >( A1::Number{ 101 }               )
+                                    std::make_unique< Node >( A1::Registry::getNumHandle() ),
+                                    std::make_unique< Node >( A1::Number{ .value = 101 } )
                                 )
                             ),
                             std::make_unique< Node >
@@ -1871,7 +1871,7 @@ INSTANTIATE_TEST_SUITE_P
                                                     std::make_unique< Node >( A1::Identifier{ .name = "foo"  } )
                                                 )
                                             ),
-                                            std::make_unique< Node >( A1::Number{ 5 } )
+                                            std::make_unique< Node >( A1::Number{ .value = 5 } )
                                         )
                                     )
                                 )
@@ -2005,8 +2005,8 @@ INSTANTIATE_TEST_SUITE_P
                                         makeChildren
                                         (
                                             std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
-                                            std::make_unique< Node >( A1::Number{ 3 }                  ),
-                                            std::make_unique< Node >( A1::Number{ 4 }                  )
+                                            std::make_unique< Node >( A1::Number{ .value = 3 } ),
+                                            std::make_unique< Node >( A1::Number{ .value = 4 } )
                                         )
                                     )
                                 )

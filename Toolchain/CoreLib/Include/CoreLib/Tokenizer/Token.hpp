@@ -22,6 +22,31 @@ struct Identifier
     std::string name;
 
     [[ nodiscard ]] bool operator==( Identifier const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "identifier"; }
+};
+
+struct Number
+{
+    using Type = std::int64_t;
+
+    Type value{ 0 };
+
+    [[ nodiscard ]] bool operator==( Number const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "number"; }
+};
+
+struct StringLiteral
+{
+    std::string value;
+
+    [[ nodiscard ]] bool operator==( StringLiteral const & ) const = default;
+
+    [[ nodiscard ]]
+    static constexpr auto toString() noexcept { return "string"; }
 };
 
 struct Indentation
@@ -48,13 +73,10 @@ struct Eof
     static constexpr auto toString() noexcept { return "eof"; }
 };
 
-using Number = std::int64_t;
-using String = std::string;
-
 class Token
 {
 public:
-    using ValueType = std::variant< ReservedToken, Identifier, Number, String, Indentation, Newline, Eof >;
+    using ValueType = std::variant< ReservedToken, Identifier, Number, StringLiteral, Indentation, Newline, Eof >;
 
     Token() noexcept = default;
     Token( ValueType value, ErrorInfo errorInfo )

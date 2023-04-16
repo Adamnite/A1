@@ -93,10 +93,10 @@ namespace
         {
             if ( std::isdigit( result.front() ) )
             {
-                Number number{ 0U };
+                Number number;
                 if
                 (
-                    auto const [ ptr, ec ]{ std::from_chars( result.data(), result.data() + result.size(), number ) };
+                    auto const [ ptr, ec ]{ std::from_chars( result.data(), result.data() + result.size(), number.value ) };
                     ec != std::errc{}
                 )
                 {
@@ -112,7 +112,7 @@ namespace
 
     [[ nodiscard ]] Token getString( Stream & stream )
     {
-        String result;
+        StringLiteral result;
 
         auto escaped{ false };
 
@@ -128,11 +128,11 @@ namespace
             {
                 switch ( *c )
                 {
-                    case 't': result.push_back( '\t' ); break;
-                    case 'n': result.push_back( '\n' ); break;
-                    case 'r': result.push_back( '\r' ); break;
-                    case '0': result.push_back( '\0' ); break;
-                    default : result.push_back( *c   ); break;
+                    case 't': result.value.push_back( '\t' ); break;
+                    case 'n': result.value.push_back( '\n' ); break;
+                    case 'r': result.value.push_back( '\r' ); break;
+                    case '0': result.value.push_back( '\0' ); break;
+                    default : result.value.push_back( *c   ); break;
                 }
                 escaped = false;
             }
@@ -143,7 +143,7 @@ namespace
             }
             else
             {
-                result.push_back( *c );
+                result.value.push_back( *c );
             }
         }
 

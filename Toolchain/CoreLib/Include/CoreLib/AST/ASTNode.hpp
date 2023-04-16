@@ -115,7 +115,7 @@ public:
         TypeID,     // Type declaration for variables, function parameters, return values etc.
         Boolean,
         Number,
-        String
+        StringLiteral
     >;
 
     Node( ValueType value, ErrorInfo errorInfo = {} );

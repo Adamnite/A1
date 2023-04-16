@@ -28,11 +28,11 @@ std::string Token::toString() const noexcept
             },
             []( Number const number )
             {
-                return std::to_string( number );
+                return std::to_string( number.value );
             },
-            []( String const & str )
+            []( StringLiteral const & str )
             {
-                return str;
+                return str.value;
             },
             []( auto const token ) -> std::string
             {

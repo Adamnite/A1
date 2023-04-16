@@ -69,7 +69,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::KwIf,
                 A1::Identifier{ .name = "var" },
                 A1::ReservedToken::OpEqual,
-                A1::String{ "foo" },
+                A1::StringLiteral{ .value = "foo" },
                 A1::ReservedToken::OpColon,
                 A1::Eof{}
             }
@@ -116,7 +116,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::OpLogicalAnd,
                 A1::Identifier{ .name = "var3" },
                 A1::ReservedToken::OpEqual,
-                A1::String{ "foo" },
+                A1::StringLiteral{ .value = "foo" },
                 A1::ReservedToken::OpColon,
                 A1::Eof{}
             }
@@ -410,7 +410,7 @@ INSTANTIATE_TEST_SUITE_P
                 A1::Indentation{},
                 A1::Indentation{},
                 A1::ReservedToken::KwReturn,
-                A1::String{ "Hello, world!" },
+                A1::StringLiteral{ .value = "Hello, world!" },
                 A1::Newline{},
 
                 // 4th line

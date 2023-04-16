@@ -45,7 +45,7 @@ namespace Detail
         if
         (
             value->getType()->getNumContainedTypes() > 0U &&
-            value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number ) * 8U )
+            value->getType()->getContainedType( 0U )->isIntegerTy( sizeof( Number::Type ) * 8U )
         )
         {
             return ctx.builder->CreateLoad( llvm::Type::getInt64Ty( *ctx.internalCtx ), value );

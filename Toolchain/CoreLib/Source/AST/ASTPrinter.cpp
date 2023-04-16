@@ -151,12 +151,12 @@ void print( Node::Pointer const & node, std::FILE * stream, std::size_t const in
             [ = ]( Number const number )
             {
                 printIndentation( stream, indentationLevel );
-                fmt::print( stream, "Number = '{}'\n", number );
+                fmt::print( stream, "Number = '{}'\n", number.value );
             },
-            [ = ]( String const & str )
+            [ = ]( StringLiteral const & str )
             {
                 printIndentation( stream, indentationLevel );
-                fmt::print( stream, "String = '{}'\n", str );
+                fmt::print( stream, "StringLiteral = '{}'\n", str.value );
             },
             [ = ]( TypeID const typeID )
             {
