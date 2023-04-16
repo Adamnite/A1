@@ -2065,6 +2065,21 @@ INSTANTIATE_TEST_SUITE_P
     (
         ErrorTestParameter
         {
+            .expression           = "let = 5",
+            .expectedErrorMessage = "1:6: error: Expecting identifier"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "let var: = 5",
+            .expectedErrorMessage = "1:11: error: Expecting type identifier"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "contract :",
+            .expectedErrorMessage = "1:11: error: Expecting identifier"
+        },
+        ErrorTestParameter
+        {
             .expression           = "var = 5 * (5 + 5",
             .expectedErrorMessage = "1:17: error: Expecting closing parenthesis"
         },
@@ -2082,6 +2097,11 @@ INSTANTIATE_TEST_SUITE_P
         {
             .expression           = "def func(param1: num",
             .expectedErrorMessage = "1:21: error: Expecting closing parenthesis"
+        },
+        ErrorTestParameter
+        {
+            .expression           = "def func(param1: num) -> ",
+            .expectedErrorMessage = "1:26: error: Expecting type identifier"
         },
         ErrorTestParameter
         {
