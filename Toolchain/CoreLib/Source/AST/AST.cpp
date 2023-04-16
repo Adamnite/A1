@@ -16,6 +16,7 @@
 
 #include <stdexcept>
 #include <cstdint>
+#include <vector>
 
 namespace A1::AST
 {
@@ -254,50 +255,72 @@ namespace
 #undef MAP_TOKEN_TO_NODE
     }
 
-    [[ nodiscard ]]
-    Node::Pointer parseOperand( TokenIterator const & token )
+    struct Any {};
+
+    template< typename T >
+    [[ nodiscard ]] Node::Pointer parse( TokenIterator & token )
     {
-        if ( token->is< Number >() )
+        if constexpr ( std::same_as< T, ReservedToken > )
         {
-            return std::make_unique< Node >( token->get< Number >(), token->errorInfo() );
-        }
-        else if ( token->is< String >() )
-        {
-            return std::make_unique< Node >( token->get< String >(), token->errorInfo() );
-        }
-        else if ( token->is< Identifier >() )
-        {
-            return std::make_unique< Node >( token->get< Identifier >(), token->errorInfo() );
-        }
-        else if ( token->is< ReservedToken >() )
-        {
-            switch ( token->get< ReservedToken >() )
+            if ( token->is< ReservedToken >() )
             {
-                case ReservedToken::KwFalse: return std::make_unique< Node >( false, token->errorInfo() );
-                case ReservedToken::KwTrue : return std::make_unique< Node >( true , token->errorInfo() );
+                auto const errorInfo{ token->errorInfo() };
+                switch ( token->get< ReservedToken >() )
+                {
+                    case ReservedToken::KwFalse: ++token; return std::make_unique< Node >( false, errorInfo );
+                    case ReservedToken::KwTrue : ++token; return std::make_unique< Node >( true , errorInfo );
 
-                case ReservedToken::KwAddress: return std::make_unique< Node >( Registry::getAddressHandle(), token->errorInfo() );
+                    case ReservedToken::KwAddress: ++token; return std::make_unique< Node >( Registry::getAddressHandle(), errorInfo );;
 
-                case ReservedToken::KwBool: return std::make_unique< Node >( Registry::getBoolHandle(), token->errorInfo() );
-                case ReservedToken::KwNum : return std::make_unique< Node >( Registry::getNumHandle (), token->errorInfo() );
-                case ReservedToken::KwStr : return std::make_unique< Node >( Registry::getStrHandle (), token->errorInfo() );
+                    case ReservedToken::KwBool: ++token; return std::make_unique< Node >( Registry::getBoolHandle(), errorInfo );
+                    case ReservedToken::KwNum : ++token; return std::make_unique< Node >( Registry::getNumHandle (), errorInfo );
+                    case ReservedToken::KwStr : ++token; return std::make_unique< Node >( Registry::getStrHandle (), errorInfo );
 
-                case ReservedToken::KwI8 : return std::make_unique< Node >( Registry::getI8Handle (), token->errorInfo() );
-                case ReservedToken::KwI16: return std::make_unique< Node >( Registry::getI16Handle(), token->errorInfo() );
-                case ReservedToken::KwI32: return std::make_unique< Node >( Registry::getI32Handle(), token->errorInfo() );
-                case ReservedToken::KwI64: return std::make_unique< Node >( Registry::getI64Handle(), token->errorInfo() );
+                    case ReservedToken::KwI8 : ++token; return std::make_unique< Node >( Registry::getI8Handle (), errorInfo );
+                    case ReservedToken::KwI16: ++token; return std::make_unique< Node >( Registry::getI16Handle(), errorInfo );
+                    case ReservedToken::KwI32: ++token; return std::make_unique< Node >( Registry::getI32Handle(), errorInfo );
+                    case ReservedToken::KwI64: ++token; return std::make_unique< Node >( Registry::getI64Handle(), errorInfo );
 
-                case ReservedToken::KwU8 : return std::make_unique< Node >( Registry::getU8Handle (), token->errorInfo() );
-                case ReservedToken::KwU16: return std::make_unique< Node >( Registry::getU16Handle(), token->errorInfo() );
-                case ReservedToken::KwU32: return std::make_unique< Node >( Registry::getU32Handle(), token->errorInfo() );
-                case ReservedToken::KwU64: return std::make_unique< Node >( Registry::getU64Handle(), token->errorInfo() );
+                    case ReservedToken::KwU8 : ++token; return std::make_unique< Node >( Registry::getU8Handle (), errorInfo );
+                    case ReservedToken::KwU16: ++token; return std::make_unique< Node >( Registry::getU16Handle(), errorInfo );
+                    case ReservedToken::KwU32: ++token; return std::make_unique< Node >( Registry::getU32Handle(), errorInfo );
+                    case ReservedToken::KwU64: ++token; return std::make_unique< Node >( Registry::getU64Handle(), errorInfo );
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
-        }
 
-        throw ParsingError{ token->errorInfo(), "Unexpected operand" };
+            throw ParsingError{ token->errorInfo(), "Expecting type identifier" };
+        }
+        else if constexpr ( std::same_as< T, Any > )
+        {
+            if ( token->is< Number >() )
+            {
+                return std::make_unique< Node >( token->get< Number >(), token->errorInfo() );
+            }
+            else if ( token->is< StringLiteral >() )
+            {
+                return std::make_unique< Node >( token->get< StringLiteral >(), token->errorInfo() );
+            }
+            else if ( token->is< Identifier >() )
+            {
+                return std::make_unique< Node >( token->get< Identifier >(), token->errorInfo() );
+            }
+
+            throw ParsingError{ token->errorInfo(), "Unexpected operand" };
+        }
+        else
+        {
+            if ( token->is< T >() )
+            {
+                auto operand{ std::make_unique< Node >( token->get< T >(), token->errorInfo() ) };
+                ++token;
+                return operand;
+            }
+
+            throw ParsingError{ token->errorInfo(), fmt::format( "Expecting {}", T::toString() ) };
+        }
     }
 
     void popOperator
@@ -468,10 +491,8 @@ namespace
                             throw ParsingError{ token->errorInfo(), "Unexpected operand" };
                         }
 
-                        operands.push( parseOperand( token ) );
+                        operands.push( parse< ReservedToken >( token ) );
                         expectingOperand = false;
-
-                        ++token;
                         break;
                     }
 
@@ -553,62 +574,32 @@ namespace
                 else if ( nodeInfo.type == NodeType::FunctionDefinition )
                 {
                     skip< ReservedToken::KwDef >( token );
-
-                    operands.push( parseOperand( token ) ); // parse function name
-                    token++;
+                    operands.push( parse< Identifier >( token ) ); // parse function name
 
                     {
                         // we are parsing function parameters
-
                         skip< ReservedToken::OpParenthesisOpen >( token );
-
-                        if ( token->is< Identifier >() && token->get< Identifier >().name == "self" )
-                        {
-                            NodeInfo const parameterDefinition
-                            {
-                                .type          = NodeType::FunctionParameterDefinition,
-                                .operandsCount = 1U,
-                                .errorInfo     = token->errorInfo()
-                            };
-
-                            operands.push( parseImpl( token ) ); // parse self parameter name
-                            operators.push( parameterDefinition );
-
-                            while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
-                            {
-                                popOperator( operands, operators, token->errorInfo());
-                            }
-
-                            ++nodeInfo.operandsCount;
-
-                            if ( token->is< ReservedToken >() )
-                            {
-                                auto const reservedToken{ token->get< ReservedToken >() };
-                                if ( reservedToken == ReservedToken::OpComma )
-                                {
-                                    ++token;
-                                }
-                                else if ( reservedToken != ReservedToken::OpParenthesisClose )
-                                {
-                                    throw ParsingError{ token->errorInfo(), "Expecting closing parenthesis" };
-                                }
-                            }
-                        }
 
                         if ( token->is_not< ReservedToken >() || token->get< ReservedToken >() != ReservedToken::OpParenthesisClose )
                         {
                             while ( true )
                             {
+                                operands.push( parse< Identifier >( token ) ); // parse parameter name
+
+                                auto const isSelfParameter{ operands.top()->get< Identifier >().name == "self" };
+
                                 NodeInfo const parameterDefinition
                                 {
                                     .type          = NodeType::FunctionParameterDefinition,
-                                    .operandsCount = getOperandsCount( NodeType::FunctionParameterDefinition ),
+                                    .operandsCount = isSelfParameter ? 1U : getOperandsCount( NodeType::FunctionParameterDefinition ),
                                     .errorInfo     = token->errorInfo()
                                 };
 
-                                operands.push( parseImpl( token ) ); // parse parameter name
-                                skip< ReservedToken::OpColon >( token );
-                                operands.push( parseImpl( token ) ); // parse parameter type
+                                if ( !isSelfParameter )
+                                {
+                                    skip< ReservedToken::OpColon >( token );
+                                    operands.push( parse< ReservedToken >( token ) ); // parse parameter type
+                                }
 
                                 operators.push( parameterDefinition );
 
@@ -647,7 +638,7 @@ namespace
                     if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpArrow )
                     {
                         ++token;
-                        operands.push( parseImpl( token ) ); // parse type
+                        operands.push( parse< ReservedToken >( token ) ); // parse type
                         nodeInfo.operandsCount++;
                     }
 
@@ -659,16 +650,14 @@ namespace
                 else if ( nodeInfo.type == NodeType::VariableDefinition )
                 {
                     skip< ReservedToken::KwLet >( token );
-                    operands.push( parseOperand( token ) ); // parse variable name
-                    ++token;
+                    operands.push( parse< Identifier >( token ) ); // parse variable name
 
                     if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpColon )
                     {
                         // there is type declaration in this variable definition
                         ++token;
-                        operands.push( parseOperand( token ) ); // parse type
+                        operands.push( parse< ReservedToken >( token ) ); // parse type
                         nodeInfo.operandsCount++;
-                        ++token;
                     }
 
                     if ( token->is< ReservedToken >() && token->get< ReservedToken >() == ReservedToken::OpAssign )
@@ -682,7 +671,7 @@ namespace
                 else if ( nodeInfo.type == NodeType::ContractDefinition )
                 {
                     skip< ReservedToken::KwContract >( token );
-                    operands.push( parseImpl( token ) ); // parse contract name
+                    operands.push( parse< Identifier >( token ) ); // parse contract name
                     skip< ReservedToken::OpColon >( token );
                     skip< Newline >( token );
 
@@ -705,7 +694,7 @@ namespace
                     throw ParsingError{ token->errorInfo(), "Unexpected operand" };
                 }
 
-                operands.push( parseOperand( token ) );
+                operands.push( parse< Any >( token ) );
                 expectingOperand = false;
 
                 if ( operands.top()->is< Identifier >() )
@@ -784,7 +773,7 @@ namespace
 
         while ( !operators.empty() && operators.top().type != NodeType::ModuleDefinition )
         {
-            popOperator( operands, operators, token->errorInfo());
+            popOperator( operands, operators, token->errorInfo() );
         }
 
         if ( !operators.empty() && operators.top().type == NodeType::ModuleDefinition )
