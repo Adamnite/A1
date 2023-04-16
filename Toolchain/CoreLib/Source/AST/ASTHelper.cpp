@@ -129,6 +129,7 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
 {
     switch ( type )
     {
+        case NodeType::StatementElse:
         case NodeType::StatementPass:
             return 0U;
 
@@ -200,7 +201,6 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::Call:
         case NodeType::StatementIf:
         case NodeType::StatementElif:
-        case NodeType::StatementElse:
         case NodeType::StatementWhile:
         case NodeType::ContractDefinition:
         case NodeType::FunctionDefinition:
