@@ -39,4 +39,4 @@ A1 source files utilize `.ao` extension.
 
 1. Write your first smart contract using the A1 programming language or simply use one of the examples from [here](../Examples/)
 2. Compile the code by executing the following command `$ aoc -o my-contract my-first-contract.ao`
-3. Follow the steps specified in [goAdamnite](https://github.com/Adamnite/goAdamnite) to learn on how to easily upload your compiled contract to the blockchain
+3. Follow the steps specified in [goAdamnite](https://github.com/Adamnite/goAdamnite) to learn how to easily upload your compiled contract to the blockchain
