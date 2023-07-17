@@ -102,10 +102,13 @@ NodePrecedence getPrecedence( NodeType const type ) noexcept
         case NodeType::StatementReturn:
         case NodeType::StatementImport:
         case NodeType::StatementAssert:
-        case NodeType::ModuleDefinition:
+        case NodeType::ArrayDefinition:
+        case NodeType::ClassDefinition:
         case NodeType::ContractDefinition:
         case NodeType::FunctionDefinition:
         case NodeType::FunctionParameterDefinition:
+        case NodeType::MapDefinition:
+        case NodeType::ModuleDefinition:
         case NodeType::VariableDefinition:
             return NodePrecedence::Group16;
 
@@ -202,8 +205,11 @@ std::size_t getOperandsCount( NodeType const type ) noexcept
         case NodeType::StatementIf:
         case NodeType::StatementElif:
         case NodeType::StatementWhile:
+        case NodeType::ArrayDefinition:
+        case NodeType::ClassDefinition:
         case NodeType::ContractDefinition:
         case NodeType::FunctionDefinition:
+        case NodeType::MapDefinition:
         case NodeType::VariableDefinition:
             return 1U;
 

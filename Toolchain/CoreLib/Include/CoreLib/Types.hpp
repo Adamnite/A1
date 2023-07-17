@@ -42,8 +42,9 @@ enum class PrimitiveType : std::uint8_t
 
 struct ArrayType;
 struct FunctionType;
+struct MapType;
 
-using Type   = std::variant< PrimitiveType, ArrayType, FunctionType >;
+using Type   = std::variant< PrimitiveType, ArrayType, FunctionType, MapType >;
 using TypeID = Type const *;
 
 struct ArrayType
@@ -62,10 +63,19 @@ struct FunctionType
     std::vector< ParameterType > parameterTypeIDs{};
 };
 
+struct MapType
+{
+    TypeID keyTypeID{ nullptr };
+    TypeID valueTypeID{ nullptr };
+};
+
 namespace Registry
 {
 
 [[ nodiscard ]] TypeID getHandle( Type const & type ) noexcept;
+
+[[ nodiscard ]] TypeID getArrayHandle( TypeID const inner ) noexcept;
+[[ nodiscard ]] TypeID getMapHandle  ( TypeID const key, TypeID const value ) noexcept;
 
 [[ nodiscard ]] TypeID getAddressHandle() noexcept;
 

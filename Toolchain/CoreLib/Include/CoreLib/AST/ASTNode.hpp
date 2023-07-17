@@ -92,10 +92,13 @@ enum class NodeType : std::uint8_t
     StatementImport,         // import <expression>
     StatementAssert,         // assert <expression>
 
-    ModuleDefinition,
+    ArrayDefinition,
+    ClassDefinition,
     ContractDefinition,
     FunctionDefinition,
     FunctionParameterDefinition,
+    MapDefinition,
+    ModuleDefinition,
     VariableDefinition,
 
     // Number of possible node operations

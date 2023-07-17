@@ -97,10 +97,13 @@ namespace
             STR_CASE( StatementReturn             );
             STR_CASE( StatementImport             );
             STR_CASE( StatementAssert             );
-            STR_CASE( ModuleDefinition            );
+            STR_CASE( ArrayDefinition             );
+            STR_CASE( ClassDefinition             );
             STR_CASE( ContractDefinition          );
             STR_CASE( FunctionDefinition          );
             STR_CASE( FunctionParameterDefinition );
+            STR_CASE( MapDefinition               );
+            STR_CASE( ModuleDefinition            );
             STR_CASE( VariableDefinition          );
 #undef STR_CASE
 

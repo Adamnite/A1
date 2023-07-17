@@ -79,6 +79,7 @@ enum class ReservedToken : std::uint8_t
     // Keywords
     KwAddress,
     KwAnd,
+    KwArray,
     KwAs,
     KwAssert,
     KwBool,
@@ -106,6 +107,7 @@ enum class ReservedToken : std::uint8_t
     KwI64,
     KwLambda,
     KwLet,
+    KwMap,
     KwNon,
     KwNone,
     KwNonLocal,

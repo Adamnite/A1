@@ -64,10 +64,24 @@ TypeID getHandle( Type const & type ) noexcept
             []( FunctionType const ) noexcept -> TypeID
             {
                 return nullptr;
+            },
+            []( MapType const ) noexcept -> TypeID
+            {
+                return nullptr;
             }
         },
         type
     );
+}
+
+TypeID getArrayHandle( TypeID const ) noexcept
+{
+    return nullptr;
+}
+
+TypeID getMapHandle( TypeID const, TypeID const ) noexcept
+{
+    return nullptr;
 }
 
 TypeID getAddressHandle() noexcept { return &address; }

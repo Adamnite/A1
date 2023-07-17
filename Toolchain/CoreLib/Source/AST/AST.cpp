@@ -89,6 +89,31 @@ namespace
         }
     }
 
+    [[ nodiscard ]] TypeID getPrimitiveTypeID( ReservedToken const keyword ) noexcept
+    {
+        switch ( keyword )
+        {
+            case ReservedToken::KwAddress: return Registry::getAddressHandle();
+
+            case ReservedToken::KwBool: return Registry::getBoolHandle();
+            case ReservedToken::KwNum : return Registry::getNumHandle ();
+            case ReservedToken::KwStr : return Registry::getStrHandle ();
+
+            case ReservedToken::KwI8 : return Registry::getI8Handle ();
+            case ReservedToken::KwI16: return Registry::getI16Handle();
+            case ReservedToken::KwI32: return Registry::getI32Handle();
+            case ReservedToken::KwI64: return Registry::getI64Handle();
+
+            case ReservedToken::KwU8 : return Registry::getU8Handle ();
+            case ReservedToken::KwU16: return Registry::getU16Handle();
+            case ReservedToken::KwU32: return Registry::getU32Handle();
+            case ReservedToken::KwU64: return Registry::getU64Handle();
+
+            default:
+                return nullptr;
+        }
+    }
+
     [[ nodiscard ]] bool isEndOfExpression( Token const & token ) noexcept
     {
         if ( token.is< Indentation >() || token.is< Newline >() || token.is< Eof >() )
@@ -215,6 +240,7 @@ namespace
             // Definitions
             MAP_TOKEN_TO_NODE( KwDef     , FunctionDefinition );
             MAP_TOKEN_TO_NODE( KwLet     , VariableDefinition );
+            MAP_TOKEN_TO_NODE( KwClass   , ClassDefinition    );
             MAP_TOKEN_TO_NODE( KwContract, ContractDefinition );
 
 #define IGNORE_TOKEN( token ) case ReservedToken::token: break;
@@ -229,10 +255,11 @@ namespace
             IGNORE_TOKEN( KwTrue  );
 
             IGNORE_TOKEN( KwAddress );
-
-            IGNORE_TOKEN( KwBool );
-            IGNORE_TOKEN( KwNum  );
-            IGNORE_TOKEN( KwStr  );
+            IGNORE_TOKEN( KwArray   );
+            IGNORE_TOKEN( KwBool    );
+            IGNORE_TOKEN( KwMap     );
+            IGNORE_TOKEN( KwNum     );
+            IGNORE_TOKEN( KwStr     );
 
             IGNORE_TOKEN( KwI8  );
             IGNORE_TOKEN( KwI16 );
@@ -270,24 +297,45 @@ namespace
                     case ReservedToken::KwFalse: ++token; return std::make_unique< Node >( false, errorInfo );
                     case ReservedToken::KwTrue : ++token; return std::make_unique< Node >( true , errorInfo );
 
-                    case ReservedToken::KwAddress: ++token; return std::make_unique< Node >( Registry::getAddressHandle(), errorInfo );;
+                    case ReservedToken::KwArray:
+                    {
+                        skip< ReservedToken::KwArray         >( token );
+                        skip< ReservedToken::OpSubscriptOpen >( token );
 
-                    case ReservedToken::KwBool: ++token; return std::make_unique< Node >( Registry::getBoolHandle(), errorInfo );
-                    case ReservedToken::KwNum : ++token; return std::make_unique< Node >( Registry::getNumHandle (), errorInfo );
-                    case ReservedToken::KwStr : ++token; return std::make_unique< Node >( Registry::getStrHandle (), errorInfo );
+                        if ( !token->is< ReservedToken >() ) { break; }
+                        auto const innerTypeID{ getPrimitiveTypeID( token->get< ReservedToken >() ) };
+                        ++token;
 
-                    case ReservedToken::KwI8 : ++token; return std::make_unique< Node >( Registry::getI8Handle (), errorInfo );
-                    case ReservedToken::KwI16: ++token; return std::make_unique< Node >( Registry::getI16Handle(), errorInfo );
-                    case ReservedToken::KwI32: ++token; return std::make_unique< Node >( Registry::getI32Handle(), errorInfo );
-                    case ReservedToken::KwI64: ++token; return std::make_unique< Node >( Registry::getI64Handle(), errorInfo );
+                        skip< ReservedToken::OpSubscriptClose >( token );
+                        return std::make_unique< Node >( Registry::getArrayHandle( innerTypeID ), errorInfo );
+                    }
+                    case ReservedToken::KwMap:
+                    {
+                        skip< ReservedToken::KwMap           >( token );
+                        skip< ReservedToken::OpSubscriptOpen >( token );
 
-                    case ReservedToken::KwU8 : ++token; return std::make_unique< Node >( Registry::getU8Handle (), errorInfo );
-                    case ReservedToken::KwU16: ++token; return std::make_unique< Node >( Registry::getU16Handle(), errorInfo );
-                    case ReservedToken::KwU32: ++token; return std::make_unique< Node >( Registry::getU32Handle(), errorInfo );
-                    case ReservedToken::KwU64: ++token; return std::make_unique< Node >( Registry::getU64Handle(), errorInfo );
+                        if ( !token->is< ReservedToken >() ) { break; }
+                        auto const keyTypeID{ getPrimitiveTypeID( token->get< ReservedToken >() ) };
+                        ++token;
 
+                        skip< ReservedToken::OpComma >( token );
+
+                        if ( !token->is< ReservedToken >() ) { break; }
+                        auto const valueTypeID{ getPrimitiveTypeID( token->get< ReservedToken >() ) };
+                        ++token;
+
+                        skip< ReservedToken::OpSubscriptClose >( token );
+                        return std::make_unique< Node >( Registry::getMapHandle( keyTypeID, valueTypeID ), errorInfo );
+                    }
                     default:
+                    {
+                        if ( auto const typeID{ getPrimitiveTypeID( token->get< ReservedToken >() ) }; typeID != nullptr )
+                        {
+                            ++token;
+                            return std::make_unique< Node >( typeID, errorInfo );
+                        }
                         break;
+                    }
                 }
             }
 
@@ -667,6 +715,15 @@ namespace
                         operands.push( parseImpl( token ) );
                         nodeInfo.operandsCount++;
                     }
+                }
+                else if ( nodeInfo.type == NodeType::ClassDefinition )
+                {
+                    skip< ReservedToken::KwClass >( token );
+                    operands.push( parse< Identifier >( token ) ); // parse class name
+                    skip< ReservedToken::OpColon >( token );
+                    skip< Newline >( token );
+
+                    nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
                 else if ( nodeInfo.type == NodeType::ContractDefinition )
                 {

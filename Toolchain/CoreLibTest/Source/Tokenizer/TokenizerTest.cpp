@@ -347,6 +347,38 @@ INSTANTIATE_TEST_SUITE_P
         },
         TestParameter
         {
+            .expression     = "let var: array[num]",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwArray,
+                A1::ReservedToken::OpSubscriptOpen,
+                A1::ReservedToken::KwNum,
+                A1::ReservedToken::OpSubscriptClose,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .expression     = "let var: map[num, str]",
+            .expectedTokens =
+            {
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "var" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwMap,
+                A1::ReservedToken::OpSubscriptOpen,
+                A1::ReservedToken::KwNum,
+                A1::ReservedToken::OpComma,
+                A1::ReservedToken::KwStr,
+                A1::ReservedToken::OpSubscriptClose,
+                A1::Eof{}
+            }
+        },
+        TestParameter
+        {
             .expression =
                 "def func(param1: num, param2: num) -> num:\n"
                 "    return param1 + param2",
@@ -376,6 +408,36 @@ INSTANTIATE_TEST_SUITE_P
                 A1::ReservedToken::OpAdd,
                 A1::Identifier{ .name = "param2" },
                 A1::Eof{}
+            }
+        },
+        TestParameter
+        {
+            .expression =
+                "class HelloWorld:\n"
+                "    let name: str\n"
+                "    let count: num",
+            .expectedTokens =
+            {
+                // 1st line
+                A1::ReservedToken::KwClass,
+                A1::Identifier{ .name = "HelloWorld" },
+                A1::ReservedToken::OpColon,
+                A1::Newline{},
+
+                // 2nd line
+                A1::Indentation{},
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "name" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwStr,
+                A1::Newline{},
+
+                // 3rd line
+                A1::Indentation{},
+                A1::ReservedToken::KwLet,
+                A1::Identifier{ .name = "count" },
+                A1::ReservedToken::OpColon,
+                A1::ReservedToken::KwNum,
             }
         },
         TestParameter
