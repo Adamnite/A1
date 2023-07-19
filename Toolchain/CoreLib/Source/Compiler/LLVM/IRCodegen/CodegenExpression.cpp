@@ -617,7 +617,8 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
 
     if ( hasElifElseBlock )
     {
-        auto * phi{ ctx.builder->CreatePHI( llvm::IntegerType::getInt32Ty( *ctx.internalCtx ), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
+        ASSERT( then->getType() == elifOrElse->getType() );
+        auto * phi{ ctx.builder->CreatePHI( then->getType(), hasElifElseBlock ? 2U : 1U, "iftmp" ) };
         phi->addIncoming( then      , thenBlock );
         phi->addIncoming( elifOrElse, elseBlock );
         return phi;

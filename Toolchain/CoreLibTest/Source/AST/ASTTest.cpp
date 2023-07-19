@@ -6,6 +6,7 @@
  */
 
 #include <CoreLib/AST/AST.hpp>
+#include <CoreLib/AST/ASTPrinter.hpp>
 #include <CoreLib/Errors/ParsingError.hpp>
 #include <CoreLib/Tokenizer/Tokenizer.hpp>
 
@@ -86,6 +87,8 @@ TEST_P( ASTTestFixture, parsing )
     auto actualRoot{ A1::AST::parse( token ) };
 
     match( actualRoot.get(), expectedRoot.get() );
+
+    A1::AST::print( actualRoot );
 }
 
 INSTANTIATE_TEST_SUITE_P
@@ -1825,6 +1828,118 @@ INSTANTIATE_TEST_SUITE_P
                             std::make_unique< Node >( A1::Identifier{ .name = "var" } ),
                             std::make_unique< Node >( A1::Registry::getNumHandle() ),
                             std::make_unique< Node >( A1::Number{ .value = 5 } )
+                        )
+                    )
+                )
+            )
+        },
+        TestParameter
+        {
+            .expression =
+                "contract Example:\n"
+                "    def func(x: num) -> num:\n"
+                "        let y = 0\n"
+                "        if x > 3:\n"
+                "            y = x\n"
+                "        elif x != 0:\n"
+                "            y = 1\n"
+                "        return y",
+            .expectedRoot = std::make_shared< Node >
+            (
+                NodeType::ModuleDefinition,
+                makeChildren
+                (
+                    std::make_unique< Node >
+                    (
+                        NodeType::ContractDefinition,
+                        makeChildren
+                        (
+                            std::make_unique< Node >( A1::Identifier{ .name = "Example" } ),
+                            std::make_unique< Node >
+                            (
+                                NodeType::FunctionDefinition,
+                                makeChildren
+                                (
+                                    std::make_unique< Node >( A1::Identifier{ .name = "func" } ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::FunctionParameterDefinition,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "x" } ),
+                                            std::make_unique< Node >( A1::Registry::getNumHandle() )
+                                        )
+                                    ),
+                                    std::make_unique< Node >( A1::Registry::getNumHandle() ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::VariableDefinition,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "y" } ),
+                                            std::make_unique< Node >( A1::Number{ .value = 0 } )
+                                        )
+                                    ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::StatementIf,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::GreaterThan,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "x" } ),
+                                                    std::make_unique< Node >( A1::Number{ .value = 3 } )
+                                                )
+                                            ),
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::Assign,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "y" } ),
+                                                    std::make_unique< Node >( A1::Identifier{ .name = "x" } )
+                                                )
+                                            ),
+                                            std::make_unique< Node >
+                                            (
+                                                NodeType::StatementElif,
+                                                makeChildren
+                                                (
+                                                    std::make_unique< Node >
+                                                    (
+                                                        NodeType::Inequality,
+                                                        makeChildren
+                                                        (
+                                                            std::make_unique< Node >( A1::Identifier{ .name = "x" } ),
+                                                            std::make_unique< Node >( A1::Number{ .value = 0 } )
+                                                        )
+                                                    ),
+                                                    std::make_unique< Node >
+                                                    (
+                                                        NodeType::Assign,
+                                                        makeChildren
+                                                        (
+                                                            std::make_unique< Node >( A1::Identifier{ .name = "y" } ),
+                                                            std::make_unique< Node >( A1::Number{ .value = 1 } )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    ),
+                                    std::make_unique< Node >
+                                    (
+                                        NodeType::StatementReturn,
+                                        makeChildren
+                                        (
+                                            std::make_unique< Node >( A1::Identifier{ .name = "y" } )
+                                        )
+                                    )
+                                )
+                            )
                         )
                     )
                 )

@@ -345,6 +345,23 @@ INSTANTIATE_TEST_SUITE_P
         TestParameter
         {
             .input =
+                "contract Example:\n"
+                "    def func(self, x: num) -> num:\n"
+                "        let y = 0\n"
+                "        if x > 3:\n"
+                "            y = x\n"
+                "        elif x != 0:\n"
+                "            y = 1\n"
+                "        return y\n"
+                "\n"
+                "let var = Example()\n"
+                "print(var.func(1))",
+            .expectedOutput =
+                "1"
+        },
+        TestParameter
+        {
+            .input =
                 "contract Addition:\n"
                 "    let name: str = \"Addition\"\n"
                 "    let description: str\n"

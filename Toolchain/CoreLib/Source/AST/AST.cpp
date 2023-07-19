@@ -586,10 +586,19 @@ namespace
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
 
-                    if ( token->is< Newline >() ) { ++token; }
+                    auto newLineBeginToken{ token };
+                    while ( token->is< Newline >() ) { ++token; }
+
+                    auto elifElseIndentation{ 0U };
+                    while ( token->is< Indentation >() )
+                    {
+                        ++token;
+                        elifElseIndentation++;
+                    }
 
                     if
                     (
+                        currentIndentationLevel == elifElseIndentation &&
                         token->is< ReservedToken >() &&
                         (
                             token->get< ReservedToken >() == ReservedToken::KwElif ||
@@ -600,6 +609,11 @@ namespace
                         // Parse elif / else expression
                         operands.push( parseImpl( token, currentIndentationLevel ) );
                         nodeInfo.operandsCount++;
+                    }
+                    else
+                    {
+                        // No elif / else, get back to the beginning
+                        token = std::move( newLineBeginToken );
                     }
                 }
                 else if ( nodeInfo.type == NodeType::StatementElse )
