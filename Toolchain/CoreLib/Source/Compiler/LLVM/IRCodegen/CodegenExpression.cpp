@@ -567,7 +567,7 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
         ctx.builder->CreateCondBr( condition, thenBlock, elseBlock );
         ctx.builder->SetInsertPoint( thenBlock );
 
-        for ( ; nodeIdx < std::size( nodes ); nodeIdx++ )
+        for ( auto idx{ 0U }; nodeIdx < std::size( nodes ); idx++, nodeIdx++ )
         {
             auto const & node{ nodes[ nodeIdx ] };
             if
@@ -583,8 +583,14 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
                 break;
             }
 
-            then = codegen( ctx, node );
-            if ( then == nullptr ) { return nullptr; }
+            auto * value{ codegen( ctx, node ) };
+            if ( value == nullptr ) { return nullptr; }
+
+            if ( idx == 0U )
+            {
+                // required for the PHI node below
+                then = value;
+            }
         }
         // Jump to end block
         ctx.builder->CreateBr( endBlock );
@@ -599,10 +605,16 @@ llvm::Value * codegenControlFlow( Context & ctx, std::span< AST::Node::Pointer c
         parent->getBasicBlockList().push_back( elseBlock );
         ctx.builder->SetInsertPoint( elseBlock );
 
-        for ( ; nodeIdx < std::size( nodes ); nodeIdx++ )
+        for ( auto idx{ 0U }; nodeIdx < std::size( nodes ); idx++, nodeIdx++ )
         {
-            elifOrElse = codegen( ctx, nodes[ nodeIdx ] );
-            if ( elifOrElse == nullptr ) { return nullptr; }
+            auto * value{ codegen( ctx, nodes[ nodeIdx ] ) };
+            if ( value == nullptr ) { return nullptr; }
+
+            if ( idx == 0U )
+            {
+                // required for the PHI node below
+                elifOrElse = value;
+            }
         }
         // Jump to end block
         ctx.builder->CreateBr( endBlock );
@@ -653,15 +665,16 @@ llvm::Value * codegenLoopFlow( Context & ctx, std::span< AST::Node::Pointer cons
     ctx.builder->CreateCondBr( condition, loopBlock, afterLoopBlock );
     ctx.builder->SetInsertPoint( loopBlock );
 
+    llvm::Value * then{ nullptr };
     for ( std::size_t i{ 1U }; i < std::size( nodes ); i++ )
     {
-        auto * then{ codegen( ctx, nodes[ i ] ) };
+        then = codegen( ctx, nodes[ i ] );
         if ( then == nullptr ) { return nullptr; }
     }
 
     ctx.builder->CreateBr( conditionBlock );
     ctx.builder->SetInsertPoint( afterLoopBlock );
-    return nullptr;
+    return then;
 }
 
 llvm::Value * codegenAssert( Context & ctx, std::span< AST::Node::Pointer const > const nodes )
