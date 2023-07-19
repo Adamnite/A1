@@ -1761,6 +1761,8 @@ INSTANTIATE_TEST_SUITE_P
         {
             .expression =
                 "class Example:\n"
+                "\n"
+                "\n"
                 "    let member1: str\n"
                 "    let member2: num",
             .expectedRoot = std::make_shared< Node >

@@ -46,6 +46,12 @@ namespace
     };
 
     template< typename T >
+    struct Consecutive
+    {
+        using Type = T;
+    };
+
+    template< typename T >
         requires requires ( T )
         {
             T::match( std::declval< TokenIterator >() );
@@ -73,6 +79,22 @@ namespace
         else
         {
             throw ParsingError( tokenIt->errorInfo(), fmt::format( "Expecting {}", T::toString() ) );
+        }
+    }
+
+    template< typename T > requires requires ( T ) { T::Type::toString(); }
+    void skip( TokenIterator & tokenIt )
+    {
+        auto atLeastOneMatched{ false };
+        while ( tokenIt->is< typename T::Type >() )
+        {
+            ++tokenIt;
+            atLeastOneMatched = true;
+        }
+
+        if ( !atLeastOneMatched )
+        {
+            throw ParsingError( tokenIt->errorInfo(), fmt::format( "Expecting {}", T::Type::toString() ) );
         }
     }
 
@@ -582,7 +604,7 @@ namespace
                     skip< Either< ReservedToken::KwIf, ReservedToken::KwElif > >( token );
                     operands.push( parseImpl( token ) ); // parse condition
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
 
@@ -620,7 +642,7 @@ namespace
                 {
                     skip< ReservedToken::KwElse  >( token );
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
@@ -629,7 +651,7 @@ namespace
                     skip< ReservedToken::KwWhile >( token );
                     operands.push( parseImpl( token ) ); // parse condition
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
@@ -705,7 +727,7 @@ namespace
                     }
 
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
@@ -735,7 +757,7 @@ namespace
                     skip< ReservedToken::KwClass >( token );
                     operands.push( parse< Identifier >( token ) ); // parse class name
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
@@ -744,7 +766,7 @@ namespace
                     skip< ReservedToken::KwContract >( token );
                     operands.push( parse< Identifier >( token ) ); // parse contract name
                     skip< ReservedToken::OpColon >( token );
-                    skip< Newline >( token );
+                    skip< Consecutive< Newline > >( token );
 
                     nodeInfo.operandsCount += parseBody( token, operands, currentIndentationLevel + 1U );
                 }
