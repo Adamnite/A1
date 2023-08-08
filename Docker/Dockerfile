@@ -1,7 +1,6 @@
 FROM ubuntu:22.04
 
 ENV DEPENDENCIES="build-essential gcc cmake ninja-build python3 git wget"                                        \
-    TMP_GITHUB_PAT=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 \
     LLVM_PATH=/tmp/llvm                                                                                          \
     WASI_VERSION=15                                                                                              \
     WASI_VERSION_FULL=15.0                                                                                       \
@@ -33,7 +32,7 @@ RUN wget -P /tmp https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-
     && rm -rf wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz
 
 # Build A1 compiler
-RUN git clone https://Adamnite:${TMP_GITHUB_PAT}@github.com/Adamnite/A1.git                                  \
+RUN git clone https://github.com/Adamnite/A1.git                                                             \
     && mkdir -p /tmp/A1/Toolchain/build                                                                      \
     && cd /tmp/A1/Toolchain/build                                                                            \
     && cmake                                                                                                 \
